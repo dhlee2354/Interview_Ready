@@ -15,6 +15,6 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
 
 ## 📝 Table of Contents
 
-- ### Android(https://github.com/cheonjoosung/Interview_Ready/tree/master/Android)
-- ### Java(https://github.com/cheonjoosung/Interview_Ready/tree/master/Java)
-- ### Kotlin(https://github.com/cheonjoosung/Interview_Ready/tree/master/Kotlin)
+- ### [Android](./Android)
+- ### [Java](./Java)
+- ### [Kotlin](./Kotlin)

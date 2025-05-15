@@ -121,7 +121,9 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 - 관련된 심화 주제
   + StringBuilder/StringBuffer, JVM 구조
 
+
 ---
+
 
 ### Equals
 - 자바에서 **equlas()** 함수는 객체의 동등성을 비교하는 데 사용됩니다.
@@ -194,87 +196,150 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 
 ---
-    
 
-### StringBuilder VS StringBuffer
-- 개념
-  + 가변 문자열을 다룰 수 있도록 설계 된 클래스로 AbstarctStringBuilder 클래스를 상속받아 구현
-  + String 클래스와 달리 값을 변경해도 새로운 객체를 생성하지 않기에 문자열 반복 수정하는 경우 성능이 뛰어남
+
+### 추상클래스 vs 인터페이스
+- 추상 클래스(Abstract Class) 란?
+  + 자바에서 추상 클래스(Abstract Class)는 객체지향 프로그래밍의 중요한 요소 중 하나로, 불완전한 클래스를 의미합니다. 
+  + 객체를 직접 생성 할 수 없는 클래스 이며, abstract 키워드를 사용하여 선언됩니다.
+
+- 추상 클래스 특징
+  + 추상메서드와 일반메서드를 모두 가질 수 있습니다.
+  + 인스턴스 변수를 가질 수 있습니다.
+  + 생성자를 가질 수 있습니다.
+  + 단일 상속만 가능 합니다. 클래스는 하나의 추상 클래스만 상속 받을 수 있습니다.
+  + 객체를 직접 생성할 수 없습니다. 추상 클래스를 상속받는 자식 클래스를 통해 객체를 생성해야 합니다.
+
+- 추상 클래스 사용 목적
+  + 공통 기능 및 속성 정의 : 여러 클래스에서 공통적으로 사용되는 필드와 메서드를 정의하여 코드 중복을 줄이고, 일관성을 유지 합니다.
+  + 부분적인 구현 제공 : 일부 메서드는 구현을 제공하고, 일부 메서드는 추상 메서드로 남겨두어 자식클래스에서 반드시 구현하도록 강제합니다.
+  + 상속 계층 구조의 기반 : 관련된 클래스들의 상속 계층 구조를 구축하기 위해 사용됩니다.
+
+- 소스 예제
   ```java
-  public final class StringBuffer
-    extends AbstractStringBuilder
-    implements Serializable, Comparable<StringBuffer>, CharSequence {}
-
-  public final class StringBuilder
-    extends AbstractStringBuilder
-    implements java.io.Serializable, Comparable<StringBuilder>, CharSequence {}
-  ```
-- 공통점
-  + | 항목     | 설명                                                                              |
-    |--------|---------------------------------------------------------------------------------|
-    | 패키지    | 둘 다 `java.lang` 패키지에 포함되어 있음                                                    |
-    | 상속 구조  | 모두 `AbstractStringBuilder`를 상속                                                  |
-    | 가변성    | `String`과 달리 내부 문자열이 변경 가능 (mutable)                                            |
-    | 내부 구조  | 내부적으로 `char[]` 배열을 사용                                                           |
-    | 주요 메서드 | `append()`, `insert()`, `delete()`, `replace()`, `reverse()`, `toString()` 등 동일 |
-    | 자동 확장  | 버퍼의 크기가 초과되면 자동으로 확장됨                                                           |
-    | 성능     | 문자열 연산 시 `String`보다 훨씬 빠름                                                       |
-    | 사용 목적  | 문자열의 빈번한 수정이 필요할 때 사용                                                           |
-    | 빌더 패턴  | 자기 자신을 반환하는 빌더패턴 사용                                                             |
-  + 빌더 패턴 사용하기에 .append().append().append() 가능한 구조
-    ```java
-    // StringBuilder
-    public StringBuilder append(String str) {
-        super.append(str);
-        return this;
-    }
+    abstract class Shape {
+        String color;
     
-    // StringBuffer
-    public synchronized StringBuffer append(StringBuffer sb) {
-        toStringCache = null;
-        super.append(sb);
-        return this;
-    }
-    ```
-
-- 차이점
-  + | 비교 항목         | StringBuilder                         | StringBuffer                           |
-    |-------------------|----------------------------------------|----------------------------------------|
-    | 도입 시기         | JDK 1.5                                | JDK 1.0                                |
-    | 스레드 안전성     | ❌ 비동기 (Thread-unsafe)              | ✅ 동기화됨 (Thread-safe)              |
-    | 동기화            | ❌ 없음                                | ✅ 모든 메서드에 `synchronized` 적용   |
-    | 성능 (단일 스레드)| 빠름                                  | 느림 (불필요한 동기화 오버헤드)       |
-    | 성능 (멀티 스레드)| 데이터 충돌 위험 있음                  | 안전하게 공유 가능                     |
-    | 사용 권장 환경    | 단일 스레드                            | 멀티 스레드                            |
-    | 대표 사용 예시    | 일반적인 문자열 처리 작업              | 스레드 공유 환경에서의 문자열 처리     |
-  + StringBuffer 클래스 내부에 선언된 모든 메서드에 **synchronized** 키워드 사용하고 있음
-    ```java
-    // StringBuffer
-    public synchronized String toString() {
-        if (toStringCache == null) {
-            return toStringCache =
-                    isLatin1() ? StringLatin1.newString(value, 0, count)
-                               : StringUTF16.newString(value, 0, count);
+        public Shape(String color) {
+            this.color = color;
         }
-        return new String(toStringCache);
+    
+        // 추상 메서드 (자식 클래스에서 반드시 구현해야 함)
+        abstract double getArea();
+    
+        // 일반 메서드
+        public String getColor() {
+            return color;
+        }
     }
     
-    public synchronized String substring(int start) {
-        return substring(start, count);
+    class Circle extends Shape {
+        double radius;
+    
+        public Circle(String color, double radius) {
+            super(color);
+            this.radius = radius;
+        }
+    
+        @Override
+        double getArea() {
+            return Math.PI * radius * radius;
+        }
     }
-    ```
-
-- 성능 비교 (String vs StringBuilder vs StringBuffer)
-  + StringBuilder 와 StringBuffer 비슷 >> String 속도차이가 큼
-  + 멀티 스레드 환경이 아니라면 StringBuilder 멀티 스레드 환경이라면 StringBuufer  tkdyd
-  ```java
-  for (int i = 0; i < n1; i++) str += "a"; // 12초
-  stringBuilder.append("a".repeat(n1)); // 0.11초
-  stringBuffer.append("a".repeat(n1)); // 0.12 초
+    
+    class Rectangle extends Shape {
+        double width;
+        double height;
+    
+        public Rectangle(String color, double width, double height) {
+            super(color);
+            this.width = width;
+            this.height = height;
+        }
+    
+        @Override
+        double getArea() {
+            return width * height;
+        }
+    }
+    
+    public class Main {
+        public static void main(String[] args) {
+            // 추상 클래스는 직접 객체 생성 불가
+            // Shape myShape = new Shape("Red"); // 컴파일 오류
+    
+            Shape myCircle = new Circle("Blue", 5.0);
+            Shape myRectangle = new Rectangle("Green", 4.0, 6.0);
+    
+            System.out.println("Circle color: " + myCircle.getColor());
+            System.out.println("Circle area: " + myCircle.getArea());
+    
+            System.out.println("Rectangle color: " + myRectangle.getColor());
+            System.out.println("Rectangle area: " + myRectangle.getArea());
+        }
+    }
   ```
-- 주요 메서드
-  + append, insert, replace, delete, reverse, toString, capacity, ensureCapacity, charAt, substring
-- 추가 팁
-  + capacity(초기 용량)을 예상하여 생성하면 성능 높일 수 있음
-  + 내부적으로 char [] 사용하기에 이보다 커지는 경우 배열 복사가 일어나기에 최대 치를 고려하면 배열 복사하는 코스트를 줄일 수 있음
-  + StringBuilder sb = new StringBuilder(1000); // 초기 용량 설정
+
+- 인터페이스(Interface) 란?
+  + 자바에서 인터페이스는 클래스가 구현해야 하는 메서드들의 집합을 정의하는 특별한 종류의 참조형 타입입니다. 
+  + 인터페이스는 클래스가 어떤 기능을 제공해야 하는지에 대한 규약 또는 명세를 정의하는 역할을 합니다.
+  
+- 인터페이스 특징
+  + 추상메서드만 가질 수 있습니다.
+  + 상수 필드만 가질 수 있습니다.
+  + 다중 상속을 지원합니다. 클래스는 여러 인터페이스를 구현할 수 있습니다.
+  + 객체를 직접 생성할 수 없습니다. 인터페이스는 구현하는 클래스를 통해 사용됩니다.
+
+- 인터페이스 사용목적
+  + 다형성 구현 : 여러클래스가 동일한 인터페이스를 구현함으로써, 인터페이스 타입으로 객체를 참조하여 다양한 구현체를 동일하게 처리 할 수 있습니다.
+  + 코드 재사용성 : 공통된 기능을 인터페이스로 정의하고 여러 클래스에서 구현하여 코드 중복을 줄일 수 있습니다.
+  + 설계 규약 정의 : 클래스가 따라야할 메서드를 정의하여, 개발자 간의 협업을 제공합니다.
+
+- 소스 예제
+  ```java
+    interface Animal {
+        void makeSound(); // 추상 메서드
+        void eat();       // 추상 메서드
+    }
+    
+    class Dog implements Animal {
+        @Override
+        public void makeSound() {
+            System.out.println("Woof!");
+        }
+    
+        @Override
+        public void eat() {
+            System.out.println("Dog food");
+        }
+    }
+    
+    class Cat implements Animal {
+        @Override
+        public void makeSound() {
+            System.out.println("Meow!");
+        }
+    
+        @Override
+        public void eat() {
+            System.out.println("Fish");
+        }
+    }
+    
+    public class Main {
+        public static void main(String[] args) {
+            Animal myDog = new Dog();
+            Animal myCat = new Cat();
+    
+            myDog.makeSound(); // 출력: Woof!
+            myDog.eat();       // 출력: Dog food
+    
+            myCat.makeSound(); // 출력: Meow!
+            myCat.eat();       // 출력: Fish
+        }
+    }
+  ```
+  
+- 결론
+  + 추상 클래스를 사용하는 경우 : 관련된 클래스 간 코드를 공유하고, 클래스들이 공통된 기반 클래스를 가져야 하며, public 외의 접근 제한자를 가진 멤버가 필요할때 사용 합니다.
+  + 인터페이스를 사용하는 경우 : 서로 관련 없는 클래스들이 특정 행동 규약을 따르도록하고, 다중 상속의 이점을 활용 하고 싶을때 사용 합니다.

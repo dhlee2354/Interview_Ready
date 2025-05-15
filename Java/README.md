@@ -121,6 +121,8 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 - 관련된 심화 주제
   + StringBuilder/StringBuffer, JVM 구조
 
+---
+
 ### Equals
 - 자바에서 **equlas()** 함수는 객체의 동등성을 비교하는 데 사용됩니다.
 - 기본적으로 Object 클래스에 정의되어 있으며, 두 객체가 메모리상에서 동일한 객체를 참조하는지 비교합니다.
@@ -275,4 +277,4 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 - 추가 팁
   + capacity(초기 용량)을 예상하여 생성하면 성능 높일 수 있음
   + 내부적으로 char [] 사용하기에 이보다 커지는 경우 배열 복사가 일어나기에 최대 치를 고려하면 배열 복사하는 코스트를 줄일 수 있음
-  > StringBuilder sb = new StringBuilder(1000); // 초기 용량 설정
+  + StringBuilder sb = new StringBuilder(1000); // 초기 용량 설정

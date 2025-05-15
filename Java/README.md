@@ -58,6 +58,10 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
           }    
           ```
 
+
+---
+
+
 ### String 문자열
 - 문자열을 다루는 가장 기본적이고 중요한 참조형 타입 클래스
   ```java
@@ -185,3 +189,90 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 - equals()와 hashCode()를 같이 재정의해야 하는 이유
   1. hashCode()를 재정의 하지 않으면 같은 값 객체라도 해시값이 다를 수 있다. 따라서 HashTable에서 해당 객체가 저장 된 버킷을 찾을 수 없습니다.
   2. equals()를 재정의 하지 않으면 hashCode()가 만든 해시값을 이용해 객체가 저장 된 버킷을 찾을 수 있지만 해당 객체가 자신과 같은 객체인지 값을 비교할 수 없기 때문에 null을 리턴하게 됩니다.
+
+
+---
+    
+
+### StringBuilder VS StringBuffer
+- 개념
+  + 가변 문자열을 다룰 수 있도록 설계 된 클래스로 AbstarctStringBuilder 클래스를 상속받아 구현
+  + String 클래스와 달리 값을 변경해도 새로운 객체를 생성하지 않기에 문자열 반복 수정하는 경우 성능이 뛰어남
+  ```java
+  public final class StringBuffer
+    extends AbstractStringBuilder
+    implements Serializable, Comparable<StringBuffer>, CharSequence {}
+
+  public final class StringBuilder
+    extends AbstractStringBuilder
+    implements java.io.Serializable, Comparable<StringBuilder>, CharSequence {}
+  ```
+- 공통점
+  + | 항목     | 설명                                                                              |
+    |--------|---------------------------------------------------------------------------------|
+    | 패키지    | 둘 다 `java.lang` 패키지에 포함되어 있음                                                    |
+    | 상속 구조  | 모두 `AbstractStringBuilder`를 상속                                                  |
+    | 가변성    | `String`과 달리 내부 문자열이 변경 가능 (mutable)                                            |
+    | 내부 구조  | 내부적으로 `char[]` 배열을 사용                                                           |
+    | 주요 메서드 | `append()`, `insert()`, `delete()`, `replace()`, `reverse()`, `toString()` 등 동일 |
+    | 자동 확장  | 버퍼의 크기가 초과되면 자동으로 확장됨                                                           |
+    | 성능     | 문자열 연산 시 `String`보다 훨씬 빠름                                                       |
+    | 사용 목적  | 문자열의 빈번한 수정이 필요할 때 사용                                                           |
+    | 빌더 패턴  | 자기 자신을 반환하는 빌더패턴 사용                                                             |
+  + 빌더 패턴 사용하기에 .append().append().append() 가능한 구조
+    ```java
+    // StringBuilder
+    public StringBuilder append(String str) {
+        super.append(str);
+        return this;
+    }
+    
+    // StringBuffer
+    public synchronized StringBuffer append(StringBuffer sb) {
+        toStringCache = null;
+        super.append(sb);
+        return this;
+    }
+    ```
+
+- 차이점
+  + | 비교 항목         | StringBuilder                         | StringBuffer                           |
+    |-------------------|----------------------------------------|----------------------------------------|
+    | 도입 시기         | JDK 1.5                                | JDK 1.0                                |
+    | 스레드 안전성     | ❌ 비동기 (Thread-unsafe)              | ✅ 동기화됨 (Thread-safe)              |
+    | 동기화            | ❌ 없음                                | ✅ 모든 메서드에 `synchronized` 적용   |
+    | 성능 (단일 스레드)| 빠름                                  | 느림 (불필요한 동기화 오버헤드)       |
+    | 성능 (멀티 스레드)| 데이터 충돌 위험 있음                  | 안전하게 공유 가능                     |
+    | 사용 권장 환경    | 단일 스레드                            | 멀티 스레드                            |
+    | 대표 사용 예시    | 일반적인 문자열 처리 작업              | 스레드 공유 환경에서의 문자열 처리     |
+  + StringBuffer 클래스 내부에 선언된 모든 메서드에 **synchronized** 키워드 사용하고 있음
+    ```java
+    // StringBuffer
+    public synchronized String toString() {
+        if (toStringCache == null) {
+            return toStringCache =
+                    isLatin1() ? StringLatin1.newString(value, 0, count)
+                               : StringUTF16.newString(value, 0, count);
+        }
+        return new String(toStringCache);
+    }
+    
+    public synchronized String substring(int start) {
+        return substring(start, count);
+    }
+    ```
+
+- 성능 비교 (String vs StringBuilder vs StringBuffer)
+  + StringBuilder 와 StringBuffer 비슷 >> String 속도차이가 큼
+  + 멀티 스레드 환경이 아니라면 StringBuilder 멀티 스레드 환경이라면 StringBuufer  tkdyd
+  ```java
+  for (int i = 0; i < n1; i++) str += "a"; // 12초
+  stringBuilder.append("a".repeat(n1)); // 0.11초
+  stringBuffer.append("a".repeat(n1)); // 0.12 초
+  ```
+- 주요 메서드
+  + append, insert, replace, delete, reverse, toString, capacity, ensureCapacity, charAt, substring
+- 추가 팁
+  + capacity(초기 용량)을 예상하여 생성하면 성능 높일 수 있음
+  + 내부적으로 char [] 사용하기에 이보다 커지는 경우 배열 복사가 일어나기에 최대 치를 고려하면 배열 복사하는 코스트를 줄일 수 있음
+  > StringBuilder sb = new StringBuilder(1000); // 초기 용량 설정

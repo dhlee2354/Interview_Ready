@@ -35,10 +35,10 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 - **참조형 타입**
     1. 타입종류
-        - 논리형 : boolean (1byte)
-        - 문자형 : char (2byte)
-        - 정수형 : byte (1byte), short (2byte), int (4byte), long (8byte)
-        - 실수형 : float (4byte), double (8byte)
+       - 클래스 (class)
+       - 인터페이스 (interface)
+       - 배열 (array)
+       - 열거형 (enum)
     2. 특징
         - 기본형 이외의 타입 ( ex) 배열(Array), 열거형(enum), 인터페이스(interface), 클래스(class) )
         - 실제 객체는 **힙(heap)** 에 할당되고, stack에는 메모리 주소가 저장
@@ -363,7 +363,7 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
   ```
 - 공통점
     + | 항목     | 설명                                                                              |
-      |--------|---------------------------------------------------------------------------------|
+          |--------|---------------------------------------------------------------------------------|
       | 패키지    | 둘 다 `java.lang` 패키지에 포함되어 있음                                                    |
       | 상속 구조  | 모두 `AbstractStringBuilder`를 상속                                                  |
       | 가변성    | `String`과 달리 내부 문자열이 변경 가능 (mutable)                                            |
@@ -391,7 +391,7 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 - 차이점
     + | 비교 항목         | StringBuilder                         | StringBuffer                           |
-      |-------------------|----------------------------------------|----------------------------------------|
+          |-------------------|----------------------------------------|----------------------------------------|
       | 도입 시기         | JDK 1.5                                | JDK 1.0                                |
       | 스레드 안전성     | ❌ 비동기 (Thread-unsafe)              | ✅ 동기화됨 (Thread-safe)              |
       | 동기화            | ❌ 없음                                | ✅ 모든 메서드에 `synchronized` 적용   |
@@ -430,6 +430,73 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
     + capacity(초기 용량)을 예상하여 생성하면 성능 높일 수 있음
     + 내부적으로 char [] 사용하기에 이보다 커지는 경우 배열 복사가 일어나기에 최대 치를 고려하면 배열 복사하는 코스트를 줄일 수 있음
   > StringBuilder sb = new StringBuilder(1000); // 초기 용량 설정
+  > 
+
+ ---
+
+### 오버로딩(Overloading) vs 오버라이딩(overriding)
+- **오버로딩**
+    - 같은 클래스 내에서 메서드 이름은 같지만, 매개변수 목록(타입, 개수 또는 순서)이 서로 다른 메서드를 여러 개 정의
+    - 특징
+      1. 컴파일 시점에 호출될 메서드를 결정 → 정적 바인딩(static binding)
+      2. 반환타입만 다른 것은 시그니처가 동일하기 때문에 오버로딩이 아님
+      3. 보통 같은 기능의 변형된 버전을 제공할 때 사용
+      4. 같은 이름으로 여러 종류의 입력을 받는 편의 메서드를 만들 때 사용
+    ```java
+        public class Calculator {
+        public int add(int a, int b) {
+            return a + b;
+        }
+        public double add(double a, double b) {
+            return a + b;
+        }
+        public int add(int a, int b, int c) {
+            return a + b + c;
+        }
+    }
+    
+    // 호출
+    Calculator calc = new Calculator();
+    calc.add(1, 2);       // add(int,int)
+    calc.add(1.5, 2.3);   // add(double,double)
+    calc.add(1, 2, 3);    // add(int,int,int)
+    ```
+  
+  - **오버라이딩**
+      - 상속 관계에서 **자식 클래스가 부모 클래스로부터 물려받은 메서드**를 같은 시그니처(이름·매개변수)로 재정의
+      - 특징
+        1. 런타임 시점에 실제 객체 타입에 따라 호출될 메서드를 결정 → 동적 바인딩(dynamic binding)
+        2. @Override 애노테이션 사용 권장
+        3. **접근 제어자**는 부모보다 좁게 바꾸지 못함, **예외 선언(throws)**도 부모 메서드보다 넓게(더 많은) 선언 불가
+        4. 다형성을 통해 **부모 타입 변수**로 자식 객체의 오버라이드된 메서드를 호출 가능 
+        5. 상속을 활용해 부모 클래스의 기본 동작을 **특정 자식 클래스에 맞춰** 수정하거나 확장할 때 사용
+      ```java
+    class Animal {
+      public void sound() {
+          System.out.println("동물이 웁니다");
+      }
+    }
+    
+    class Dog extends Animal {
+      @Override
+      public void sound() {
+        System.out.println("멍멍!");
+      }
+    }
+
+    class Cat extends Animal {
+      @Override
+      public void sound() {
+        System.out.println("야옹~");
+      }
+    }
+
+    // 호출
+    Animal a1 = new Dog();
+    Animal a2 = new Cat();
+    a1.sound();  // 멍멍!   (Dog.sound)
+    a2.sound();  // 야옹~   (Cat.sound)
+    ```
 
 
 ---

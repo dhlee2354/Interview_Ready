@@ -418,7 +418,7 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 - 성능 비교 (String vs StringBuilder vs StringBuffer)
     + StringBuilder 와 StringBuffer 비슷 >> String 속도차이가 큼
-    + 멀티 스레드 환경이 아니라면 StringBuilder 멀티 스레드 환경이라면 StringBuufer  tkdyd
+    + 멀티 스레드 환경이 아니라면 StringBuilder 멀티 스레드 환경이라면 StringBuffer 사용
   ```java
   for (int i = 0; i < n1; i++) str += "a"; // 12초
   stringBuilder.append("a".repeat(n1)); // 0.11초

@@ -418,7 +418,7 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 - 성능 비교 (String vs StringBuilder vs StringBuffer)
     + StringBuilder 와 StringBuffer 비슷 >> String 속도차이가 큼
-    + 멀티 스레드 환경이 아니라면 StringBuilder 멀티 스레드 환경이라면 StringBuufer  tkdyd
+    + 멀티 스레드 환경이 아니라면 StringBuilder 멀티 스레드 환경이라면 StringBuffer 사용
   ```java
   for (int i = 0; i < n1; i++) str += "a"; // 12초
   stringBuilder.append("a".repeat(n1)); // 0.11초
@@ -545,6 +545,49 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
   + 재사용성 증가 : 모듈화가 잘 되어 있어 다른 프로젝트에서도 코드를 재사용하기 좋습니다.
   + 결합도 감소, 응집도 증가 : 모듈 간의 의존성은 줄어들고, 모듈 내의 요소들은 서로 밀접하게 관련됩니다.
   + 테스트 용이성 증가 : 각 모듈을 독립적으로 테스트하기 쉬워집니다.
+
+
+---
+
+
+### volatile
+- 개념
+  + 사전적 의미로 `휘발성`을 뜻함
+  + 변수의 값이 여러 쓰레드 간에 공유됨을 보장하는 키워드
+  + 메인 메모리와 스레드 로컬 메로리 간의 동기화 문제 해결
+- 필요한 이유?
+  + Java 에선 각 스레드가 자기만의 캐시를 유지함 → 변수 값이 다른 스레드에 반영 안 될 수 있음
+  + 변수 읽기 시 메인 메모리부터 직접 읽어옴
+  + 변수 쓰기 시 메인 메모리에 적용(캐시 패싱)
+- 언제 쓰면 좋을까?
+  + Flag 변수 (true/false) 가 있는 경우
+- ❗주의할 점
+  + 원자성 보장 X
+    * 원자성은 하나의 연산이 중단 없이 단일 동작처럼 수행되는 것
+    ```java
+    private volatile int count = 0;
+    public void increment() {
+        count++;
+    }
+    ```
+    * count++ 는 count 읽기, +1 하기, count 쓰기 3단계로 나뉘기에 여러 쓰레드가 동시 접근 시 값이 꼬일 수 있음
+  + Thread-Safe X
+    * 여러 스레드가 동시에 접근해도 결과가 일관되고 에러 없이 작동하는 상태
+    * 변수의 최신값은 공유되지만 그 값에 대해 경쟁조건은 방지하지 못함
+  + 그럼 어떻게?
+    ```java
+    private volatile int count = 0;
+    public synchronized void increment() {
+        count++;
+    }
+    
+    private AtomicInteger count = new AtomicInteger();
+
+    public void increment() {
+        count.incrementAndGet(); // 원자적으로 증가
+    }
+    ```
+    + volatile + synchronized 를 쓰거나 AtomicInteger 클래스 사용 필요
 
 
 ---

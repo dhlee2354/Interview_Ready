@@ -22,8 +22,11 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + Equals
   + 추상클래스 & 인터페이스
   + StringBuilder & StringBuffer
+  + 오버로딩(Overloading) vs 오버라이딩(overriding)
   + Thread 쓰레드
   + 객체지향 설계의 5가지 원칙(SOLID)
+  + JVM (Java Virtual Machine)
   + volatile 키워드
   + final 키워드
+  + synchronized 키워드
 - ### [Kotlin](./Kotlin)

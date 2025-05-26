@@ -35,10 +35,10 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 - **참조형 타입**
     1. 타입종류
-        - 논리형 : boolean (1byte)
-        - 문자형 : char (2byte)
-        - 정수형 : byte (1byte), short (2byte), int (4byte), long (8byte)
-        - 실수형 : float (4byte), double (8byte)
+       - 클래스 (class)
+       - 인터페이스 (interface)
+       - 배열 (array)
+       - 열거형 (enum)
     2. 특징
         - 기본형 이외의 타입 ( ex) 배열(Array), 열거형(enum), 인터페이스(interface), 클래스(class) )
         - 실제 객체는 **힙(heap)** 에 할당되고, stack에는 메모리 주소가 저장
@@ -363,7 +363,7 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
   ```
 - 공통점
     + | 항목     | 설명                                                                              |
-      |--------|---------------------------------------------------------------------------------|
+          |--------|---------------------------------------------------------------------------------|
       | 패키지    | 둘 다 `java.lang` 패키지에 포함되어 있음                                                    |
       | 상속 구조  | 모두 `AbstractStringBuilder`를 상속                                                  |
       | 가변성    | `String`과 달리 내부 문자열이 변경 가능 (mutable)                                            |
@@ -391,7 +391,7 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 - 차이점
     + | 비교 항목         | StringBuilder                         | StringBuffer                           |
-      |-------------------|----------------------------------------|----------------------------------------|
+          |-------------------|----------------------------------------|----------------------------------------|
       | 도입 시기         | JDK 1.5                                | JDK 1.0                                |
       | 스레드 안전성     | ❌ 비동기 (Thread-unsafe)              | ✅ 동기화됨 (Thread-safe)              |
       | 동기화            | ❌ 없음                                | ✅ 모든 메서드에 `synchronized` 적용   |
@@ -430,6 +430,73 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
     + capacity(초기 용량)을 예상하여 생성하면 성능 높일 수 있음
     + 내부적으로 char [] 사용하기에 이보다 커지는 경우 배열 복사가 일어나기에 최대 치를 고려하면 배열 복사하는 코스트를 줄일 수 있음
   > StringBuilder sb = new StringBuilder(1000); // 초기 용량 설정
+  >
+
+---
+
+### 오버로딩(Overloading) vs 오버라이딩(overriding)
+- **오버로딩**
+    - 같은 클래스 내에서 메서드 이름은 같지만, 매개변수 목록(타입, 개수 또는 순서)이 서로 다른 메서드를 여러 개 정의
+    - 특징
+      1. 컴파일 시점에 호출될 메서드를 결정 → 정적 바인딩(static binding)
+      2. 반환타입만 다른 것은 시그니처가 동일하기 때문에 오버로딩이 아님
+      3. 보통 같은 기능의 변형된 버전을 제공할 때 사용
+      4. 같은 이름으로 여러 종류의 입력을 받는 편의 메서드를 만들 때 사용
+    ```java
+        public class Calculator {
+        public int add(int a, int b) {
+            return a + b;
+        }
+        public double add(double a, double b) {
+            return a + b;
+        }
+        public int add(int a, int b, int c) {
+            return a + b + c;
+        }
+    }
+    
+    // 호출
+    Calculator calc = new Calculator();
+    calc.add(1, 2);       // add(int,int)
+    calc.add(1.5, 2.3);   // add(double,double)
+    calc.add(1, 2, 3);    // add(int,int,int)
+    ```
+  
+  - **오버라이딩**
+      - 상속 관계에서 **자식 클래스가 부모 클래스로부터 물려받은 메서드**를 같은 시그니처(이름·매개변수)로 재정의
+      - 특징
+        1. 런타임 시점에 실제 객체 타입에 따라 호출될 메서드를 결정 → 동적 바인딩(dynamic binding)
+        2. @Override 애노테이션 사용 권장
+        3. **접근 제어자**는 부모보다 좁게 바꾸지 못함, **예외 선언(throws)**도 부모 메서드보다 넓게(더 많은) 선언 불가
+        4. 다형성을 통해 **부모 타입 변수**로 자식 객체의 오버라이드된 메서드를 호출 가능 
+        5. 상속을 활용해 부모 클래스의 기본 동작을 **특정 자식 클래스에 맞춰** 수정하거나 확장할 때 사용
+      ```java
+    class Animal {
+      public void sound() {
+          System.out.println("동물이 웁니다");
+      }
+    }
+    
+    class Dog extends Animal {
+      @Override
+      public void sound() {
+        System.out.println("멍멍!");
+      }
+    }
+
+    class Cat extends Animal {
+      @Override
+      public void sound() {
+        System.out.println("야옹~");
+      }
+    }
+
+    // 호출
+    Animal a1 = new Dog();
+    Animal a2 = new Cat();
+    a1.sound();  // 멍멍!   (Dog.sound)
+    a2.sound();  // 야옹~   (Cat.sound)
+    ```
 
 
 ---
@@ -545,6 +612,43 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
   + 재사용성 증가 : 모듈화가 잘 되어 있어 다른 프로젝트에서도 코드를 재사용하기 좋습니다.
   + 결합도 감소, 응집도 증가 : 모듈 간의 의존성은 줄어들고, 모듈 내의 요소들은 서로 밀접하게 관련됩니다.
   + 테스트 용이성 증가 : 각 모듈을 독립적으로 테스트하기 쉬워집니다.
+
+---
+
+### JVM (Java Virtual Machine)
+- 자바 바이트코드(.class 파일)를 실행하는 가상의 컴퓨터(런타임)
+- 물리적 OS나 하드웨어와 무관하게 **한번 작성하면 어디서나 실행**
+- 바이트코드를 실행하고, 메모리를 관리하며, 플랫폼 독립성과 안정성을 제공하는 자바 프로그램의 **심장** 역할
+- 역활
+    - 자바 컴파일러가 생성한 바이트코드 기계어로 변환해 실행
+    - 메모리 관리 : 힙(객체), 스택(메서드 호출), 메타스페이스(클래스 정보) 등을 할당 또는 회수
+    - 가비지 컬렉션(GC) : 더 이상 사용되지 않는 객체를 자동으로 정리
+    - JIT(Just-In-Time) 컴파일 : 자주 쓰이는 바이트코드를 네이티브 코드로 변환해 성능 최적화
+- JVM 내부구조
+    1. 클래스 로더 (Class Loader)
+        - .class 파일을 읽어 메모리에 올리고, 의존 클래스로도 로딩
+    2. 런타임 데이터 영역
+        - 메소드 영역(Method Area / MetaSpace) : 클래스 구조, 상수풀, static 변수
+        - 힙(Heap) : new로 생성된 객체
+        - 스택(Stack) : 각 스레드별 메서드 호출 정보와 지역변수
+        - PC 레지스터 : 현재 실행중인 바이트코드 주소
+        - 네이티브 메소드 영역(Native Method Stack) : 네이티브 코드 호출 정보
+    3. 실행 엔진 (Excusion Engine)
+        - 인터프리터 : 바이트코드를 한 줄씩 해석
+        - JIR 컴파일러 : 반복 실행되는 코드를 네이티브로 변환
+        - GC 모듈 : 힙에서 사용하지 않는 객체 탐지 및 정리
+- JVM 동작 흐름
+    1.	소스 코드(.java)를 javac로 컴파일 → 바이트코드(.class)
+    2.	클래스 로더가 바이트코드 로딩
+    3.	**바이트코드 검증(Bytecode Verifier)** 으로 안전성 검사
+    4.	실행 엔진에서 인터프리트 또는 JIT 컴파일 후 실행
+    5.	런타임에 필요 시 GC로 메모리 정리
+- JVM 장점
+    - 플랫폼 독립성 : "Write Once, Run Anywhere"
+    - 안정성 : 바이트코드 검증으로 잘못된 메모리 접근 방지
+    - 자동 메모리 관리 : 개발자가 직접 free/delete 하지 않아도 됨
+    - 성능 최적화 : JIT, GC 튜닝으로 고속 실행이 가능
+
 
 
 ---
@@ -695,3 +799,121 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
   + 불변성 확보 : final 변수를 사용하여 객체의 상태를 변경 불가능하게 만들 수 있습니다.
   + 보안 강화 : final 클래스나 메서드를 사용하여 의도치 않은 변경이나 확장을 막아 시스템의 보안을 강화할 수 있습니다.
   + 설계 명확성 : final 키워드를 사용함으로써 해당 요소가 변경되거나 확장되지 않음을 명시적으로 표현하여 코드의 의도를 더 명확하게 전달 할 수 있습니다.
+
+### synchronized
+- 멀티스레드 환경에서 동시성 제어(concurrency control)를 위해 사용
+- 공유 자원(예: 객체 필드, 컬렉션 등)에 여러 스레드가 접근할 때 발생할 수 있는 경쟁 상태(race condition), 데이터 불일치 등을 방지
+1. 기본 개념
+    - 모니터 락(monitor lock)
+        - 각 객체가 모니터(lock)를 하나씩 가지고 있음
+        - 스레드는 synchronized가 선언된 영역에 들어가기 전 해당 객체의 모니터를 획득해야 하고, 끝나면 해제
+    - 상호 배제(mutual exclusion)
+        - 한 번에 단 하나의 스레드만 락을 획득하므로, 동기화된 영역 내부에서는 다른 스레드가 동시에 실행되지 않음
+2. 사용 방법
+    1. 메서드 단위 동기화
+        - 인스턴스 메서드에 붙이면, this 객체의 모니터를 사용
+        - 동일 인스턴스의 다른 synchronized 메서드와 상호 배제
+    ```java
+    public class Counter {
+        private int count = 0;
+
+        // 인스턴스 메서드 전체를 동기화
+        public synchronized void increment() {
+            count++;
+        }
+
+        public synchronized int getCount() {
+            return count;
+        }
+    }
+    ```
+   2. 블록 단위 동기화
+        - 유연성: 동기화 범위를 좁혀서 성능 최적화
+        - 원하는 락 객체(일반 Object, 클래스 객체 등) 지정 가능
+   ```java
+    public class Counter {
+        private int count = 0;
+        private final Object lock = new Object();
+
+        public void increment() {
+            // 특정 객체(lock)만 동기화
+            synchronized (lock) {
+                count++;
+            }
+        }
+    }
+    ```
+   3. static synchronized
+        - 클래스 전체(모든 인스턴스)에서 하나의 락
+        - static synchronized 메서드는 Util.class 객체를 락으로 사용
+   ```java
+    public class Util {
+        private static int value = 0;
+
+        // 클래스 레벨 모니터를 사용 (Util.class)
+        public static synchronized void doSomething() {
+            value++;
+        }
+    }
+    ```
+3. 재진입성
+```java
+public synchronized void methodA() {
+    methodB();  // 같은 스레드가 다시 synchronized를 진입해도 블록됨 없이 실행
+}
+
+public synchronized void methodB() {
+    // ...
+}
+ ```
+4. 주의사항 및 성능고려
+    - 과도한 블록 범위
+        - 불필요하게 큰 범위를 동기화하면 성능 저하
+        - 가능한 최소 범위로 좁힐 것
+    - 데드락(Deadlock)
+        - 서로 다른 락을 획득하려고 할 때 교착 상태 발생
+    ```java
+    synchronized(lockA) {
+        synchronized(lockB) { … }
+    }
+    // 다른 스레드가 lockB 먼저, 그 다음 lockA를 획득하려고 하면 교착 발생
+     ```
+   - 락 경합(Lock Contention)
+        - 락을 획득하려는 스레드가 많으면 대기 시간이 늘어남
+        - 필요 시 java.util.concurrent 패키지의 ReentrantLock, ReadWriteLock 등을 고려
+5. ex )
+```java
+public class SafeCounter {
+    private int count = 0;
+
+    public void increment() {
+        synchronized (this) {   // 또는 synchronized 메서드
+            count++;
+        }
+    }
+
+    public int getCount() {
+        synchronized (this) {
+            return count;
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        SafeCounter counter = new SafeCounter();
+        Runnable task = () -> {
+            for (int i = 0; i < 1000; i++) {
+                counter.increment();
+            }
+        };
+
+        Thread t1 = new Thread(task);
+        Thread t2 = new Thread(task);
+        t1.start(); t2.start();
+        t1.join(); t2.join();
+
+        System.out.println("최종 count: " + counter.getCount());
+        // 동기화 없으면 2000이 안 나올 수 있지만,
+        // synchronized 덕분에 항상 2000 출력
+    }
+}
+```

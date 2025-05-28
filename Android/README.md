@@ -51,3 +51,52 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 
 ---
+
+
+### Fragment 생명주기
+- 정의
+  + Fragment는 자체적인 생명주기를 가지는 UI 구성요소로, Activity 내에서 모듈식 UI를 구축하는 데 사용 됩니다.
+  + Fragment의 생명주기를 이해하는 것은 리소스를 올바르게 관리하고 사용자 경험을 향상시키는 데 매우 중요합니다.
+
+- onAttach()
+  + Fragment가 Activity에 연결될 때 호출됩니다.
+  + 이 시점에서 Fragment는 Activity의 Context를 얻을 수 있습니다.
+  + 주로 Activity와 통신을 위한 인터페이스를 초기화하거나, Activity로부터 필요한 데이터를 전달받는 작업을 수행합니다.
+
+- onCreate()
+  + Fragment가 생설될 때 호출됩니다.
+  + Fragment의 핵심 로직을 초기화하는 작업을 수행합니다.
+
+- onCreateView()
+  + Fragment의 UI 레이아웃을 생성하고 반환할 때 호출됩니다.
+  + XML 레이아웃 파일을 inflate하여 Fragment의 뷰 계층 구조를 만듭니다.
+  + 반환된 뷰가 화면에 표시 됩니다.
+
+- onViewCreated()
+  + onCreateView()에서 반환된 뷰가 완전히 생성된 후 호출 됩니다.
+  + 이 시점부터 Fragment의 뷰에 안전하게 접근하여 초기화 작업을 수행 할 수 있습니다.
+
+- onStart()
+  + Fragment가 사용자에게 보이기 시작할 때 호출됩니다.
+
+- onResume()
+  + Fragment가 사용자와 상호작용할 수 있는 상태가 될때 호출됩니다.
+
+- onStop()
+  + Fragment가 더 이상 사용자에게 보이지 않게 될 때 호출 됩니다.
+  + 화면에 보이지 않는 동안 필요하지 않은 리소스를 해제합니다.
+
+- onSaveInstanceState()
+  + Fragment의 상태가 예기치 않게 소멸 될 가능성이 있을 때, 현재 상태를 저장하기 위해 호출 됩니다.
+  + Bundle 객체에 저장할 데이터를 넣어두면, 나중에 onCreate(), onCreateView(), onViewCreated()에서 해당 Bundle을 통해 상태를 복원할 수 있습니다.
+
+- onDestoryView()
+  + Fragment와 관련된 뷰가 제거될 때 호출됩니다.
+
+- onDestroy()
+  + Fragment가 완전히 소멸될 때 호출됩니다.
+  + Fragment의 모든 리소스를 정리하고, 백그라운드 스레드를 중지하는 등의 최종 정리 작업을 수행합니다.
+  + 이후 해당 Fragment의 인스턴스는 더 이상 사용되지 않습니다.
+
+- onDetach()
+  + Fragment가 Activity와의 연결이 끊어질 때 호출됩니다.

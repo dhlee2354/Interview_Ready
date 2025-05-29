@@ -100,3 +100,15 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 - onDetach()
   + Fragment가 Activity와의 연결이 끊어질 때 호출됩니다.
+
+- Cold Start
+  + 앱이 완전히 종료된 상태에서 처음 실행할 때 입니다.
+  + `onAttach()` → `onCreate()`→ `onCreateView()`→ `onViewCreated()`→ `onStart()`→ `onResume()`
+
+- Warm Start
+  + 앱의 프로세스는 살아있지만, Activity가 메모리에서 제거되었거나,백그라운에 있다가 다시 시작될 때 입니다.
+  + `onStart()`→ `onResume()`
+
+- Hot Start
+  + 앱의 프로세스와 Activity가 모두 메모리에 살아있고, 단순히 화면의 전면으로 다시 가져오는 경우 입니다.
+  + `onResume()`

@@ -90,7 +90,7 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
   + Fragment의 상태가 예기치 않게 소멸 될 가능성이 있을 때, 현재 상태를 저장하기 위해 호출 됩니다.
   + Bundle 객체에 저장할 데이터를 넣어두면, 나중에 onCreate(), onCreateView(), onViewCreated()에서 해당 Bundle을 통해 상태를 복원할 수 있습니다.
 
-- onDestoryView()
+- onDestroyView()
   + Fragment와 관련된 뷰가 제거될 때 호출됩니다.
 
 - onDestroy()

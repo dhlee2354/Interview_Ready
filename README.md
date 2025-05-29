@@ -16,6 +16,8 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
 ## 📝 Table of Contents
 
 - ### [Android](./Android)
+  + Activity 생명주기
+  + Fragment 생명주기
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -29,4 +31,9 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + volatile 키워드
   + final 키워드
   + synchronized 키워드
+  + OOP(객체 지향 프로그래밍)
+  + 자바 메모리 모델
+  + 자바 메모리 구조
 - ### [Kotlin](./Kotlin)
+  + object 키워드
+  + lateinit & lazy

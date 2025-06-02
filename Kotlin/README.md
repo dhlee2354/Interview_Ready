@@ -135,3 +135,47 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 
 ---
+
+
+### Safe Call / Elvis 연산자
+- 코틀린에서 Safe Call 연산자(?.)와 Elvis 연산자(?:)는 null-safety를 보장하기 위해서 자주 사용되는 두 가지 핵심 연산자 입니다.
+
+- Safe Call 연산자 (?.)
+  + 역할 : 객체가 null일 경우 메서드 호출이나 프로퍼티 접근을 건너뛰고 null을 반환합니다.
+  + NullPointerException을 방지할 수 있습니다.
+
+- 문법
+  ```kotlin
+  val result = someObject?.someMethod()
+  ```
+
+- 예제
+  ```kotlin
+    data class User(val name: String?)
+
+    val user: User? = null
+    val nameLength = user?.name?.length
+    println(nameLength) // 출력: null
+  ```
+  
+- Elvis 연산자 (?:)
+  + 역할 : 좌측 값이 null일 경우 우측의 기본값을 사용합니다.
+  
+- 문법
+  ```kotlin
+  val value = nullableValue ?: defaultValue
+  ```
+
+- 예제
+  ```kotlin
+    val user: User? = null
+    val nameLength = user?.name?.length ?: 0
+    println(nameLength) // 출력: 0
+  ```
+  
+- Safe Call 연산자 + Elvis 연산자 함께 쓰는 예
+  ```kotlin
+    val user: User? = null
+    val nameLength = user?.name?.length ?: 0
+    println(nameLength) // 출력: 0
+  ```

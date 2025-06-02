@@ -136,7 +136,6 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ---
 
-
 ### Safe Call / Elvis 연산자
 - 코틀린에서 Safe Call 연산자(?.)와 Elvis 연산자(?:)는 null-safety를 보장하기 위해서 자주 사용되는 두 가지 핵심 연산자 입니다.
 
@@ -178,4 +177,67 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     val user: User? = null
     val nameLength = user?.name?.length ?: 0
     println(nameLength) // 출력: 0
+  
+    // Android 에서 자주 쓰는 패턴
+    // null이면 return 처리
+    val token = prefs?.getString("token", null) ?: return
   ```
+
+
+---
+
+
+## var vs val
+- 개념
+  + var 변경 가능한 변수 (mutable)
+  + val 변경 불가능한 변수 (immutable)
+- 공통점
+  + | 항목                     | 내용                                    |
+    | ---------------------- | ------------------------------------- |
+    | **둘 다 변수 선언에 사용**      | Kotlin에서 변수를 선언할 때 `var` 또는 `val`을 사용 |
+    | **타입 추론 가능**           | `var name = "John"`처럼 타입 명시 없이 선언 가능  |
+    | **null 가능성, 범위 규칙 동일** | 둘 다 `?`로 nullable 여부 설정 가능, scope는 동일 |
+- 차이점
+  + | 항목             | `var`                              | `val`                                                              |
+    | -------------- | ---------------------------------- | ------------------------------------------------------------------ |
+    | **가변성**        | 값을 변경할 수 있음                        | 최초 할당 이후 값 변경 불가                                                   |
+    | **재할당**        | 가능                                 | 불가능                                                                |
+    | **사용 예시**      | 루프 인덱스, 상태 변화 변수                   | 상수, 변경되지 않는 참조값                                                    |
+    | **컴파일러 처리**    | 매번 수정 가능성 고려                       | 불변성 보장 → 최적화 유리                                                    |
+    | **컬렉션의 내용 변경** | `val`로 선언해도 **내부 요소는 변경 가능** (주의!) | `val list = mutableListOf(1, 2)`는 리스트 요소 변경 가능, 단 `list` 자체 재할당 불가 |
+- 예시
+  + ```kotlin
+    // var: 값 변경 가능
+    var name = "Alice"
+    name = "Bob" // ✅ 가능
+
+    // val: 값 변경 불가능
+    val age = 30
+    // age = 31 // ❌ 컴파일 오류
+
+    // val로 선언된 불편 컬렉션의 내부는 변경 가능
+    val list = listOf(1,2,3)
+    // list 에는 객체를 변경할 수 있는 메소드가 제공되지 않음
+    list = listOf(4,5,6) // ❌ 재할당 불가능
+    
+    // val로 선언된 가변 컬렉션의 내부는 변경 가능
+    val numbers = mutableListOf(1, 2, 3)
+    numbers.add(4) // ✅ 가능
+    // numbers = mutableListOf(5, 6) // ❌ 재할당 불가능
+    ```
+  + val 의 의미는 재할당이 불가능하고 가변 컬렉션의 내부 값의 변경은 가능함
+- 결론
+  + 기본적으로 val 을 사용하고 변수를 만들고 필요한 경우에만 var 사용하는 것이 코틀린 가이드
+  + val이 많을수록 코드 안정성, 스레드 안전성 증가
+  + val 사용 시 **불변객체 지향(immutability)**로 인한 버그 예방 가능
+  + 안드로이드 예
+    ```kotlin
+    class MyViewModel : ViewModel() {
+       private val _uiState = MutableLiveData<UiState>()
+       val uiState: LiveData<UiState> = _uiState  // 외부에는 읽기 전용으로 노출
+    }
+    ```
+    * val을 쓰면 ViewModel의 구조적 명확성(읽기 전용 참조)이 보장됨
+    * 실제 상태 변경은 내부 로직에서만 가능하게 설계 → 클린 아키텍처, MVVM 패턴에서 권장되는 방식
+    * 의도하지 않은 재할당 방지
+    * 상태 추적이 쉬움 → 참조가 고정돼 디버깅, 로깅, 추적이 수월

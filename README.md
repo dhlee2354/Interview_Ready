@@ -18,6 +18,8 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
 - ### [Android](./Android)
   + Activity 생명주기
   + Fragment 생명주기
+  + Android 4대 컴포넌트 (Content Provider & Service)
+  + Android 4대 컴포넌트 (Activity & BroadcastReceiver)
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -37,3 +39,5 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
 - ### [Kotlin](./Kotlin)
   + object 키워드
   + lateinit & lazy
+  + Safe Call and Elvis 연산자
+  + var vs val

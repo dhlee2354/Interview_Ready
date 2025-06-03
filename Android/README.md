@@ -248,3 +248,69 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 
 ---
+
+
+## 4대 컴포넌트 BroadcastReceiver
+- 정의
+  + 시스템 또는 앱에서 발생하는 브로드캐스트 이벤트를 수신하고, 이에 대응하는 코드를 실행하는 컴포넌트
+    * 안드로이드 시스템은 다양한 **이벤트(알람, 네트워크 변화, 부팅 완료 등)**를 브로드캐스트로 보냄
+    * 앱도 커스텀 브로드캐스트를 만들어 보낼 수 있음
+    
+- 특징
+  + | 항목    | 설명                                |
+    | ----- | --------------------------------- |
+    | 실행 방식 | 콜백 함수인 `onReceive()`가 호출되어 처리     |
+    | 생명주기  | 화면 UI 없음. `onReceive()`만 실행되고 종료됨 |
+    | 등록 방식 | 정적 등록 (Manifest), 동적 등록 (코드에서)    |
+    | 목적    | 이벤트 감지 및 간단한 처리를 빠르게 수행           |
+
+- 사용 방법
+  + 정적 등록(Manifest)
+    * ```xml
+      <receiver android:name=".BootReceiver">
+        <intent-filter>
+           <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        </intent-filter>
+      </receiver>
+      ```
+  + 동적 등록(코드 방식)
+    * ```kotlin
+      val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+          Log.d("Receiver", "Battery changed!")
+        }
+      }
+
+      val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+      registerReceiver(receiver, filter)
+      ```
+      1. 앱이 실행 중일 때만 수신 가능
+      2. 주로 Activity, Service 내에서 사용
+
+- 주의사항
+  + onReceive()는 UI 작업 금지 (짧고 빠른 처리만 수행해야 함)
+  + 오래 걸리는 작업은 JobIntentService, WorkManager, ForegroundService 연계 필요
+  + Android 8.0(Oreo) 이상에서는 Manifest 등록 제한이 많아 동적 등록 또는 백그라운드 제한 우회 필요
+
+- 면접 관련 질문
+  + Android 8.0(Oreo) 이후 백그라운드 앱의 정적 브로드캐스트 수신이 제한
+    * 보안과 배터리 최적화
+      1. Manifest 등록한 브로드캐스트 리시버는 일부 시스템 이벤트만 수신할 수 있게 되었고,
+      2. 대부분 앱이 실행 중일 때 동적으로 등록해야 수신 가능
+  + onReceive() 에서 긴 시간의 작업 실행 시?
+    * 내부적으로는 앱 프로세스가 일시적으로 깨워진 상태에서 동작함
+    * 긴 작업을 실행 시 **ANR(Application Not Responding)**이 발생하거나 시스템이 강제로 종료
+  + BroadcastReceiver 대신 사용할 수 있는 대
+    * Android 8.0 이상 JobScheduler, JobIntentService, WorkManager 같은 백그라운드 작업 매니저
+    * LiveData, StateFlow, EventBus 방법 등으로 대체 가능
+  + BroadcastReceiver vs Service
+    * | 항목           | **BroadcastReceiver**                          | **Service**                                             |
+      | ------------ | ---------------------------------------------- | ------------------------------------------------------- |
+      | **목적**       | 이벤트 수신 후 짧은 작업 처리                              | 백그라운드에서 장시간 작업 수행                                       |
+      | **트리거 방식**   | 외부 or 내부에서 **브로드캐스트**로 호출됨 (`sendBroadcast()`) | 명시적으로 **시작(`startService`)** 또는 바인딩(`bindService`)      |
+      | **생명주기**     | `onReceive()` 단 하나, 실행 후 바로 종료                 | `onCreate()` → `onStartCommand()` → `onDestroy()` 등 존재  |
+      | **UI와의 관계**  | UI 없음 / 사용자와 상호작용 X                            | UI 없음 / Activity와는 분리되어 있음                              |
+      | **작업 시간 제약** | **매우 짧아야 함** (몇 초 이내) → 길면 ANR 발생              | 상대적으로 **장시간 작업 가능**                                     |
+      | **실행 상태 유지** | 호출 후 자동 종료됨                                    | 명시적으로 종료되기 전까지 **계속 실행** 가능                             |
+      | **멀티스레드 처리** | 자체 스레드 아님 (메인 스레드에서 동작)                        | 직접 스레드 생성 가능 (`HandlerThread`, `Coroutine`, `Thread` 등) |
+      | **사용 사례**    | 네트워크 상태 변경 감지, 부팅 완료 감지, 앱 내 메시지 처리            | 파일 다운로드, 음악 재생, 알람 대기 등                                 |

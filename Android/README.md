@@ -183,3 +183,134 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
     * 안드로이드 9 버전 이상에서는 포그라운드 서비스 실행시 FOREGROUND_SERVICE 권한이 필요합니다.
   + 서비스는 기본적으로 애플리케이션의 메인 스레드에서 실행됩니다. 따라서 서비스 내에서 CPU를 많이 사용하거나 시간이 오래 걸리는 작업을 직접 수행하면 ANR 오류가 발생할 수 있습니다.
   + 백그라운드 실행 제한 : 최신안드로이드 버전에서는 배터리 수명과 시스템 성능을 위해 백그라운드 서비스 실행에 제한이 강화되었습니다. 따라서 장기 실행 작업에서는 WorkManager와 같은 다른 솔루션을 고려하는 것이 좋습니다.
+
+
+---
+
+
+## 4대 컴포넌트 Activity
+- 정의
+  + 안드로이드에서 하나의 사용자 인터페이스 화면
+  + 사용자와 직접 상호작용하는 컴포넌트이며 UI를 구성하고 앱 흐름을 제어하는 기본 단위
+- 특징
+  + | 항목                     | 내용                                       |
+    | ---------------------- | ---------------------------------------- |
+    | **UI 구성 단위**           | 앱의 화면 하나가 하나의 Activity                   |
+    | **생명주기 존재**            | `onCreate()`부터 `onDestroy()`까지 상태 전환     |
+    | **명시적/암시적 인텐트로 호출 가능** | 다른 Activity나 앱 호출 가능                     |
+    | **Manifest 등록 필수**     | `AndroidManifest.xml`에 선언돼야 실행 가능        |
+    | **백스택 관리**             | `startActivity()` → 이전 Activity는 백스택에 저장 |
+    | **Context 역할 수행**      | 리소스 접근, 시스템 서비스 호출 가능                    |
+- Intent
+  + 명시적(Intent Explicit) 특정 컴포넌트 지정
+    * ```kotlin
+      val intent = Intent(this, DetailActivity::class.java)
+      startActivity(intent)
+      ```
+  + 암시적(Intent Implicit) 작업(Action)에 맞는 컴포넌트 자동 매칭
+    * ```kotlin
+      val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://google.com"))
+      startActivity(intent)
+      ```
+    * 링크를 띄울 수 있는 액션을 OS에서 받아 하단 Chooser 브라우저 목록 표시
+- 면접 관련 질문
+  + Activity 간 데이터 전달 방법?
+    * Activity 간 데이터는 주로 Intent의 Extra를 통해 전달
+    * 복잡한 데이터는 Serializable 또는 Parcelable 객체를 사용하며, 경우에 따라 Bundle을 통해 전달
+  + Activity & Fragment 차이
+    * | 항목      | Activity | Fragment              |
+      | ------- | -------- | --------------------- |
+      | 실행 단위   | 독립 실행 가능 | Activity 내부에서만 실행     |
+      | 생명주기    | 독립적      | Activity 생명주기에 종속     |
+      | 사용 목적   | 전체 화면 구성 | 부분 화면, 동적 UI 구성       |
+      | 재사용성    | 낮음       | 높음                    |
+      | Manager | 시스템이 관리  | `FragmentManager`가 관리 |
+    * Fragment 사용 시 장점
+      1. 메모리 효율성 높음 (View 만 교체 가능 → 가벼움)
+      2. 화면 재사용 용이 (여러 Activity 에서 호출 가능)
+    * Activity는 UI뿐 아니라 자체 Window와 Context를 포함하기에 시스템 차원에서 더 많은 초기화 비용이 발생.
+    * 반면 Fragment는 Activity 위에서 동작하며, View와 Lifecycle만 별도로 관리하므로 생성 비용이 훨씬 가벼움
+  + Activity 에서 메모리 누수 발생 상황?
+    * "Activity는 View, Context 등을 포함하고 있어서, 생명주기와 무관한 참조가 남아 있으면 GC되지 않아 메모리 누수 발생할 수 있음
+      1. 익명 클래스 Handler
+      2. 전역 static 변수에 Context 저장
+      3. 비동기 작업 (예: Retrofit, RxJava) 완료 전에 Activity가 종료됨
+      4. ViewBinding을 onDestroy에서 해제하지 않음 (Fragment도 포함)
+    * 해결 방법
+      1. WeakReference 사용
+      2. lifecycleScope, viewLifecycleOwner.lifecycleScope 활용
+      3. onDestroy()에서 리소스 해제
+  + Activity 화면 회전 시 상태 보존 방법?
+    * 화면 회전 시 Activity는 재생성되므로, 
+      1. **onSaveInstanceState()**를 사용해 데이터를 임시 저장, 
+      2. **onCreate() 또는 onRestoreInstanceState()**에서 복원
+    * ViewModel 사용하여, 구성 변경(Configuration Change) 시에도 데이터를 유지
+
+
+---
+
+
+## 4대 컴포넌트 BroadcastReceiver
+- 정의
+  + 시스템 또는 앱에서 발생하는 브로드캐스트 이벤트를 수신하고, 이에 대응하는 코드를 실행하는 컴포넌트
+    * 안드로이드 시스템은 다양한 **이벤트(알람, 네트워크 변화, 부팅 완료 등)**를 브로드캐스트로 보냄
+    * 앱도 커스텀 브로드캐스트를 만들어 보낼 수 있음
+    
+- 특징
+  + | 항목    | 설명                                |
+    | ----- | --------------------------------- |
+    | 실행 방식 | 콜백 함수인 `onReceive()`가 호출되어 처리     |
+    | 생명주기  | 화면 UI 없음. `onReceive()`만 실행되고 종료됨 |
+    | 등록 방식 | 정적 등록 (Manifest), 동적 등록 (코드에서)    |
+    | 목적    | 이벤트 감지 및 간단한 처리를 빠르게 수행           |
+
+- 사용 방법
+  + 정적 등록(Manifest)
+    * ```xml
+      <receiver android:name=".BootReceiver">
+        <intent-filter>
+           <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        </intent-filter>
+      </receiver>
+      ```
+  + 동적 등록(코드 방식)
+    * ```kotlin
+      val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+          Log.d("Receiver", "Battery changed!")
+        }
+      }
+
+      val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+      registerReceiver(receiver, filter)
+      ```
+      1. 앱이 실행 중일 때만 수신 가능
+      2. 주로 Activity, Service 내에서 사용
+
+- 주의사항
+  + onReceive()는 UI 작업 금지 (짧고 빠른 처리만 수행해야 함)
+  + 오래 걸리는 작업은 JobIntentService, WorkManager, ForegroundService 연계 필요
+  + Android 8.0(Oreo) 이상에서는 Manifest 등록 제한이 많아 동적 등록 또는 백그라운드 제한 우회 필요
+
+- 면접 관련 질문
+  + Android 8.0(Oreo) 이후 백그라운드 앱의 정적 브로드캐스트 수신이 제한
+    * 보안과 배터리 최적화
+      1. Manifest 등록한 브로드캐스트 리시버는 일부 시스템 이벤트만 수신할 수 있게 되었고,
+      2. 대부분 앱이 실행 중일 때 동적으로 등록해야 수신 가능
+  + onReceive() 에서 긴 시간의 작업 실행 시?
+    * 내부적으로는 앱 프로세스가 일시적으로 깨워진 상태에서 동작함
+    * 긴 작업을 실행 시 **ANR(Application Not Responding)**이 발생하거나 시스템이 강제로 종료
+  + BroadcastReceiver 대신 사용할 수 있는 대
+    * Android 8.0 이상 JobScheduler, JobIntentService, WorkManager 같은 백그라운드 작업 매니저
+    * LiveData, StateFlow, EventBus 방법 등으로 대체 가능
+  + BroadcastReceiver vs Service
+    * | 항목           | **BroadcastReceiver**                          | **Service**                                             |
+      | ------------ | ---------------------------------------------- | ------------------------------------------------------- |
+      | **목적**       | 이벤트 수신 후 짧은 작업 처리                              | 백그라운드에서 장시간 작업 수행                                       |
+      | **트리거 방식**   | 외부 or 내부에서 **브로드캐스트**로 호출됨 (`sendBroadcast()`) | 명시적으로 **시작(`startService`)** 또는 바인딩(`bindService`)      |
+      | **생명주기**     | `onReceive()` 단 하나, 실행 후 바로 종료                 | `onCreate()` → `onStartCommand()` → `onDestroy()` 등 존재  |
+      | **UI와의 관계**  | UI 없음 / 사용자와 상호작용 X                            | UI 없음 / Activity와는 분리되어 있음                              |
+      | **작업 시간 제약** | **매우 짧아야 함** (몇 초 이내) → 길면 ANR 발생              | 상대적으로 **장시간 작업 가능**                                     |
+      | **실행 상태 유지** | 호출 후 자동 종료됨                                    | 명시적으로 종료되기 전까지 **계속 실행** 가능                             |
+      | **멀티스레드 처리** | 자체 스레드 아님 (메인 스레드에서 동작)                        | 직접 스레드 생성 가능 (`HandlerThread`, `Coroutine`, `Thread` 등) |
+      | **사용 사례**    | 네트워크 상태 변경 감지, 부팅 완료 감지, 앱 내 메시지 처리            | 파일 다운로드, 음악 재생, 알람 대기 등                                 |

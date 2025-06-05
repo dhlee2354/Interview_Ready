@@ -314,3 +314,107 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
       | **실행 상태 유지** | 호출 후 자동 종료됨                                    | 명시적으로 종료되기 전까지 **계속 실행** 가능                             |
       | **멀티스레드 처리** | 자체 스레드 아님 (메인 스레드에서 동작)                        | 직접 스레드 생성 가능 (`HandlerThread`, `Coroutine`, `Thread` 등) |
       | **사용 사례**    | 네트워크 상태 변경 감지, 부팅 완료 감지, 앱 내 메시지 처리            | 파일 다운로드, 음악 재생, 알람 대기 등                                 |
+
+
+---
+
+
+## PendingIntent
+- 정의
+  + 다른 앱 또는 시스템이 지정된 작업(Intent) 대신 실행할 수 있도록 허가하는 객체
+  + 알림(Notification), 알람(AlarmManager), 위젯(AppWidget), 브로드캐스트 예약 등에 쓰임
+  > Intent 캡슐화하여 나중에 다른 컴포넌트(시스템 또는 외부 앱)가 실행할 수 있도록 위임하는 객체
+
+- 필요한 이유?
+  + 시스템이나 다른 앱이 내 앱의 Context 없이 특정 작업을 수행해야 할 때 사용
+  + AlarmManager, NotificationManager 같은 시스템 서비스는 앱의 Intent를 직접 실행할 수 없음
+  + 즉, 앱이 대신 실행해달라고 요청하는 형태로 감싸서 전달해야 함
+
+- 주요 사용 케이스
+  + | 상황                     | 사용 예                                |
+    | ---------------------- | ----------------------------------- |
+    | 알림 클릭 시 특정 Activity 열기 | `Notification`과 함께 사용               |
+    | 특정 시간에 알림 보내기          | `AlarmManager`에서 예약 시 사용            |
+    | 브로드캐스트 예약              | `PendingIntent.getBroadcast()` 사용   |
+    | 서비스 시작                 | `PendingIntent.getService()` 사용     |
+    | 앱 위젯에서 버튼 클릭 처리        | 위젯의 `RemoteViews`에 PendingIntent 연결 |
+  + PendingIntent 메소드에는 getActivity(), getService() 도 있음
+
+- 생성 방법
+  + ```kotlin
+    // Activity 실행
+    val intent = Intent(context, MyActivity::class.java)
+    val pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+    // Broadcast 실행
+    val intent = Intent(context, MyReceiver::class.java)
+    val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+    // Service 실행
+    val intent = Intent(context, MyService::class.java)
+    val pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+    ```
+
+- 주요 Flag
+  + | 플래그                   | 설명                                            |
+    | --------------------- | --------------------------------------------- |
+    | `FLAG_IMMUTABLE`      | **Intent 내용 변경 불가** (보안 강화, Android 12+에서 필수) |
+    | `FLAG_MUTABLE`        | 시스템이 Intent 내부를 수정할 수 있도록 허용                  |
+    | `FLAG_UPDATE_CURRENT` | 같은 PendingIntent가 있으면 업데이트                    |
+    | `FLAG_CANCEL_CURRENT` | 기존 PendingIntent 취소 후 새로 생성                   |
+    | `FLAG_NO_CREATE`      | 이미 존재하는 경우에만 반환, 없으면 null                     |
+    | `FLAG_ONE_SHOT`      |  한 번만 사용되고 나면 자동으로 소멸되도록 설정                  |
+  
+  + (| 또는 or) 연산으로 조합 가능
+    * PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT
+
+- 실무 팁
+  + Android 12(API 31) 이상에서는 FLAG_IMMUTABLE 또는 FLAG_MUTABLE 중 하나를 반드시 명시해야 함
+  + PendingIntent는 시스템에 캐싱되므로 중복 생성 주의
+  + Request Code가 같고, Intent 내용이 같으면 같은 PendingIntent로 간주됨
+  + 보안을 위해 불필요하게 mutable한 Intent는 지양
+
+- 면접 관련 질문
+  + PendingIntent란 무엇이며, 왜 필요한가요?
+  + PendingIntent.FLAG_IMMUTABLE은 언제 사용하나요?
+  + PendingIntent.getActivity()와 getBroadcast()의 차이는?
+
+
+---
+
+
+### Bundle
+- 정의
+  + key-value 쌍으로 데이터를 저장하고 전달하는 데 사용되는 핵심 클래스이며, 다양한 타입의 데이터를 담을 수 있습니다.
+
+- Activity, Fragment 간 데이터 전달
+  + Intent 객체에 Bundle을 담아 다른 Activity로 데이터를 전달할 수 있습니다.
+  + Fragment를 생성할 때 arguments로 Bundle을 전달하여 초기 데이터를 넘겨줄 수 있습니다.
+
+- Activity, Fragment 상태 저장 및 복원
+  + 화면 회전과 같이 Activity나 Fragment가 시스템에 의해 재생성될때, onSaveInstanceState 콜백 메서드를 통해 현재 상태를 Bundle에 저장할 수 있습니다.
+  + 이후 onCreate나 onRestoreInstanceState 또는 onCreateView(), onViewCreated()에서 저장된 Bundle을 받아 상태를 복원할 수 있습니다.
+
+- Service와 데이터 교환
+  + Service에 데이터를 전달하거나 Service로부터 결과를 받을 때 Bundle을 사용할 수 있습니다.
+
+- 다양한 Android 컴포넌트 간 데이터 전달
+  + BroadcastReceiver가 브로드캐스트를 수신할 때 Intent에 포함된 Bundle을 통해 데이터를 받을 수 있습니다.
+  + ContentProvider를 통해 데이터를 전달할 때도 Bundle이 사용될 수 있습니다.
+
+- Bundle의 주요 특징
+  + key-value 저장소 : 문자열 키를 사용하여 다양한 타입의 값을 저장합니다.
+  + 다양한 데이터 타입 지원 : String, int, long,boolean, float, double, char, byte, short와 같은 기본 타입뿐만 아니라,
+                         CharSequence, Parcelable, Serializable, 배열, ArrayList 등 다양한 객체 타입을 저장할 수 있습니다.
+  + Parcelable 인터페이스 : Bundle 자체는 Parcelable 인터페이스를 구현합니다. 이는 Bundle 객체가 프로세스 간 통신을 위해 효율적으로 직렬화될 수 있음을 의미합니다.
+                         안드로이드 시스템은 Parcelable을 사용하여 객체를 Intent에 담아 다른 컴포넌트로 전달하거나, 프로세스 경계를 넘어 데이터를 전송합니다.
+  + 데이터 크기 제한 : Bundle을 통해 전달되는 데이터의 크기에는 제한이 있습니다. 너무 큰 데이터를 Bundle에 담아 전달하려고 하면 TranscationTooLargeException이 발생할 수 있습니다.
+                   일반적으로 10KB에서 1MB 미만으로 유지하는 것이 좋습니다. 
+
+- Bundle 사용 시 주의 사항
+  + null 체크 : Bundle에서 값을 꺼낼 때는 해당 키가 존재하지 않거나 값이 null일 수 있으므로, 항상 null체크를 하거나 기본값을 제공하는 함수(예 : getXX(key, defaultValue))를 사용 하는 것이 안전 합니다.
+  + 키 관리 : Bundle에 데이터를 넣고 뺄 때 사용하는 키 문자열은 정확히 일치해야 합니다. 오타를 방지하기 위해 상수로 정의하여 사용하는 것이 좋습니다.
+  + 데이터 타입 일치 : 데이터를 넣을 때 사용한 putType() 메서드와 꺼낼 때 사용한 getType()메서드의 데이터 타입이 일치 해야 합니다.
+  + Serializable vs Parcelable : 복잡한 객체를 Bundle에 담을 때 Serializable이나 Parcelable을 사용할 수 있습니다.
+    * Parcelable : 안드로이드에서 성능이 더 좋도록 특별히 설계되었으므로, 안드로이드 컴포넌트 간 데이터 전달에는 Parcelable 사용이 권장됩니다.
+    * Serializable : 구현이 더 간단하지만 리플렉션을 사용하기 때문에 성능이 상대적으로 느립니다.

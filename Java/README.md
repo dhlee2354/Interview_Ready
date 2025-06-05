@@ -1017,6 +1017,125 @@ public class SafeCounter {
     + 해당 객체의 참조가 다른 스레드에게 공유될때 올바르게 초기화된 값을 볼 수 있도록 보장합니다.
 
 
+    
+---
+
+
+### data class
+- 데이터를 저장하기 위한 용도로 만들어진 클래스로, 데이터를 다룰 때 필요한 여러 기능을 자동으로 제공함으로써 **간결하고 효율적인 코드작성이 가능**
+- 자동으로 생성되는 함수들
+    - toString()
+    - equals() / hashCode()
+    - copy()
+    - componentN()
+```java
+    val user1 = User("철수", 25)
+    val user2 = User1.copy(age = 30)
+
+    println(user1)  // User(name=철수, age=25)
+    println(user2)  // User(name=철수, age=30)
+
+    val (name, age) = user2
+    println(name)   // 철수
+    println(age)    // 30
+```
+- 제약사항
+    - primary constructor에 최소 하나 이상의 파라미터가 있어야 함
+    - open, abstract, sealed, inner 클래스로 선언할 수 없음
+    - 상속은 불가능 (final로 선언 됨)
+
+
+---
+
+
+### 객체 직렬화
+- **Serializable** 
+   - 객체를 **바이트 스트림으로 변환**하여 파일로 저장하거나 네트워크로 전송할 수 있게 하는 기능
+   - 바이트 스트림을 역직렬화(Deserialization)를 통하여 원래 객채로 복원 가능
+
+   - 직렬화 사용 이유
+       - 저장 : 객체 상태를 파일에 저장하거나 DB에 저장
+       - 전송 : 네트워크를 통해 객체를 다른 JVM으로 전달
+       - 캐싱 : 객체를 메모리/디스크에 저장해 재사용
+       - RPC : 원격 호출에서 객체 데이터를 주고 받을때 사용
+
+   - 사용방법
+       1. **Serializable** 인터페이스 구현
+       ```java
+           import java.io.Serializable;
+        
+           public class User implements Serializable {
+               private static final long serialVersionUID = 1L;
+
+               private String name;
+               private int age;
+            
+               // 생성자, getter, setter 등
+           }
+       ```
+       - Serializable은 마커 인터페이스로, 메서드가 하나도 없고 단지 직렬화 대상이라는 표시만 함
+  
+       2. 직렬화 예제 (저장)
+       ```java
+           ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("user.dat"));
+           User user = new User("철수", 25);
+           out.writeObject(user);
+           out.close();
+       ```
+       - 역질렬화 예제 (복원)
+       ```java
+           ObjectInputStream in = new ObjectInputStream(new FileInputStream("user.dat"));
+           User user = (User) in.readObject();
+           in.close();
+       ```
+   - 주의할 점
+       - serialVersionUID : 클래스 버전 관리를 위한 고유 ID (버전이 불일치할 경우 오류 발생 가능)
+       - transient 키워드 : 직렬화에서 제외할 필드에 사용 (transient String password;)
+       - static 필드 : 클래스에 속한 값이므로 직렬화 되지 않음
+       - 직렬화 대상 객체의 모든 필드 : 직렬화가 가능해야 함 (안될경우 NotSerializableException 발생)
+
+- **Parcelable** 
+  - 안드로이드에서 객체를 Intent나 Bundle로 전달할 때 사용되는 직렬화 방식
+  ```kotlin
+        val intent = Intent(this, DetailActivity::class.java)
+        intent.putExtra("user", user)   // user는 객체
+  ```
+    - user가 일반 클래스면 안됨 -> Parcelable을 구현해야 넘기기 가능
+  - 예제
+    1. 데이터 클래스 만들기
+    ```kotlin
+        import android.os.Parcelable
+        import kotlinx.parcelize.Parcelize
+        
+        @Parcelize
+        data class User (val name: String, val age: Int) : Parcelable
+    ```
+    2. Intent에 담아서 전달
+    ```kotlin
+        val user = User("철수", 25)
+        val intent = Intent(this, DetailActivity::class.java)
+        
+        intent.putExtra("user", user)
+        startActivity(intent)
+    ```
+    3. 받은 쪽에서 꺼내기
+    ```kotlin
+        val user = intent.getParcelableExtra<User>("user")
+    ```
+- Parcelable vs Serializable
+  
+  | 항목  | Parcelable     | Serializable       |
+          |-----|----------------|--------------------|
+      | 속도  | 빠름 (메모리 직접 처리) | 느림 (리플렉션 기반)       |
+      | 용도  | 안드로이드 앱 전용     | 자바 전반에 사용 가능       |
+      | 코드량 | 많음 (직접 작성)     | 적음 (인터페이스만 붙히면 가능) |
+      | 성능  | 고성능            | 저성능                |
+        
+  
+
+
+
+
 ---
 
 

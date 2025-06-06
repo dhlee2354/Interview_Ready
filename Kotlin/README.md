@@ -305,7 +305,7 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ---
 
-## 타입 캐스팅 
+### 타입 캐스팅 
 - 정의
   + 하나의 타입을 다른 타입으로 변환하는 행위
   + 코틀린의 경우 타입 캐스팅이 **안전성 중심**으로 설계되어 있어 null or classCastException 줄이는 문법 강조
@@ -353,3 +353,30 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
         }
       }
       ```
+
+
+---
+
+
+### data class
+- 데이터를 저장하기 위한 용도로 만들어진 클래스로, 데이터를 다룰 때 필요한 여러 기능을 자동으로 제공함으로써 **간결하고 효율적인 코드작성이 가능**
+- 자동으로 생성되는 함수들
+    - toString()
+    - equals() / hashCode()
+    - copy()
+    - componentN()
+```java
+    val user1 = User("철수", 25)
+    val user2 = User1.copy(age = 30)
+
+    println(user1)  // User(name=철수, age=25)
+    println(user2)  // User(name=철수, age=30)
+
+    val (name, age) = user2
+    println(name)   // 철수
+    println(age)    // 30
+```
+- 제약사항
+    - primary constructor에 최소 하나 이상의 파라미터가 있어야 함
+    - open, abstract, sealed, inner 클래스로 선언할 수 없음
+    - 상속은 불가능 (final로 선언 됨)

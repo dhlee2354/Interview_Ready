@@ -380,3 +380,91 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     - primary constructor에 최소 하나 이상의 파라미터가 있어야 함
     - open, abstract, sealed, inner 클래스로 선언할 수 없음
     - 상속은 불가능 (final로 선언 됨)
+
+
+---
+
+
+### enum 열거형 클래스
+- 정의
+  > 미리 정의된 고정된 상수 집합을 표현할 때 사용하는 열거형 클래스
+
+- 기본 사용법
+  + ```kotlin
+    enum class Direction {
+        NORTH, SOUTH, EAST, WEST
+    }
+    
+    val dir = Direction.NORTH
+    print(dir.name) // "NORTH"
+    print(dir.ordinal) // 0
+    ```
+  + `name`: 문자열
+  + `ordinal`: 순서(0부터 시작)
+    
+- 예제
+  + 생성자와 프로퍼티 사용
+    * ```kotlin
+      enum class HttpsStatus(val code: Int, val desc: String) {
+        OK(200, "Success"),
+        NOT_FOUND(404, "Not Found"),
+        SERVER_ERROR(500, "Internal Server Error")
+      }
+      
+      val status = HttpsStatus.NOT_FOUND
+      println(status.code) // 404
+      println(status.desc) // Not Found
+      ```
+  + 함수 정의도 가능
+    * ```kotlin
+      enum class Operation {
+        PLUS {
+           override fun apply(a: Int, b: Int) = a + b
+        },
+        MINUS {
+           override fun apply(a: Int, b: Int) = a - b
+        };
+
+        abstract fun apply(a: Int, b: Int): Int
+      }
+      
+      Operation.PLUS.apply(5,3).also { println(it) } // 8
+      Operation.MINUS.apply(5,3).also { println(it) } // 2
+      ```
+    * enum 상수마다 서로 달느 동작 구현 가능
+    * abstract 함수 -> 각 상수 오버라이드
+  + when 과 함께 쓰임
+    * ```kotlin
+      fun handleDirection(dir: Direction) = when(dir) {
+        Direction.NORTH -> "Going up"
+        Direction.SOUTH -> "Going down"
+        Direction.EAST  -> "Going right"
+        Direction.WEST  -> "Going left"
+      }
+      ```
+    * 코틀린의 when 은 enum을 exhaustive(가능한 모든 경우를 빠짐없이 다룸) 하게 다룰 수 있어 모든 enum 을 다 처리하면 else 없어도 됨
+  + values() / valueOf()
+    * ```kotlin
+      enum class Direction {
+        NORTH, SOUTH, EAST, WEST
+      }
+      
+      Direction.values().forEach { println(it) } // 전체 enum 출력
+      Direction.valueOf("EAST").also { println(it) } // 문자열 -> enum
+      ```
+  
+- enum vs sealed class
+  + | 항목        | enum class           | sealed class                  |
+    | --------- | -------------------- | ----------------------------- |
+    | 목적        | 고정된 상수 집합            | 계층적인 타입 제한                    |
+    | 런타임 확장    | ❌ 불가능 (상수 고정)        | ✅ 하위 클래스 자유롭게 정의 가능           |
+    | 인스턴스 속성   | 제한적 (상수당 고정 생성자)     | 유연하게 정의 가능                    |
+    | 상태 표현     | 간단한 상태 (예: 방향, 상태코드) | 복잡한 구조적 상태 표현에 유리             |
+    | `when` 사용 | 자동 exhaustive 체크     | exhaustive 하려면 else 필요할 수도 있음 |
+
+- 면접 관련 질문
+  + enum 대신 sealed class 대신 사용하는 건 언제 적절한지?
+    * 상태나 타입이 미리 정의된 값으로 고정되어 있고, 로직이 간단할 때 enum 이 적절
+    * 복잡한 상태 표현은 sealed class 가 적절
+    * enum 동종의 데이터나 상태 묶을 때 적합
+    * sealed class 이종의 타입들을 하나의 계층으로 통합

@@ -385,6 +385,147 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 ---
 
 
+### enum 열거형 클래스
+- 정의
+  > 미리 정의된 고정된 상수 집합을 표현할 때 사용하는 열거형 클래스
+
+- 기본 사용법
+  + ```kotlin
+    enum class Direction {
+        NORTH, SOUTH, EAST, WEST
+    }
+    
+    val dir = Direction.NORTH
+    print(dir.name) // "NORTH"
+    print(dir.ordinal) // 0
+    ```
+  + `name`: 문자열
+  + `ordinal`: 순서(0부터 시작)
+    
+- 예제
+  + 생성자와 프로퍼티 사용
+    * ```kotlin
+      enum class HttpsStatus(val code: Int, val desc: String) {
+        OK(200, "Success"),
+        NOT_FOUND(404, "Not Found"),
+        SERVER_ERROR(500, "Internal Server Error")
+      }
+      
+      val status = HttpsStatus.NOT_FOUND
+      println(status.code) // 404
+      println(status.desc) // Not Found
+      ```
+  + 함수 정의도 가능
+    * ```kotlin
+      enum class Operation {
+        PLUS {
+           override fun apply(a: Int, b: Int) = a + b
+        },
+        MINUS {
+           override fun apply(a: Int, b: Int) = a - b
+        };
+
+        abstract fun apply(a: Int, b: Int): Int
+      }
+      
+      Operation.PLUS.apply(5,3).also { println(it) } // 8
+      Operation.MINUS.apply(5,3).also { println(it) } // 2
+      ```
+    * enum 상수마다 서로 달느 동작 구현 가능
+    * abstract 함수 -> 각 상수 오버라이드
+  + when 과 함께 쓰임
+    * ```kotlin
+      fun handleDirection(dir: Direction) = when(dir) {
+        Direction.NORTH -> "Going up"
+        Direction.SOUTH -> "Going down"
+        Direction.EAST  -> "Going right"
+        Direction.WEST  -> "Going left"
+      }
+      ```
+    * 코틀린의 when 은 enum을 exhaustive(가능한 모든 경우를 빠짐없이 다룸) 하게 다룰 수 있어 모든 enum 을 다 처리하면 else 없어도 됨
+  + values() / valueOf()
+    * ```kotlin
+      enum class Direction {
+        NORTH, SOUTH, EAST, WEST
+      }
+      
+      Direction.values().forEach { println(it) } // 전체 enum 출력
+      Direction.valueOf("EAST").also { println(it) } // 문자열 -> enum
+      ```
+  
+- enum vs sealed class
+  + | 항목        | enum class           | sealed class                  |
+    | --------- | -------------------- | ----------------------------- |
+    | 목적        | 고정된 상수 집합            | 계층적인 타입 제한                    |
+    | 런타임 확장    | ❌ 불가능 (상수 고정)        | ✅ 하위 클래스 자유롭게 정의 가능           |
+    | 인스턴스 속성   | 제한적 (상수당 고정 생성자)     | 유연하게 정의 가능                    |
+    | 상태 표현     | 간단한 상태 (예: 방향, 상태코드) | 복잡한 구조적 상태 표현에 유리             |
+    | `when` 사용 | 자동 exhaustive 체크     | exhaustive 하려면 else 필요할 수도 있음 |
+
+- 면접 관련 질문
+  + enum 대신 sealed class 대신 사용하는 건 언제 적절한지?
+    * 상태나 타입이 미리 정의된 값으로 고정되어 있고, 로직이 간단할 때 enum 이 적절
+    * 복잡한 상태 표현은 sealed class 가 적절
+    * enum 동종의 데이터나 상태 묶을 때 적합
+    * sealed class 이종의 타입들을 하나의 계층으로 통합
+
+
+---
+
+
+### 확장 함수(Extension Function)
+- 정의
+  + 확장 함수는 기존 클래스를 상속하거나 Decorator와 같은 디자인 패턴을 사용하지 않고도 클래스에 새로운 기능을 추가할 수 있게 해주는 강력한 기능입니다.
+  + 마치 원래 그 클래스에 있던 메서드처럼 호출할 수 있습니다.
+
+- 기본 개념
+  + 확장 함수를 선언하려면, 추가하고자 하는 함수의 이름 앞에 수신 객체 타입을 명시합니다.
+  + 수신 객체 타입은 함수를 확장하고자 하는 클래스 또는 인터페이스의 이름 입니다.
+
+- 주요 특징 및 장점
+  + 코드 간결성 및 가독성 향상
+    * 유틸리티 함수들을 특정 클래스와 관련된 것처럼 보이게 하여 코드의 가독성을 높입니다.
+  + 기존 클래스 수정 없이 기능 확장
+    * Java 표준 라이브러리 클래스나 서드파티 라이브러리의 클래스와 같이 직접 수정할 수 없는 클래스에도 새로운 기능을 추가할 수 있습니다.
+  + 정잭 디스패치
+    * 확장 함수는 정적으로 디스패치됩니다. 즉, 호출되는 함수는 변수의 컴파일 타임 타입에 의해 결정되며, 런타임 타입에 의해 결정되지 않습니다.
+    * 이는 오버라이딩과 다르게 동작합니다. 만약 클래스에 멤버 함수와 동일한 시그니처를 가진 확장 함수가 있다면, 항상 멤버 함수가 우선적으로 호출 됩니다.
+  + Null 수신 객체 처리 기능
+    * 확장 함수는 수신 객체가 null일 가능성을 염두에 두고 정의할 수 있습니다.
+  + 스코프 제한
+    * 확장 함수는 일반 함수와 마찬가지로 특정 스코프 내에서만 유효하게 만들 수 있습니다.
+    * 파일 최상단에 선언하거나, 클래스 또는 함수 내부에 선언할 수 있습니다.
+    * 다른 패키지에서 사용하려면 import 해야 합니다.
+
+- 확장 함수 vs 멤버 함수
+  + 캡슐화 : 확장 함수는 클래스 외부에서 정의되므로, 클래스의 private 또는 protected 멤버에는 접근할 수 없습니다. 멤버함수는 클래스의 모든 멤버에 접근 가능 합니다.
+  + 오버라이딩 : 멤버 함수는 서브클래스에서 오버라이드될 수 있지만, 확장 함수는 정적으로 디스패치 되므로 오버라이드 개념이 적용되지 않습니다.
+  + 확장 함수 사용 시점
+    * 기존 클래스에 유틸리티성 기능을 추가하고 싶을 때
+    * 특정 타입에 대한 헬퍼 함수를 정의하여 코드의 가독성을 높이고 싶을 때
+    * 클래스의 핵심 API의 일부는 아니지만, 해당 클래스의 객체를 다룰 때 자주 사용되는 부가적인 기능을 제공하고 싶을 때
+  + 멤버 함수 사용 시점
+    * 클래스의 핵심적인 기능을 구현할 때
+    * 클래스의 내부 상태에 접근해야 할 때
+    * 다형성을 활용하여 하위 클래스에서 동작을 변경할 수 있도록 하고 싶을 때
+
+- 주의사항
+  + 확장 함수는 실제로 클래스의 코드를 변경하는 것이 아닙니다. 단지 컴파일러가 해당 함수를 정적 메서드 호출로 변환해주는 syntactic sugar 입니다.
+  + 너무 많은 확장 함수를 남용하면 코드를 이해하기 어려워질 수 있으므로, 적절한 상황에서 명확한 목적으로 사용하는 것이 좋습니다.
+  + 확장 함수는 코틀린의 유연한 기능 중 하나로 API를 더 깔끔하고 사용하기 쉽게 만드는 데 큰 도움을 줍니다.
+
+- 면접 관련 질문
+  + 확장 함수와 유틸 클래스의 차이점은?
+    * 전통적인 Java 스타일 유틸 클래스는 Utils.method() 형태이지만 코틀린의 확장함수는 obj.method() 형태로 사용 가능하며 가독성이 좋고, IDE 자동 완성도 더 자연스럽게 동작합니다.
+  + 확장 함수 남용 시 단점은?
+    * 정적 바인딩이기 때문에 다형성을 기대하면 안 됩니다.
+    * 프로젝트 전체에 퍼지면 어디서 정의했는지 추적이 어려워질 수 있습니다.
+    * 같은 이름의 확장 함수가 여러 모듈에 정의되면 충돌 가능성도 있습니다.
+
+
+---
+
+
 ### sealed class
 - 상속 가능한 클래스를 같은 **파일 내에서만 정의하도록 제한**한 클래스
 - **컴파일러가 모든 하위 타입을 알고있게 되어**, when 문에서 **타입 분기 처리 안전하게 가능**

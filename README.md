@@ -23,6 +23,9 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + PendingIntent
   + Bundle
   + 직렬화 (Parcelable & Serializable)
+  + Application 클래스 역할
+  + AndroidManifest.xml 역할
+  + Context ?
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -47,3 +50,6 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + 스코프 함수 (let, run, with, apply, also)
   + 타입 캐스팅 (as, as?, is)
   + data class
+  + enum 열거형 클래스
+  + 확장 함수
+  + sealed class

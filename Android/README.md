@@ -418,3 +418,146 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
   + Serializable vs Parcelable : 복잡한 객체를 Bundle에 담을 때 Serializable이나 Parcelable을 사용할 수 있습니다.
     * Parcelable : 안드로이드에서 성능이 더 좋도록 특별히 설계되었으므로, 안드로이드 컴포넌트 간 데이터 전달에는 Parcelable 사용이 권장됩니다.
     * Serializable : 구현이 더 간단하지만 리플렉션을 사용하기 때문에 성능이 상대적으로 느립니다.
+
+
+---
+
+
+### 객체 직렬화
+- **Serializable**
+  - 객체를 **바이트 스트림으로 변환**하여 파일로 저장하거나 네트워크로 전송할 수 있게 하는 기능
+  - 바이트 스트림을 역직렬화(Deserialization)를 통하여 원래 객채로 복원 가능
+
+  - 직렬화 사용 이유
+    - 저장 : 객체 상태를 파일에 저장하거나 DB에 저장
+    - 전송 : 네트워크를 통해 객체를 다른 JVM으로 전달
+    - 캐싱 : 객체를 메모리/디스크에 저장해 재사용
+    - RPC : 원격 호출에서 객체 데이터를 주고 받을때 사용
+
+  - 사용방법
+    1. **Serializable** 인터페이스 구현
+      ```java
+          import java.io.Serializable;
+       
+          public class User implements Serializable {
+              private static final long serialVersionUID = 1L;
+
+              private String name;
+              private int age;
+           
+              // 생성자, getter, setter 등
+          }
+      ```
+    - Serializable은 마커 인터페이스로, 메서드가 하나도 없고 단지 직렬화 대상이라는 표시만 함
+
+    2. 직렬화 예제 (저장)
+      ```java
+          ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("user.dat"));
+          User user = new User("철수", 25);
+          out.writeObject(user);
+          out.close();
+      ```
+    - 역질렬화 예제 (복원)
+      ```java
+          ObjectInputStream in = new ObjectInputStream(new FileInputStream("user.dat"));
+          User user = (User) in.readObject();
+          in.close();
+      ```
+  - 주의할 점
+    - serialVersionUID : 클래스 버전 관리를 위한 고유 ID (버전이 불일치할 경우 오류 발생 가능)
+    - transient 키워드 : 직렬화에서 제외할 필드에 사용 (transient String password;)
+    - static 필드 : 클래스에 속한 값이므로 직렬화 되지 않음
+    - 직렬화 대상 객체의 모든 필드 : 직렬화가 가능해야 함 (안될경우 NotSerializableException 발생)
+
+- **Parcelable**
+  - 안드로이드에서 객체를 Intent나 Bundle로 전달할 때 사용되는 직렬화 방식
+  ```kotlin
+        val intent = Intent(this, DetailActivity::class.java)
+        intent.putExtra("user", user)   // user는 객체
+  ```
+  - user가 일반 클래스면 안됨 -> Parcelable을 구현해야 넘기기 가능
+  - 예제
+    1. 데이터 클래스 만들기
+    ```kotlin
+        import android.os.Parcelable
+        import kotlinx.parcelize.Parcelize
+        
+        @Parcelize
+        data class User (val name: String, val age: Int) : Parcelable
+    ```
+    2. Intent에 담아서 전달
+    ```kotlin
+        val user = User("철수", 25)
+        val intent = Intent(this, DetailActivity::class.java)
+        
+        intent.putExtra("user", user)
+        startActivity(intent)
+    ```
+    3. 받은 쪽에서 꺼내기
+    ```kotlin
+        val user = intent.getParcelableExtra<User>("user")
+    ```
+- Parcelable vs Serializable
+
+  | 항목  | Parcelable     | Serializable       |
+            |-----|----------------|--------------------|
+  | 속도  | 빠름 (메모리 직접 처리) | 느림 (리플렉션 기반)       |
+  | 용도  | 안드로이드 앱 전용     | 자바 전반에 사용 가능       |
+  | 코드량 | 많음 (직접 작성)     | 적음 (인터페이스만 붙히면 가능) |
+  | 성능  | 고성능            | 저성능                |
+
+
+
+---
+
+
+### Application 클래스 역할
+- 정의
+  + 앱 프로세스가 시작될 때 생성되어, 앱 전역에서 사용 가능한 **싱글톤 컨텍스트(Context)**를 제공하는 클래스
+  + onCreate()는 앱이 실행될 때 가장 먼저 호출
+  + 앱이 완전히 종료되기 전까지 인스턴스는 살아있음
+  + 전역 상태 관리, 초기화, 라이브러리 설정 등에 사용
+
+- 주요 역할
+  + | 역할                | 설명                                                             |
+    | ----------------- | -------------------------------------------------------------- |
+    | **전역 Context 제공** | 어떤 컴포넌트에서도 `applicationContext`로 접근 가능                         |
+    | **앱 시작 시 초기화 작업** | DI 초기화, Logger 설정, SDK 초기화 등                                   |
+    | **전역 상태/데이터 관리**  | 로그인 상태, 글로벌 설정, 싱글톤 객체 관리 등                                    |
+    | **생명주기 감지**       | `registerActivityLifecycleCallbacks()`를 통해 Activity 생명주기 추적 가능 |
+    | **공통 처리 추상화**     | 공통 에러 처리, 공통 폰트, 공통 테마 적용 등                                    |
+
+- 사용 방법
+  + MyApp 클래스 생성 및 Application 상속 
+    * ```kotlin
+      class MyApp : Application() {
+         override fun onCreate() {
+           super.onCreate()
+           // 예: Timber 초기화, Hilt, Firebase 등
+         }
+      }
+      ```
+  + AndroidManifest.xml 선언
+    * ```xml
+      <application
+         android:name=".MyApp" >
+      </application>
+      ```
+
+- 주의사항
+  + | 주의점                   | 설명                                    |
+    | --------------------- | ------------------------------------- |
+    | **메모리 누수 주의**         | Activity, Context 등 참조 저장 금지 (GC 안 됨) |
+    | **성능 영향**             | `onCreate()`에서 너무 무거운 작업 금지           |
+    | **Thread-safe 설계 필요** | 전역 변수 접근 시 동시성 문제 고려                  |
+
+- 면접 관련 질문
+  + Application 생성과 소멸 시점?
+    * 앱 프로세스 시작 시 onCreate()가 호출되고, 앱이 완전히 종료될 때 소멸
+  + Application과 Activity의 Context 차이?
+    * Application은 앱 전역의 Context, Activity는 UI에 특화된 Context
+    * Activity UI와 관련된 작업(ViewInflate, Theme 등)은 Application Context 에서 하면 안 됨
+  + 전역 데이터 Application에 저장?
+    * 간단한 설정 or 일시적 정보는 괜찮음
+    * DB나 SharedPreferences가 필요한 복잡한 데이터 별도 관리 권장
+    * 장기 보관은 ViewModel, Repository 등을 사용

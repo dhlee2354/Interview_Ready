@@ -26,6 +26,9 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + Application 클래스 역할
   + AndroidManifest.xml 역할
   + Context ?
+  + Weak/Strong Reference
+  + ANR
+  + DI
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -53,3 +56,6 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + enum 열거형 클래스
   + 확장 함수
   + sealed class
+  + 구조분해선언
+  + inline 키워드
+  + 코틀린 vs Java

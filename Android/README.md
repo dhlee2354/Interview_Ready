@@ -790,3 +790,70 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
     * Strong/Soft/Weak/Phantom 4가지의 참조타입이 존재
     * soft 는 캐시용으로 적합하며 메모리 부족할때만 수거 (LRU캐시처럼 동작)
     * phantom 객체가 finalize 된 이후 추적용으로 쓰임. 리소스 해제 후 처리 작업 추적 용도이나 복잡해서 거의 쓰이질 않음
+
+
+
+---
+
+
+### 의존성
+- 어떤 클래스가 다른 클래스의 기능에 의존하고 있을 경우, 그 다른 클래스가 의존성(Dependency)
+```kotlin
+    class Car {
+        val engine = Engine()
+    }
+    // Car이 Engine에 의존함
+```
+
+- 의존성 주입 (DI)
+  - 의존하는 객체를 클래스 내부에서 직접 만들지 않고 **외부에서 넣어주는 것**
+  - ex)
+    1. 이전 방식 (직접생성 - 나쁨)
+    ```kotlin
+        class Car {
+            val engine = Engine()   // 직접 생성
+        }   
+    ```
+    2. 주입 방식
+    ```kotlin
+        class Car (val engine : Engine)     // 밖에서 넣어줌 
+        // Car은 Engine의 구체적인 생성 방법을 몰라도 됨
+    ```
+- 사용해야하는 이유
+  + | 이유      | 설명                      |
+                      |---------|-------------------------|
+    | 유지보수 용이 | 클래스 간 연결이 약해져서 쉽게 수정 가능 |
+    | 테스트 쉬움  | 테스트 시 가짜(Mock) 객체 주입 가능 |
+    | 확장성     | 코드를 바꾸지 않고 기능 추가 가능     |
+    | 결합도 낮춤  | 클래스 간의 결합도를 줄이고 재사용성 증가 |
+
+- 안드로이드에서 DI가 중요한 이유 ➡ DI가 **객체 생성 책음을 관리**하고 코드 테스트를 쉽게 만들어줌
+  - Context, ViewModel, Repository, UseCase 등 다양한 객체들이 서로 연결되어 있음
+  - 수명 주기가 복잡하고 메모리 누수가 발생할 수 있음
+  - 테스트가 어렵고 환경에 따라 로직이 바뀔 수 있음
+
+- 안드로이드에서 DI 도구
+  + | DI 프레임워크  | 설명                                      |
+                          |-----------|-----------------------------------------|
+    | Hilt      | 구글이 만든 공식 안드로이드 DI 도구 (Dagger 기반, 자동설정) |
+    | Dagger2   | 매우 강력하지만 설정 복잡 (Hilt의 기반이 됨)            |
+    | Koin      | 코틀린 친화적 DSL 기반 DI (간단하고 직관적)            |
+    | Manual DI | 직접 생성자 주입/팩토리 작성 (작은 프로젝트에 적합)          |
+
+- Hilt 예시
+  ```kotlin
+        // Repository 정의
+        class UserRepository @Inject constructor() {
+            fun getUser() : String = "철수"
+        }     
+    
+        // ViewModel에서 주입받기
+        @HiltViewModel
+        class MainViewModel @Inject constructor (private val repository : UserRepository) : ViewModel() {
+            val user = repository.getUser()
+        }
+  
+        // Application 클래스 설정
+        @HiltAndroidApp
+        class MyApp : Application()
+  ```

@@ -765,3 +765,69 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
   + reified 는 왜 inline 함수에서만 사용할 수 있는가?
     * Kotlin의 제네릭은 기본적으로 타입 소거되지만, inline 함수는 컴파일 시 타입을 알고 있으므로 reified로 타입 유지가 가능
     * > reified 는 ㅔ제릭 타입 정보를 런타임에도 유지할 수 있게 해주는 키워드 (단 inline 함수에서만 사용 가능)
+
+
+
+
+---
+
+
+
+### Kotlin & Java
+- 두 언어 모두 JVM에서 실행되는 언어, 안드로이드 개발이나 서버 개발에서 많이 쓰임 
+
+- 공통점
+  + | 항목                 | 설명                                     |
+          |--------------------|----------------------------------------|
+      | JVM 기반             | 둘 다 **Java Virtual Machine**에서 실행 됨    |
+      | Java 라이브러리 사용 가능   | Kotlin은 Java의 모든 API, 라이브러리를 그대로 사용 가능 |
+      | 클래스, 객체, 상속        | 객체지향 언어로서 기본 구조 동일                     |
+      | 쓰레드, 네트워크, 파일 IO 등 | 기본 기능 거의 동일                            |
+      | 안드로이드 개발 가능                   | 둘 다 안드로이드 공식 지원 언어               |
+
+- 차이점
+  + | 항목                 | Java                             | Kotlin                                |
+              |--------------------|----------------------------------|---------------------------------------|
+    | 문법 간결성             | 비교적 장황함                          | 매우 간결함 (`val`, `when`, `dataclass`)   |
+    | Null 안정성           | `NullPointerException` 위험 존재     | 컴파일 단계에서 **null** 체크 지원 (`?`, `?:`)   |
+    | 데이터 클래스            | 직접 `equals`, `hashCode` 등 작성해야 함 | `data class`로 자동 생성                   |
+    | 함수형 프로그래밍          | 람다 지원은 있지만 불편                    | 고차 함수, 람다, `map/filter` 등 자연스러움       |
+    | 확장 함수              | 없음                               | 기존 클래스에 함수 추가 가능 (`String.isEmail()`) |
+    | 스마트 캐스팅            | 수동 형변환 필요                        | `is` 체크 후 자동 캐스팅                      |
+    | 기본 자료형 (Primitive) | `int`, `double` 등 존재             | 모두 객체 타입으로 통합 (`Int`, `double`)       |
+    | 코루틴 지원             | 없음 (외부 라이브러리 필요)                 | 코루틴으로 비동기 쉽게 처리 가능                    |
+    | Null 처리            | 런타임에서 터짐                         | `?`, `!!`, `?:` 로 컴파일 타임에서 경구         |
+
+- 예시
+  1. 변수 선언
+     - java
+     ```java
+        String name = "철수";
+     ```
+     - kotlin
+     ```kotlin
+      val name = "철수"   // 자동 타입 추론
+     ```
+  2. Null 처리
+     - java
+     ```java
+      if (user != null) {
+        System.out.println(user.getName());  
+      }
+     ```
+     - kotlin
+     ```kotlin
+        println(user?.name ?: "이름 없음")
+     ```
+  3. 데이터 클래스
+    - java
+     ```java
+      public class User {
+        String name;
+        int age;
+      }
+     ```
+    - kotlin
+     ```kotlin
+        data class User (val name : String, val age : Int)
+     ```

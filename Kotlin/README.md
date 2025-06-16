@@ -764,7 +764,7 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     * 람다 중 일부만 인라인하고 싶거나, 해당 람다를 다른 곳에 전달해야 할 경우 사용
   + reified 는 왜 inline 함수에서만 사용할 수 있는가?
     * Kotlin의 제네릭은 기본적으로 타입 소거되지만, inline 함수는 컴파일 시 타입을 알고 있으므로 reified로 타입 유지가 가능
-    * > reified 는 ㅔ제릭 타입 정보를 런타임에도 유지할 수 있게 해주는 키워드 (단 inline 함수에서만 사용 가능)
+    * > reified 는 제네릭 타입 정보를 런타임에도 유지할 수 있게 해주는 키워드 (단 inline 함수에서만 사용 가능)
 
 
 
@@ -831,3 +831,53 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
      ```kotlin
         data class User (val name : String, val age : Int)
      ```
+
+
+---
+
+
+### 상속 제어 (open, final, abstract)
+- 정의
+  + 코틀린에서 상속 제어 키워드는 클래스나 함수, 프로퍼티가 상속/재정의 가능한지 명확하게 제어하는 기능
+  + Java 와 기본값이 다르며 코틀린의 안정성과 설계 철학을 보여주는 부분
+
+- 기본 개념 정리
+  + | 키워드        | 의미                             | 기본값 여부            |
+    | ---------- | ------------------------------ | ----------------- |
+    | `final`    | **상속 불가**, 오버라이드 금지            | ✅ Kotlin의 기본값     |
+    | `open`     | **상속 가능**, 오버라이드 허용            | ❌ 명시적으로 선언해야 함    |
+    | `abstract` | 추상 멤버 또는 클래스, **무조건 오버라이드 필요** | ❌ 추상 클래스에서만 사용 가능 |
+
+- 상세 설명
+  + final
+    * 클래스, 메서드, 프로퍼티 기본적으로 `final`
+    * 오버라이드/상속 하려면 명시적으로 `open` or `abstract` 로 풀어야 함
+    * ```kotlin
+      class Animal {
+         fun sound() { println("Animal sound") } // final이 기본
+      }
+      ```
+  + open
+    * 해당 클래스 or 멤버를 상속/재정의 가능하게 만듦
+    * ```kotlin
+      open class Animal {
+         open fun sound() { println("Animal sound") }
+      }
+
+      class Dog : Animal() {
+         override fun sound() { println("Bark!") }
+      }
+      ```
+  + abstract
+    * 클래스 또는 멤버가 추상적이며 하위 클래스에서 반드시 구현해야 함
+    * abstract class 인스턴스화 불가
+
+- 면접 관련 질문
+  + 추상 클래스와 인터페이스의 차이는?
+    * abstract class는 상태(필드)와 구현 메서드를 가질 수 있습니다.
+    * interface는 다중 구현이 가능하며, 일부 구현만 제공할 수 있습니다. (Kotlin에서는 interface도 default method 가능)
+  + data class 에 open or final 키워드 사용가능한가?
+    * data class 기본 적으로 final 이며 open 붙여서 상속 가능하게 만들 수 없음. 붙일 경우 컴파일 에러 발생
+    * 자동 생성되는 메서드 (equals(), hashCode(), copy(), toString() 등) 상속 허용 시 예상치 못한 동작이나 버그 발생 가능성 높아짐
+    * 데이터 클래스는 단일 데이터 컨테이너로서의 목적에 맞춰 설계됨. 객체지향적 확장보다는 `값 기반 비교(value equality)`가 핵심.
+    * 상속이 필요하다면 ? 일반 클래스 또는 composition 으로 써야 함

@@ -29,6 +29,9 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + Weak/Strong Reference
   + ANR
   + DI
+  + WorkManager
+  + DiffUtil
+  + Android 8.0 이후 Broadcast 제한사항 
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -59,3 +62,6 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + 구조분해선언
   + inline 키워드
   + 코틀린 vs Java
+  + 상속 제어 (open, final, abstract)
+  + Range & Progression(.., downTo, step)
+  + 접근제어자 (public, private, protected, internal)

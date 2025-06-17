@@ -999,3 +999,44 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
     * Worker: 동기 방식
     * CoroutineWorker: 코루틴 기반
     * RxWorker: RxJava 기반
+
+
+
+---
+
+
+
+### DiffUtil
+- **RecyclerView의 리스트 데이터가 변경되었을 때, 변경된 부분만 갱신**해주는 유틸리티
+  1. 사용 이유
+    + **기존 방식 (**`notifyDataSetChanged()`**)**
+      ```kotlin
+          adapter.notifyDataSetChanged()  // 리스트 전체를 다시 그림
+      ```
+      * 모든 아이템이 다시 그려짐 (비효율적)
+      * 깜빡임, 스크롤 위치 초기화, 애니메이션 없음
+
+    + **`DiffUtil` 방식**
+       ```kotlin
+           val diffResult = DiffUtil.calculateDiff(diffCallback)
+           diffResult.dispatchUpdatesTo(adapter)
+       ```
+      * 변경된 항목만 새로 그림
+      * 애니메이션 자동 처리
+      * 리스트 스크롤 위치 유지
+  2. 사용 시기
+  + | 조건                            | DiffUtil 사용 권장 여부 |
+          |-------------------------------|-------------------|
+    | RecyclerView에서 데이터 리스트가 자주 바뀜 | ✅ 필요              |
+    | 변경된 항목만 효율적으로 갱신하고 싶음         | ✅ 필요              |
+    | J깜빡임 없는 UI와 부드러운 애니메이션 필요     | ✅ 필요              |
+    | 정적 리스트 (변경 없음)                | ❌ 필요 없음           |
+
+- 면접 예상 질문
+  + DiffUtil이 무엇인가요?
+    * RecyclerView의 데이터를 효율적으로 갱신하기 위한 유틸리티 클래스
+    * 변경된 항목만 감지해 애니메이션과 함께 부분 업데이트 수행
+    * `notifyDataSetChanged()` 대신 사용
+  + DiffUtil 과 notifyDataSetChanged의 차이점이 무엇인가요?
+    * `notifyDataSetChanged()`는 전체 리스트를 다시 그리므로 비효율적
+    * DiffUtil은 변경된 항목만 계산해서 해당 위치에만 업데이트 호출 -> 성능 및 Ux 개선

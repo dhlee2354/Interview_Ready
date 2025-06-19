@@ -921,7 +921,7 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 ### WorkManager
 - 정의
-  + 백그라운드 작업을 안정적으로 실행하기 우히ㅏㄴ Jetpack 라이브러리
+  + 백그라운드 작업을 안정적으로 실행하기 위한 Jetpack 라이브러리
   + 앱 종료 또는 디바이스 재부팅 시 작업 보장되어야 할 때 사용하는 핵심 컴포넌트
 
 - 사용 시점
@@ -1025,12 +1025,12 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
       * 애니메이션 자동 처리
       * 리스트 스크롤 위치 유지
   2. 사용 시기
-  + | 조건                           | DiffUtil 사용 권장 여부 |
-          |------------------------------|-------------------|
+  + | 조건                            | DiffUtil 사용 권장 여부 |
+          |-------------------------------|-------------------|
     | RecyclerView에서 데이터 리스트가 자주 바뀜 | ✅ 필요              |
-    | 변경된 항목만 효율적으로 갱신하고 싶음        | ✅ 필요              |
-    | 깜빡임 없는 UI와 부드러운 애니메이션 필요     | ✅ 필요              |
-    | 정적 리스트 (변경 없음)               | ❌ 필요 없음           |
+    | 변경된 항목만 효율적으로 갱신하고 싶음         | ✅ 필요              |
+    | J깜빡임 없는 UI와 부드러운 애니메이션 필요     | ✅ 필요              |
+    | 정적 리스트 (변경 없음)                | ❌ 필요 없음           |
 
 - 면접 예상 질문
   + DiffUtil이 무엇인가요?
@@ -1040,6 +1040,153 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
   + DiffUtil 과 notifyDataSetChanged의 차이점이 무엇인가요?
     * `notifyDataSetChanged()`는 전체 리스트를 다시 그리므로 비효율적
     * DiffUtil은 변경된 항목만 계산해서 해당 위치에만 업데이트 호출 -> 성능 및 Ux 개선
+
+
+---
+
+
+### 안드로이드 8.0 이후 브로드캐스트 제한사항
+- 개요
+  + Android 8.0부터는 배터리 수명과 시스템 성능을 향상시키기 위해 백그라운드 실행에 대한 제한이 강화되었습니다.
+  + Android 8.0 이전에는 앱이 매니페스트에 브로드캐스트 리시버를 등록해두면, 앱이 실행 중이지 않더라도 시스템이나 다른 앱에서 발생하는 다양한 브로드캐스트를 수신할 수 있었습니다.
+    이는 편리했지만, 많은 앱이 특정 시스템 이벤트에 응답하기 위해 백그라운드에서 깨어나 리소스를 소모하는 원인이 되었습니다.
+    이로 인해 배터리가 빠르게 소모되고 시스템 성능이 저하될 수 있었습니다. 안드로이드 8.0에서는 이러한 문제를 해결하기 위해 매니페스트에 등록된 리시버가 수신할 수 있는 브로드캐스트의 종류를 제한했습니다.
+
+- 핵심 변경 사항
+  + 대부분 암시적 브로드캐스트 수신 불가 : 앱이 Android 8.0 이상을 타겟팅하는 경우, 매니페스트에 등록된 리시버는 더 이상 대부분의 암시적 브로드캐스트를 수신할 수 없습니다.
+  + 명시적 브로드캐스트는 계속 수신 가능 : 매니페스트에 등록된 리시버는 여전히 명시적 브로드캐스트를 수신할 수 있습니다.
+  + 컨텍스트에 등록된 리시버는 계속 동작 : Context.registerReceiver()를 사용하여 동적으로 등록된 리시버는 앱이 활성 상태일 때 암시적 브로드캐스트를 포함한 모든 브로드캐스트를 계속 수신할 수 있습니다.
+
+- 자세한 설명
+  + 제한의 대상
+    * 브로드캐스트 Android 8.0에서 주로 제한되는 것은 암시적 브로드캐스트입니다.
+  + 예시
+    * android.net.conn.CONNECTIVITY_CHANGE (CONNECTIVITY_ACTION): 네트워크 연결 상태가 변경될 때 발생하는 브로드캐스트입니다.
+      Android 7.0 (API 레벨 24)부터 이미 매니페스트 등록이 제한되었지만, Android 8.0에서는 이 제한이 더 광범위하게 적용됩니다.
+    * android.hardware.action.NEW_PICTURE (ACTION_NEW_PICTURE): 새로운 사진이 찍혔을 때 발생하는 브로드캐스트입니다. 이 역시 Android 7.0부터 제한되었습니다.
+
+- 예외적으로 허용되는 암시적 브로드캐스트
+  + 모든 암시적 브로드캐스트가 제한되는 것은 아닙니다. 시스템 운영에 중요하거나, 앱이 특정 기능을 수행하기 위해 반드시 필요한 일부 브로드캐스트는 여전히 매니페스트에 등록된 리시버를 통해 수신할 수 있습니다.
+  + 예외 브로드캐스트의 예
+    * ACTION_BOOT_COMPLETED: 기기가 부팅을 완료했을 때 발생합니다.
+    * ACTION_LOCKED_BOOT_COMPLETED: 직접 부팅(Direct Boot) 모드에서 사용자가 기기를 잠금 해제하기 전에 발생합니다.
+    * SMS/MMS 관련 브로드캐스트 (예: SMS_RECEIVED_ACTION, WAP_PUSH_RECEIVED_ACTION)
+
+- 컨텍스트 등록 리시버의 역할 강화
+  + 매니페스트 등록 리시버의 기능이 제한됨에 따라, 컨텍스트 등록 리시버의 중요성이 커졌습니다.
+  + Context.registerReceiver(): Activity나 Service와 같은 컴포넌트의 컨텍스트를 사용하여 코드 내에서 동적으로 브로드캐스트 리시버를 등록합니다.
+  + 생명주기: 컨텍스트 등록 리시버는 해당 컨텍스트가 유효한 동안에만 브로드캐스트를 수신합니다.
+    예를 들어, Activity 컨텍스트에 등록된 리시버는 Activity가 활성 상태일 때만 동작합니다.
+  + 장점: 앱이 사용자에게 보여지거나 활발하게 사용될 때만 브로드캐스트를 수신하므로, 불필요한 백그라운드 작업을 줄일 수 있습니다.
+
+- 앱 타겟 API 레벨의 중요성
+  + 이러한 브로드캐스트 제한은 기본적으로 앱이 Android 8.0 (API 레벨 26) 이상을 타겟팅할 때 적용됩니다.
+
+- 결론
+  + Android 8.0의 브로드캐스트 제한은 앱의 백그라운드 동작을 최적화하여 사용자 경험을 향상시키기 위한 중요한 변경 사항입니다.
+  + 개발자는 이러한 제한 사항을 이해하고, 앱이 최신 Android 버전에서도 안정적으로 동작하도록 JobScheduler, WorkManager, 컨텍스트 등록 리시버, 포그라운드 서비스 등의 대안을 적극적으로 활용해야 합니다.
+  + 이는 배터리 효율성을 높이고 시스템 리소스 사용을 최적화하는 데 기여합니다.
+
+- 면접 예상 질문
+  + Android 8.0이상에서 브로드캐스트 관련 제한사항은 무엇인가요?
+    * 암시적 브로드캐스트의 정적 등록제한
+    * 백그라운드 앱은 브로드캐스트 수신 제한
+    * 명시적 브로드캐스트나 런타임 등록 권장
+    * 배터리 최적화 및 성능 향상을 위한 정책 변화
+  + 암시적 브로드캐스트와 명시적 브로드캐스트의 차이점은?
+    * 암시적 : 특정 수신자를 지정하지 않고 Intent 필터에 따라 시스템이 전달
+    * 명시적 : setComponent() 또는 setPackage()로 특정 리시버 지정
+    * Android 8.0부터는 명시적 브로드캐스트 권장
+
+
+---
+
+
+### SharedPreferences & DataStore
+- SharedPreferences
+  + 작은 양의 key-value 형태 데이터를 로컬에 저장할 수 있도록 제공되는 기본 저장 API
+  + 주로 로그인 정보, 앱 설정, 토글 상태 등 간단한 데이터를 저장하는데 사용
+  + 핵심특징
+    * XML 파일 기반 저장
+    * 동기적 or제한적인 비동기 방식 (apply())
+    * 앱 재시작 후에도 데이터 유지됨 (영속성)
+    * Thread-safe 보장 없기에 다중 접근 시 위험
+    * 복잡한 데이터 구조 저장에 부적합
+  + Sample Code
+    * ```kotlin
+      // 데이터 쓰기
+      val prefs = context.getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
+      prefs.edit {
+        putString("userName", "james")
+        .putBoolean("isLogin", true)
+      }
+      
+      // 데이터 읽기
+      val username = prefs.getString("userName", null)
+      val isLoggedIn = prefs.getBoolean("isLogin", false)
+      ```
+
+- DataStore
+  + Jetpack에서 제공하는 최신 데이터 저장 솔루션으로, 비동기 처리와 타입 안전성을 갖춘 Key-Value 저장 방식
+  + SharedPreferences의 단점을 보완하고, Flow 및 Coroutine을 기반으로 설계
+  + 핵심 특징
+    * 코루틴 기반 비동기 저장
+    * Flow 통한 실시간 데이터를 감지 및 수집
+    * 두 종류 제공
+      1. `Preferences DataStore`: Key-Value 저장
+      2. `Proto DataStroe`: 구조화된 커스텀 객체 저장 (protobuf 기반)
+    * 스레드 안전 + ANR 방지
+    * JetPack 공식 권장 방식
+  + Sample Code
+    * 의존성 추가 `implementation("androidx.datastore:datastore-preferences:1.0.0")`
+    * ```kotlin
+      class UserPreferencesRepository(private val context: Context) {
+        // 초기 설정
+        private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_settings")
+
+        // 키 정의
+        object UserPreferencesKeys {
+          val USERNAME = stringPreferencesKey("userName")
+          val IS_LOGIN = booleanPreferencesKey("isLogin")
+        }
+
+        val userData: Flow<Pair<String?, Boolean>> = context.dataStore.data
+          .map { prefs ->
+            val username = prefs[UserPreferencesKeys.USERNAME]
+            val isLoggedIn = prefs[UserPreferencesKeys.IS_LOGIN] ?: false
+            username to isLoggedIn
+        }
+
+        suspend fun saveUser(username: String, isLoggedIn: Boolean) {
+          context.dataStore.edit { prefs ->
+            prefs[UserPreferencesKeys.USERNAME] = username
+            prefs[UserPreferencesKeys.IS_LOGIN] = isLoggedIn
+          }
+        }
+
+        suspend fun clearUser() {
+          context.dataStore.edit { prefs ->
+            prefs.clear()
+          }
+        }
+      }
+      ```
+
+- 비교
+  + | 항목            | SharedPreferences | DataStore             |
+    | ------------- | ----------------- | --------------------- |
+    | 저장 구조         | Key-Value         | Key-Value / Proto 구조  |
+    | 저장 방식         | 동기 / 제한적 비동기      | 완전 비동기 + Coroutine 기반 |
+    | 데이터 접근 방식     | 직접 접근             | Flow (Reactive)       |
+    | 스레드 안전성       | ❌ 보장 안됨           | ✅ 보장됨                 |
+    | 타입 안정성        | ❌                 | ✅ (특히 ProtoDataStore) |
+    | 사용 용도         | 간단 설정값, 플래그 등     | 동기화 필요, 실시간 반응 등      |
+    | Jetpack 권장 여부 | ❌ (구식 API)        | ✅ (공식 권장 방식)          |
+
+- 면접 관련 질문
+  + SharedPreferences와 DataStore 중 어떤 것을 사용?
+    * 프로젝트에 Coroutine과 Flow를 사용하고 있고, 데이터 안정성과 실시간 반응성이 중요하다면 DataStore가 적합
+    * SharedPreferences는 마이그레이션 전 레거시 앱에서 빠르게 구현할 때는 유용하나 유지보수와 확장성 측면에서 DataStore가 더 좋음
 
 
 

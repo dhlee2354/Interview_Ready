@@ -1113,6 +1113,156 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 ---
 
 
+### reified & 제네릭
+- 정의
+  + reified
+    * `구체화된` 컴파일된 코드 안에서 타입 T가 지워지지 않고 유지됨을 의미
+    * 코틀린 제네릭 타입 파라미터를 런타임에 사용할 수 있게 해주는 키워드
+    * `inline` 함수의 타입 파라미터에서만 사용 가능하며 
+    * 일반적으로 불가능한 T::class, T::class.java, is T, as T 같은 표현 사용 가능
+  + 제네릭
+    * 클래스나 함수가 타입에 의존하지 않고 재사용성 있게 동작할 수 있게 해줌
+    * 제네릭은 런타임 시점 타입 정보가 지워짐. 이를 타입 소거라고 부름 (T::class, T::class.java 같은 작업 불가)
+    * ```kotlin
+      fun <T> printItem(item: T) {
+        println(item)
+      }
+      ```
+    * 문제점은 일반 제네릭은 런타임 타입을 알 수 없음
+    * ```kotlin
+      fun <T> getTypeClass(): Class<T> {
+        return T::class.java // compile error cannot use 'T' as reified type parameter
+      }
+      
+      inline fun <reified T> getTypeClass(): Class<T> {
+        return T::class.java
+      }
+      ```
+
+- 활용 방안
+  + JSON 파싱 with Gson
+    * ```kotlin
+      inline fun <reified T> parseJson(json: String): T {
+        return Gson().fromJson(json, T::class.java)
+      }
+      
+      val user: User = parseJson(jsonString)
+      ```
+    * reified 없으면 TypeToken<T>() 같이 우회하는 복잡한 코드 필요
+  + 타입 검사
+    * ```kotlin
+      inline fun <reified T> isOfType(value: Any): Boolean {
+        return value is T
+      }
+      
+      val result = isOfType<String>("Hello") // true
+      ```
+  + ViewModel Factory in Android
+    * ```kotlin
+      inline fun <reified VM : ViewModel> createViewModel(): VM {
+        return ViewModelProvider(this).get(VM::class.java)
+      }
+      ```
+      
+- 정리
+  + | 상황                             | `reified` 필요 여부 |
+    | ------------------------------ | --------------- |
+    | 런타임에 타입 검사 (`is`, `as`)        | ✅ 필요            |
+    | `T::class`, `T::class.java` 사용 | ✅ 필요            |
+    | 단순 타입 재사용, 타입 전달 X             | ❌ 불필요           |
+  + 제네릭은 컴파일 시점에만 타입 정보를 가짐 → 런타임엔 지워짐
+  + reified는 이 타입 정보를 런타임까지 유지하게 함
+  + inline 함수에서만 사용 가능
+  + 안드로이드에서 Gson, ViewModel, Retrofit 등과 함께 자주 활용됨
+
+- 면접 관련 질문
+  + reified 키워드 언제 왜 사용?
+    * reified는 제네릭 타입의 런타임 타입 정보를 유지하고 싶을 때 사용
+    * 코틀린의 일반 제네릭은 타입 소거 때문에 런타임에 T::class, is T 같은 연산이 불가능
+    * reified를 사용하면 이런 제약을 우회할 수 있음 (단, reified는 inline 함수에서만)
+    * 예로 Gson 파싱, 타입 필터링, ViewModelFactory 로 뷰 모델 생성 시
+  + 왜 reified는 inline 함수에서만 사용?
+    * reified는 타입 정보를 런타임까지 보존해야 하므로, 컴파일 시점에 해당 타입이 코드에 구체적으로 삽입 
+    * inline 함수는 컴파일 시점에 함수 본문이 호출된 위치에 직접 복사되기에 제네릭 타입도 실제 타입으로 치환
+    * 이 구조 덕분에 T::class, is T 같은 코드가 가능해짐
+    * 일반 함수는 이 치환이 일어나지 않기 때문에 reified를 사용 불가
+
+
+---
+
+
+### typealias
+- 정의
+  + typealias는 기준 타입에 새로운 이름을 부여하는 기능입니다.
+
+- 기본 사용법
+  + typealias 키워드를 사용하여 새로운 이름과 기존 타입을 연결합니다.
+  + ```kotlin
+    typealias Name = String
+    typealias UserList = List<User>
+    typealias ClickListener = (View) -> Unit
+    ```
+    
+- typealias를 사용하는 이유 및 장점
+  + 가독성향상 : 복잡하거나 긴 타입 이름을 의미 있는 이름으로 대체하여 코드를 더 쉽게 이해할 수 있도록 합니다.
+
+- 복잡한 제네릭 타입 간소화
+  + 제네릭을 사용하는 복잡한 타입을 더 짧고 관리하기 쉬운 이름으로 만들 수 있습니다.
+  + ```kotlin
+    // typealias 사용 전
+    val complexFunction: (List<Map<String, Set<Int>>>, (String) -> Boolean) -> List<String> = { data, predicate ->
+    // ...
+    emptyList()
+    }
+
+    // typealias 사용 후
+    typealias DataFilter = (String) -> Boolean
+    typealias ComplexData = List<Map<String, Set<Int>>>
+    typealias DataProcessor = (ComplexData, DataFilter) -> List<String>
+
+    val simpleFunction: DataProcessor = { data, predicate ->
+    // ...
+    emptyList()
+    }
+    ```
+    
+- 함수 타입 명명
+  + 특히 콜백 함수나 고차함수에서 함수 타입을 명확한 이름으로 정의하여 코드의 의도를 더 잘 전달할 수 있습니다. 
+
+- typealias의 특징 및 주의사항
+  + 새로운 타입을 만드는 것이 아님 : typealias는 단순히 기존 타입에 다른 이름을 붙이는 것입니다.
+  + 생성자를 가질 수 없음 : typealias는 타입의 별칭일 뿐이므로, 자체적인 생성자를 가질 수 없습니다.
+  + 상속 제어 불가 : typealias는 클래스가 아니므로, open, final 등의 상속 제어 키워드를 사용할 수 없습니다.
+  + 제네릭 타입에도 사용 가능
+    ```kotlin
+    typealias StringList<T> = List<T> // T는 여전히 제네릭 파라미터
+    val names: StringList<String> = listOf("Alice", "Bob")
+
+    // 특정 타입으로 고정할 수도 있음
+    typealias IntList = List<Int>
+    val numbers: IntList = listOf(1, 2, 3)
+    ```
+  + 내부 클래스 및 객체에도 사용 가능
+    ```kotlin
+    class Outer {
+        inner class Inner
+        object NestedObject
+    }
+
+    typealias InnerClass = Outer.Inner
+    typealias NestedObj = Outer.NestedObject
+    ```
+    
+- 언제 typealias를 사용하면 좋을까?
+  + 코드베이스 전체에서 반복적으로 사용되는 복잡한 타입 시그니처가 있을 때
+  + 함수 타입을 매개변수나 반환 타입으로 자주 사용할 때
+  + 특정 도메인에 맞는 의미 있는 타입 이름을 부여하고 싶을 때
+  + 가독성을 높여 코드 ㅇ지보수를 용이하게 하고 싶을 때
+
+
+---
+
+
 
 ### 고차 함수
 - **"함수를 인자로 받거나, 함수를 반환하는 함수"**

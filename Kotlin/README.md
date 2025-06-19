@@ -1186,3 +1186,75 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     * inline 함수는 컴파일 시점에 함수 본문이 호출된 위치에 직접 복사되기에 제네릭 타입도 실제 타입으로 치환
     * 이 구조 덕분에 T::class, is T 같은 코드가 가능해짐
     * 일반 함수는 이 치환이 일어나지 않기 때문에 reified를 사용 불가
+
+
+---
+
+
+### typealias
+- 정의
+  + typealias는 기준 타입에 새로운 이름을 부여하는 기능입니다.
+
+- 기본 사용법
+  + typealias 키워드를 사용하여 새로운 이름과 기존 타입을 연결합니다.
+  + ```kotlin
+    typealias Name = String
+    typealias UserList = List<User>
+    typealias ClickListener = (View) -> Unit
+    ```
+    
+- typealias를 사용하는 이유 및 장점
+  + 가독성향상 : 복잡하거나 긴 타입 이름을 의미 있는 이름으로 대체하여 코드를 더 쉽게 이해할 수 있도록 합니다.
+
+- 복잡한 제네릭 타입 간소화
+  + 제네릭을 사용하는 복잡한 타입을 더 짧고 관리하기 쉬운 이름으로 만들 수 있습니다.
+  + ```kotlin
+    // typealias 사용 전
+    val complexFunction: (List<Map<String, Set<Int>>>, (String) -> Boolean) -> List<String> = { data, predicate ->
+    // ...
+    emptyList()
+    }
+
+    // typealias 사용 후
+    typealias DataFilter = (String) -> Boolean
+    typealias ComplexData = List<Map<String, Set<Int>>>
+    typealias DataProcessor = (ComplexData, DataFilter) -> List<String>
+
+    val simpleFunction: DataProcessor = { data, predicate ->
+    // ...
+    emptyList()
+    }
+    ```
+    
+- 함수 타입 명명
+  + 특히 콜백 함수나 고차함수에서 함수 타입을 명확한 이름으로 정의하여 코드의 의도를 더 잘 전달할 수 있습니다. 
+
+- typealias의 특징 및 주의사항
+  + 새로운 타입을 만드는 것이 아님 : typealias는 단순히 기존 타입에 다른 이름을 붙이는 것입니다.
+  + 생성자를 가질 수 없음 : typealias는 타입의 별칭일 뿐이므로, 자체적인 생성자를 가질 수 없습니다.
+  + 상속 제어 불가 : typealias는 클래스가 아니므로, open, final 등의 상속 제어 키워드를 사용할 수 없습니다.
+  + 제네릭 타입에도 사용 가능
+    ```kotlin
+    typealias StringList<T> = List<T> // T는 여전히 제네릭 파라미터
+    val names: StringList<String> = listOf("Alice", "Bob")
+
+    // 특정 타입으로 고정할 수도 있음
+    typealias IntList = List<Int>
+    val numbers: IntList = listOf(1, 2, 3)
+    ```
+  + 내부 클래스 및 객체에도 사용 가능
+    ```kotlin
+    class Outer {
+        inner class Inner
+        object NestedObject
+    }
+
+    typealias InnerClass = Outer.Inner
+    typealias NestedObj = Outer.NestedObject
+    ```
+    
+- 언제 typealias를 사용하면 좋을까?
+  + 코드베이스 전체에서 반복적으로 사용되는 복잡한 타입 시그니처가 있을 때
+  + 함수 타입을 매개변수나 반환 타입으로 자주 사용할 때
+  + 특정 도메인에 맞는 의미 있는 타입 이름을 부여하고 싶을 때
+  + 가독성을 높여 코드 ㅇ지보수를 용이하게 하고 싶을 때

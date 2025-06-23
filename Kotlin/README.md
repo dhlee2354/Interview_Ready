@@ -1392,3 +1392,85 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     * 람다에서 **context (ex) Activity)**를 캡처하면 메모리 누수 발생이 가능
     * 복잡한 람다 중첩 -> 가독성이 저하
     * 인자가 많으면 오히려 유지보수 어려움
+
+
+---
+
+
+### init 블록 & constructor()
+- `init` 블록
+  + 클래스 생성될 때 실행되는 초기화 블록
+  + 클래스에 하나 이상 작성 가능하며, 생성자(constructor)보다 먼저 실행됨
+  + 주로 검증, 초기 로그, 계산 작업에 사용
+  + ```kotlin
+    class User(val name: String) {        
+        init {
+            println("init name is $name")
+        }
+    }
+    ```
+    
+- `constructor()`
+  + 코틀린 클래스는 주 생성자(primary constructor) 와 보조 성성자(secondary constructor) 가질 수 있음
+  + 주 생성자는 클래스 헤더에 정의되고, 필드 초기화는 `init 블록`에서 수행 가능
+  + 보조 생성자는 `constructor` 키워드 명시적으로 사용
+  + ```kotlin
+    class User(val name: String) {
+        constructor(name: String, age: Int) : this(name) {
+            println("constructor name is $name age is $age")
+        }
+    }
+    ```
+    
+- 차이점
+  + | 항목    | `init` 블록       | `constructor()`         |
+    | ----- | --------------- | ----------------------- |
+    | 실행 시점 | 객체 생성 시 자동 실행   | 명시적으로 호출 필요             |
+    | 목적    | 공통 초기화, 검증 로직   | 다양한 생성 방법 제공            |
+    | 개수    | 여러 개 가능         | 여러 개 가능 (오버로드)          |
+    | 호출 순서 | 생성자 → `init` 순서 | 보조 생성자 → 주 생성자 → `init` |
+
+- 샘플 코드
+  + ```kotlin
+    class Book(val title: String) {
+        init {
+            println("책 제목: $title") // init 블록
+        }
+
+        constructor(title: String, author: String) : this(title) {
+            println("저자: $author") // 보조 생성자
+        }
+
+        constructor(title: String, author: String, price: Int) : this(title) {
+            println("저자: $author , 가격: $price") // 보조 생성자
+        }
+    }
+    
+    val book = Book("해리포터")
+    val book1 = Book("해리포터2", "롤링2")
+    val book2 = Book("해리포터3", "롤링3", 10000)    
+    
+    /* 출력 결과
+    책 제목: 해리포터
+    책 제목: 해리포터2
+    저자: 롤링2
+    책 제목: 해리포터3
+    저자: 롤링3 , 가격: 10000
+    */
+    ```
+
+- 결론
+  + | 개념              | 핵심 역할                      |
+    | --------------- | -------------------------- |
+    | `init`          | 생성자 호출 후 **공통 초기화** 수행     |
+    | `constructor()` | 다양한 생성 경로를 제공하는 **보조 생성자** |
+  + init은 `공통 초기화 블록`, constructor()는 `오버로드용 생성자` 서로 보완하는 구조로 쓰인다.
+
+- 면접 관련 질문
+  + init 블록과 생성자(constructor)의 차이점은?
+  + init 블록이 보조 생성자보다 먼저 실행되는가?
+    * 보조 생성자 시작 -> : this(...) 주 생성자 호출 -> 주 생성자의 필드 초기화 + init 블록 실행 -> 보조 생성자의 나머지 블록 실행
+    * 보조 생성자가 먼저 호출 되지만 코드 실행은 init 블록이 먼저 실행이 됨
+  + 생성자 파라미터를 초기화 외에 검증하고 싶다면 어디?
+    * 검증, 로깅, 조건 분기 같은 로직은 init 블록에 넣는 것이 적절
+    * 생성자에는 기본값 할당만 하고, 로직은 init에서 분리하는 게 가독성과 유지보수 좋음

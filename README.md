@@ -35,6 +35,8 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + SharedPreferences & DataStore
   + OkHttps, Retrofit 차이
   + Handler, Looper, MessageQueue
+  + Interceptor
+  + notification
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -71,3 +73,5 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + reified와 제네릭에서의 활용
   + typealias
   + 고차함수
+  + init 블록 & constructor
+  + iterable & sequence

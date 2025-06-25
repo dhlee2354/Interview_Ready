@@ -1417,6 +1417,93 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
     - 하지만 내부적으로 Dispatchers는 `Handler`를 기반으로 동작하는 경우가 많다
 
 
+
+---
+
+
+
+### Foreground vs Background
+1. Foreground
+  - 사용자가 **화면에서 직접 보고있고, 터치하거나 상호작용 중**인 앱 상태
+  - 앱의 Activitiy 가 화면에 보여지고 있고, 사용자와 직접 상호작용 중일 때를 의미
+  ```text
+    onCreate() -> onStart() -> onResume() -> [Foreground 상태]
+  ```
+  - ex)
+    1. 유튜브에서 영상 보기
+    2. 카카오톡 채팅 화면을 열어둠
+    3. 메모 앱에서 글 쓰기
+  
+  - 특징
+    - 시스템 자원을 자유롭게 사용 가능 (CPU, 네트워크, 위치, 센서 등)
+    - 사용자의 주의가 앱 집중되어 있어야 하므로 **빠른 응답이 요구**됨
+    - 이 상태에서는 백그라운드의 제한이 적용되지 않음
+
+2. Background
+  - 앱이 실행 중이지만, **화면에 보이지 않는 상태**
+  - 사용자가 다른 앱을 보고 있거나, 홈 화면으로 나간 경우 등
+  ```text
+    Foreground() -> onPause() -> onStop() ->[Background 상태]    
+  ```
+  - ex)
+    1. 인스타그램을 보다가 홈 버튼 누름
+    2. 전화가 와서 앱이 가려짐
+    3. 다른 앱으로 전환 됨
+  
+  - 특징
+    - 시스템 자원을 **제한적으로 사용 가능**
+    - Android 8.0(API 26) 이후부터 백그라운드 작업에 제한 강화
+    - 백그라운드에서 일정시간 지나면 앱이 종료될 수 있음
+    - 서비스 또는 브로드캐스트를 사용할때도 제한이 있음
+
+3. Foreground Service
+  - 앱이 백그라운드에 있어도 계속 실행되어야 할 작업을 위해 실행되어야 할 서비스 종류
+  - 알림(Notification)을 항상 보여줘야 함
+
+  - 사용 이유
+    - 일반 서비스는 백그라운드에서 쉽게 종료될 수 있음
+    - Foreground Service는 시스템이 우선순위를 높게 잡고, 종료시키지 않음
+
+  - ex)
+    - 음악 앱에서 백그라운드 재생 중
+    - 네이버 지도에서 실시간 길 안내
+    - 피트니스 앱에서 운동시간 측정
+    
+  - 구현흐름
+    ```kotlin
+        val notification = NotificationCompat.Builder(this, "channel_id")
+            .setContentTitle("서비스 실행 중")
+            .build()
+
+        startForeground(1, notification)  // 반드시 알림과 함께 실행       
+    ```
+    
+  - Lifecycle 순서
+    * | 시나리오    | 상태변화                                                |
+                    |---------|-----------------------------------------------------|
+      | 앱 실행    | onCreate() -> onStart() -> onResume() -> Foreground |
+      | 홈 버튼 누름 | onPause() -> onStop() -> Background                 |
+      | 앱 다시 열기 | onRestart() -> onStart() -> onResume()              |
+      | 앱 종료    | onDestory()                                         |
+
+- 시스템 제한사항 (Android 8.0 이후)
+  1. ⚠️ Background 실행 제한
+    - 오래된 방식의 Background Service 실행이 제한 됨
+    - 해결방법 : Foreground Service, JobScheduler, WorkManager 사용
+  
+  2. 🔐 Background 위치 권한
+    - 백그라운드 GPS, BLE 같은 민감한 자원 접근 시 권한 강화
+    - Android 10 부터는 ACCESS_BACKGROUND_LOCATION 별도 요청 필요
+
+- 앱 상태 구분하는 기준
+  * | 구분           | 설명                                            |
+                        |--------------|-----------------------------------------------|
+    | Foreground 앱 | 사용자가 현재 보고있는 앱. 가장 높은 우순위                     |
+    | Visible 앱    | 포그라운드는 아니지만 현재 화면에 보이고 있는 상태 ( ex) Dialog 등 ) |
+    | Background 앱 | 사용자에게 보이지 않지만 실행 중인 앱                         |
+    | Cached 앱     | 사용하진 않지만 나중을 위해 메모리에 저장된 앱                    |
+
+
 ---
 
 

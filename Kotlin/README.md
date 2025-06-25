@@ -1394,6 +1394,79 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     * 인자가 많으면 오히려 유지보수 어려움
 
 
+
+---
+
+
+
+
+### mutable & immutable
+- var / val
+  1. var (mutable variable)
+     + 값을 변경할 수 있음
+     + **읽기/쓰기 모두 가능**
+     ```kotlin
+        var age = 30
+        age = 31    // ✅ 가능
+     ```
+  
+  2. val (immutable variable)
+     + **한번 초기화되면 값을 변경할 수 없음**
+     + 읽기 전용 변수(Read-only)
+     + 불변 객체를 참조하거나, 가변 객체를 참조할 수 있지만 참조 자체는 바꿀수 없음
+     ```kotlin
+        val name = "ABC"
+        // name = "New" ❌ 컴파일 오류 발생
+     ```
+
+- 컬렉션
+  1. List, Set, Map (immutable)
+     + 읽기 전용 / 변경 불가능
+  2. MutableList, MutableSet, MutableMap (mutable)
+     + 요소 추가, 삭제 등 기능
+     ```kotlin
+      val immutableList = listOf("A", "B", "C")
+      // immutableList.add("D") ❌ 불가능
+     
+      val mutableList = mutableListOf("A", "B", "C")
+      mutableList.add("D") // ✅ 가능
+     ```
+     + val mutableList = mutableListOf(...)에서 mutableList 자체는 변경 불가지만, 내부의 데이터는 변경 가능 (리스트는 mutable)
+     + 컬렉션을 불변하게 유지하면 예측 가능하고 안전한 코드 작성이 쉬워짐
+
+- 클래스의 불변성 (immutable Object)
+  - kotlin에서는 **데이터 클래스를 불변**하게 설계하는 것을 권장
+  ```kotlin
+    data class User (val name: String, val age: Int)
+    // 모든 프로퍼티가 val로 되어 있어, 인스턴스를 만든 후 값을 변경할 수 없음.
+  
+    val user = User("Heeju", 30)
+    // user.name = "New" ❌ 불가능
+  ```
+  ```kotlin
+    // 프로퍼티를 var로 하여 mutable 객체가 됨
+    data class MutableUser (var name: String, var age: Int)
+  ```
+  
+- immutable이 더 좋은 이유
+  + | 장점                       | 설명                             |
+                  |--------------------------|--------------------------------|
+    | ❄️ 예측 가능성   | 상태가 변하지 않아 디버깅, 테스트가 쉬움        |
+    | 🔐 스레드 안전성   | 멀티스레드 환경에서 동기화 문제 감소           |
+    | 🧠 가독성    | 함수형 프로그래밍 스타일과 잘 어울림           |
+    | ♻️ 참조 공유 가능    | 값이 변하지 않기 때문에 안전하게 여러곳에서 공유 가능 |
+
+- 질문
+  + val과 var의 차이점이 무엇인가요?
+    * val은 읽기전용 변수이며 var은 값이 변경 가능한 변수입니다.
+  + kotlin의 List와 MutableList의 차이점이 무엇인가요?
+    * List는 읽기전용 컬렉션이며 MutableList는 읽기, 수정이 가능한 컬렉션 입니다.
+  + val로 선언된 MutableList의 내용은 변경할 수 있을까요?
+    * val로 선언된 리스트는 참조 자체를 바꿀 순 없지만, 내부 요소를 수정가능합니다
+    * ex) val list = mutableListOf(1, 2, 3)에서 list.add(4)는 가능
+   
+
+
 ---
 
 

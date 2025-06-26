@@ -35,11 +35,12 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + SharedPreferences & DataStore
   + OkHttps, Retrofit 차이
   + Handler, Looper, MessageQueue
+  + Foreground BackGround 서비스
   + Interceptor
   + notification
-  + DSL (Domain-Specific Language)
-  + 예외처리
-  + suspend 함수
+  + GSON & Moshi
+  + jar/apk/aar
+  + view & viewGroup
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -76,8 +77,9 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + reified와 제네릭에서의 활용
   + typealias
   + 고차함수
+  + mutable & immutable collection
   + init 블록 & constructor
   + iterable & sequence
-  + gson & moshi
-  + view & viewGroup
-  + jar/apk/aar
+  + DSL (Domain-Specific Language)
+  + 예외처리
+  + suspend 함수

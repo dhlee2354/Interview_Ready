@@ -37,6 +37,9 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + Handler, Looper, MessageQueue
   + Interceptor
   + notification
+  + DSL (Domain-Specific Language)
+  + 예외처리
+  + suspend 함수
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -75,3 +78,6 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + 고차함수
   + init 블록 & constructor
   + iterable & sequence
+  + gson & moshi
+  + view & viewGroup
+  + jar/apk/aar

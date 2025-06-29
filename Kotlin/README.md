@@ -1646,6 +1646,263 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     | 중간 컬렉션 생성  | 각 연산마다 생성                                | 최종 연산 시까지 생성 안 함 (최소화)                                  |
     | 요소 처리 순서   | 컬렉션 전체에 대해 단계별로 처리 (map 전체 -> filter 전체) | 각 요소별로 전체 파이프라인 처리 (요소1: map->filter, 요소2: map->filter) |
     | 주요 사용 사례   | 작은 컬렉션, 간단한 연산, 결과가 즉시 필요할 때             | 큰 컬렉션, 여러 단계의 복잡한 연산, 무한 시퀀스, 성능 최적화 필요 시               |
+    | 성능 (큰 데이터) | 상대적으로 낮음                                 | 상대적으로 높음                                                | 
+
+
+---
+
+
+### DSL (Domain-Specific Language)
+- 정의
+  + 특정 목적(domain)에 맞게 설계된 **맞춤형 언어 스타일 코드**를 Kotlin 문법 위에서 구현할 수 있는 기능
+  + 대표적인 예로 `Gradle Kotlin DSL`, `Jetpack Compose`, `Anko`, `HTML DSL` 등이 있습니다.
+  + Kotlin 문법을 활용해서 **내 도메인에 특화된 코드를 자연어처럼 작성**할 수 있게 해줌
+
+- 구성 핵심 요소
+  + | 요소                       | 설명                      |
+    | ------------------------ | ----------------------- |
+    | **Lambda with Receiver** | 람다 내부에서 객체(this)에 접근 가능 |
+    | **Extension Function**   | 기존 타입에 새로운 함수 추가 가능     |
+    | **Function Literals**    | 함수 자체를 값처럼 전달           |
+    | **Named Arguments**      | 매개변수 이름을 코드 안에서 명확하게 표현 |
+
+- 샘플
+  + HTML DSL
+    * ```kotlin
+      fun html(block: HtmlBuilder.() -> Unit): String {
+        val builder = HtmlBuilder()
+        builder.block()
+        return builder.build()
+      }
+      
+      class HtmlBuilder {
+        private val content = StringBuilder()
+
+        fun body(block: BodyBuilder.() -> Unit) {
+            content.append("<body>")
+            val body = BodyBuilder()
+            body.block()
+            content.append(body.build())
+            content.append("</body>")
+        }
+      
+        fun build(): String = content.toString()
+      }
+
+      class BodyBuilder {
+        private val content = StringBuilder()
+
+        fun p(text: String) {
+            content.append("<p>$text</p>")
+        }
+    
+        fun build(): String = content.toString()
+      }
+
+        // 사용
+        val result = html {
+            body {
+                p("Hello, Kotlin DSL!")
+                p("This is a paragraph.")
+            }
+        }
+        println(result) // <body><p>Hello, Kotlin DSL!</p><p>This is a paragraph.</p></body>
+      ```
+  + Gradle
+    * ```kotlin
+      plugins {
+        kotlin("jvm") version "1.9.0"
+        application
+      }
+
+      repositories {
+        mavenCentral()
+      }
+
+      dependencies {
+        implementation("com.squareup.retrofit2:retrofit:2.9.0")
+        testImplementation("org.jetbrains.kotlin:kotlin-test")
+      }
+
+      application {
+        mainClass.set("com.example.MainKt")
+      }
+      ```
+      plugins {}, repositories {}, dependencies {} 전부 DSL
+      * 중괄호 안은 this 수신 객체를 활용하는 람다 블록
+  + SQL
+    * JetBrains 의 Exposed 는 코틀린 DSL 로 SQL 작성할 수 있게 해주는 QRM 쿼리 빌더
+    * ```kotlin
+      object Users : Table() { 
+        val id = integer("id").autoIncrement()
+        val name = varchar("name", 50)
+        override val primaryKey = PrimaryKey(id)
+      }
+      
+      fun insertUser(name: String) {
+            transaction {
+                Users.insert {
+                    it[Users.name] = name
+                }
+            }
+        }
+
+        fun getAllUsers(): List<String> {
+            return transaction {
+                Users.selectAll().map { it[Users.name] }
+            }
+        }
+      ```
+    * SQL 문법을 함수로 래핑한 DSL
+    * insert {}, selectAll().map {} 등이 고차함수 + 람다 수신 기반
+    * 타입 안정성 있는 쿼리 작성 가능
+  + Jetpack Compose
+    * ```kotlin
+      fun GreetingScreen(name: String) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(text = "Hello, $name!")
+            Button(onClick = { /* handle click */ }) {
+            Text("Click Me")
+            }
+        }
+      }
+      ```
+    * Column {}, Button {}, Text() 전부 DSL 스타일 컴포저블 함수
+    * XML 없이 UI를 함수로 구성
+    * 중첩 가능, 선언적, 가독성 높음
+
+- 실전 DSL 활용 사례
+  + | 사례                | 설명                    |
+    | ----------------- | --------------------- |
+    | Gradle Kotlin DSL | build.gradle.kts 파일   |
+    | Jetpack Compose   | UI 선언을 함수로 구현         |
+    | kotlinx.html      | HTML 빌더 DSL           |
+    | SQL DSL           | Exposed 같은 라이브러리      |
+    | Android UI DSL    | Anko (JetBrains, 구버전) |
+
+- 면접 관련 질문 
+  + Q1. Kotlin DSL은 어떤 상황에서 사용하는 게 적절하다고 생각하나요?
+    * Kotlin DSL은 특정 도메인에 맞는 구조화된 코드를 더 선언적이고 읽기 쉽게 표현하고 싶을 때 사용하면 좋습니다.
+      예를 들어 Gradle 빌드 스크립트, Jetpack Compose UI, SQL 쿼리 등과 같이 구조가 반복되거나 계층적인 데이터를 다룰 때 DSL이 효과적입니다.
+      또한, DSL은 특정 API 사용 방식을 제한하거나 직관적으로 만들고 싶을 때도 유용합니다.
+  + Q2. Jetpack Compose는 어떻게 DSL로 작동하나요?
+    * Jetpack Compose는 Kotlin의 함수형 DSL 문법을 기반으로 설계된 UI 프레임워크입니다.
+      각 UI 요소는 @Composable로 표시된 함수이며, 내부적으로는 수신 객체를 가진 람다(lambda with receiver)를 활용해 중첩된 UI 구조를 만들 수 있습니다.
+      예를 들어 Column { Text(...) }는 ColumnScope.() -> Unit 형태의 DSL 블록을 받는 구조로, 코드의 가독성과 유지보수성이 좋아집니다.
+  + Q3. build.gradle.kts vs build.gradle
+    * | 항목       | `build.gradle` (Groovy DSL) | `build.gradle.kts` (Kotlin DSL) |
+      | -------- | --------------------------- | ------------------------------- |
+      | 언어       | Groovy                      | Kotlin                          |
+      | 정적 타입 검사 | ❌ (런타임 에러 가능)               | ✅ (컴파일 타임 타입 체크 가능)             |
+      | 코드 완성    | 제한적, IDE 자동완성 잘 안 됨         | 훨씬 우수함 (IntelliJ 완전 지원)         |
+      | 문법 유연성   | 더 관대함 (익숙한 Gradle 스타일)      | 문법 더 엄격함, 타입 명확히 필요             |
+      | 학습 곡선    | 초반 진입 쉬움                    | Kotlin 익숙하면 훨씬 강력하지만 초반 헷갈림     |
+      | 유지보수     | 동적 타입으로 인해 오류 찾기 어려움        | 타입 안정성으로 유지보수 유리                |
+
+
+---
+
+
+### 예외 처리
+- 코틀린에서 예외 처리는 프로그램 실행 중 발생할 수 있는 오류나 예기치 않은 상황에 대처하여 프로그램이 비정상적으로 종료되는 것을 방지하고, 안정적으로 실행될 수 있도록 하는 중요한 매커니즘입니다.
+
+- 예외의 개념
+    + 예외는 프로그램 실행 중 발생하는 오류 상황을 나타내는 객체입니다.
+    + 코틀린의 모든 예외 클래스는 Throwable클래스를 상속 받습니다.
+    + Exception 클래스는 Throwable의 하위 클래스이며. 일반적으로 애플리케이션 레벨에서 처리해야 하는 예외들을 나타냅니다.
+    + 주요 예외 계층 구조
+        * Throwable
+          |- Error (일반적으로 앱에서 복구 불가능한 심각한 시스템 오류)
+          |- Exception (앱에서 처리 가능한 예외)
+          |= RuntimeException (주로 프로그래밍 오류로 인해 발생)
+          |- IOException (입출력 작업 중 발생하는 예외)
+
+- 코틀린 예외 처리의 특징
+    + 모든 예외는 Unchecked Exception : 자바와 달리 코틀린은 Checked Exception과 Unchecked Exception을 구분하지 않습니다.
+    + throw 표현식 : 코틀린에서 throw는 문장이 아닌 표현식입니다. 즉, throw는 값을 반환할 수 있으며, 다른 표현식의 일부로 사용될 수 있습니다.
+  ```kotlin
+  fun fail(message: String): Nothing {
+        throw IllegalArgumentException(message)
+    }
+
+    val name: String? = null
+    val s = name ?: fail("Name required") // Elvis 연산자와 함께 사용
+    println(s) // 이 코드는 실행되지 않음
+  ```
+
+- 예외 발생시키기(throw)
+    + throw 키워드를 사용하여 예외 객체의 인스턴스를 명시적으로 발생시킬 수 있습니다.
+  ```kotlin
+  fun checkAge(age: Int) {
+      if (age < 0) {
+          throw IllegalArgumentException("Age cannot be negative: $age")
+      }
+      println("Age is valid: $age")
+  }
+  fun main() {
+      try {
+          checkAge(-5)
+      } catch (e: IllegalArgumentException) {
+          println("Error: ${e.message}") // 출력: Error: Age cannot be negative: -5
+      }
+  }
+  ```
+
+- 전제 조건 함수 : 코틀린 표준라이브러리는 특정 조건을 만족하지 않을 때 예외를 발생시키는 유용한 함수들을 제공합니다.
+    + require(value: Boolean, lazyMessage: () -> Any): 인자가 특정 조건을 만족하는지 검사합니다. value가 false이면 IllegalArgumentException을 발생시킵니다.
+    + check(value: Boolean, lazyMessage: () -> Any): 객체의 상태가 특정 조건을 만족하는지 검사합니다. value가 false이면 IllegalStateException을 발생시킵니다.
+    + error(message: Any): 무조건 IllegalStateException을 발생시킵니다. 주로 도달해서는 안 되는 코드 경로에 사용됩니다.
+  ```kotlin
+  fun processInput(input: String?) {
+      require(input != null && input.isNotEmpty()) { "Input cannot be null or empty" }
+      // ...
+  }
+
+  class User(val id: Int, var name: String) {
+      fun updateName(newName: String) {
+          check(newName.length > 2) { "Name must be longer than 2 characters" }
+          this.name = newName
+      }
+  }
+  ```
+
+- 예외 잡기
+    + try-catch-finally 블록을 사용하여 예외를 처리합니다.
+        * try 블록 : 예외가 발생할 가능성이 있는 코드를 이 블록안에 작성합니다.
+        * catch 블록 : try 블록에서 특정 타입의 예외가 발생했을 때 실행될 코드를 작성합니다. 여러 개의 catch 블록을 사용하여 다양한 타입의 예외를 처리할 수 있습니다.
+        * finally 블록 : 예외 발생 여부와 관계없이 항상 실행되어야 하는 코드를 작성합니다. finally 블록은 선택 사항입니다.
+      ```kotlin
+      fun readFile(path: String) {
+          var reader: java.io.BufferedReader? = null
+          try {
+              reader = java.io.File(path).bufferedReader()
+              println(reader.readLine())
+          } catch (e: java.io.FileNotFoundException) {
+              println("Error: File not found at path $path")
+          } catch (e: java.io.IOException) {
+              println("Error: An IO error occurred: ${e.message}")
+          } catch (e: Exception) { // 모든 Exception 타입의 예외를 잡음 (가장 마지막에 두는 것이 일반적)
+              println("An unexpected error occurred: ${e.message}")
+          } finally {
+              try {
+                  reader?.close() // 리소스 해제
+              } catch (e: java.io.IOException) {
+                  println("Error closing reader: ${e.message}")
+              }
+              println("Finally block executed.")
+          }
+      }
+  
+      fun main() {
+          readFile("non_existent_file.txt")
+          // 출력:
+          // Error: File not found at path non_existent_file.txt
+          // Finally block executed.
+      }
+      ```
+
     | 성능 (큰 데이터) | 상대적으로 낮음                                 | 상대적으로 높음                                                |
 
 

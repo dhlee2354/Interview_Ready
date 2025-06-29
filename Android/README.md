@@ -1655,3 +1655,90 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
   + 알림 작업 : 알림에 직접 버튼을 추가하여 사용자가 앱을 열지 않고도 빠른 작업을 수행할 수 있도록 합니다.
   + 진행률 표기시 : 파일 다운로드와 같이 시간이 오래걸리는 작업의 진행 상태를 알림에 표시할 수 있습니다.
   + 알림 그룹 : 여러 알림을 하나의 그룹으로 묶어 표시할 수 있습니다.
+
+
+
+---
+
+
+
+### jar, arr, apk
+1. JAR (Java ARchive)
+  + 개념
+    * Java 클래스 파일과 메타데이터를 압축한 아카이브
+    * Java 기반 라이브러리를 패키징 할때 사용
+  + 구성
+    * .class 파일 (컴파일 된 Java 바이트코드)
+    * META_-INF/MANIFEST.MF (메타 정보)
+    * 리소스 파일 (.properties, .xml 등 포함 가능, 하지만 Android 리소스는 불가능)
+  + 사용처
+    * Java 코드만 있는 라이브러리
+    * ex) Gson, OkHttp 등 일부 라이브러리 jar 버전
+  + ❌ 한계
+    * res/, AndroidManifest.xml 같은 안드로이드 전용 리소스 포함 불가
+
+2. APK (Android Package)
+  + 개념
+    * .apk 는 Android 애플리케이션 패키지 파일
+    * 안드로이드 앱을 기기에 설치할때 사용
+  + 구성
+    * class.dex (Dalvik / ART 바이트코드)
+    * res/, assets/, AndroidManifest.xml
+    * META-INF/ (서명 정보)
+    * 네이티브 라이브러리 (lib/)
+  + 사용처
+    * 사용자 단말기에 설치되는 최종 결과물
+    * GooglePlay에 업로드 하는 파일
+  + 빌드 흐름
+    ```text
+      .java/.kt → .class → .dex → APK
+    ```
+    
+3. ARR (Android ARchive)
+  + 개념
+    * .arr은 Android 라이브러리 모듈을 위한 패키지 파일
+    * JAR의 안드로이드 버전
+  + 구성
+    * classes.jar (컴파일 된 java/kotlin 코드)
+    * res/ (레이아웃, 이미지 등 리소스 파일)
+    * AndroidManifest.xml
+    * assets/, jni/, proguard.txt 등
+  + 사용처
+    * Android 모듈을 라이브러리로 분리할 때
+    * 다른 프로젝트에서 재사용 가능
+    * ex) UI 컴포넌트, SDK 제공용 라이브러리
+  + 예시
+    ```kotlin
+      dependencies {
+        implementation("com.example:mylibrary:1.0.0") // 내부적으로 aar 사용
+      }
+    ```
+    
+- 차이점 요약
+  + | 항목            | jar        | aar                 | apk          |
+                |---------------|------------|---------------------|--------------|
+    | 목적            | Java 라이브러리 | Android 라이브러리       | Androi 앱 패키지 |
+    | 포함 가능한 것      | Java 코드만   | 코드 + 리소스 + Manifest | 전체 앱 리소스     |
+    | 설치 가능 여부      | ❌          | ❌                   | ✅            |
+    | 리소스 포함 여부     | ❌          | ✅                   | ✅            |
+    | Manifest 포함 여부 | ❌          | ✅                   | ✅            |
+    | 사용 대상         | 공통 로직      | Android 모듈 공유       | 최종 사용자 기기    |
+
+- 사용 시기 예시 
+  + | 상황                              | 사용 파일 |
+        |---------------------------------|-------|
+    | Gson, Apache Commons 등 Java 유틸리티 | JAR   |
+    | 버튼, 커스텀뷰, SDK 등 Android 재사용 모듈   | ARR   |
+    | 앱 배포 (스토어 등록, 설치)    | APK   |
+
+- 면접 질문
+  + JAR, ARR, APK의 차이가 무엇일까요?
+    * JAR : Java 아카이브로, 컴파일된 .class 파일과 메타정보만 포함하며, 안드로이드 리소스는 포함할 수 없습니다. 주로 Java 라이브러리에서 사용됩니다.
+    * AAR: Android 전용 아카이브로, classes.jar 외에도 res/, AndroidManifest.xml, assets/ 등을 포함할 수 있어 Android 라이브러리 모듈 배포에 사용됩니다.
+    * APK: Android Package로, 실제 앱을 설치할 수 있는 최종 패키지입니다. 실행 파일(.dex), 리소스, 서명 정보까지 모두 포함합니다.
+  + AAR 파일은 어떤 경우에 사용하나요?
+    * 안드로이드 앱에서 재사용 가능한 모듈을 분리해 라이브러리로 만들고, 이를 다른 프로젝트에 배포하거나 의존성으로 추가할 때 사용됩니다.
+    * ex) 커스텀 버튼 UI, 공통 ViewModel, 인증 SDK 등을 AAR로 만들어 다른 앱에서 활용할 수 있습니다.
+  + AAR과 JAR의 주요 차이점은 무엇인가요?
+    * AAR은 Android 라이브러리 전용 형식으로, 코드뿐 아니라 리소스(res/), AndroidManifest, assets 등을 포함할 수 있습니다.
+    * 반면 JAR은 Java 코드만 포함하므로, Android 앱에서 UI 구성이나 리소스를 사용하는 경우 적합하지 않습니다.

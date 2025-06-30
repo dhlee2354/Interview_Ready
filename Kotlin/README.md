@@ -1903,14 +1903,8 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       }
       ```
 
-    | 성능 (큰 데이터) | 상대적으로 낮음                                 | 상대적으로 높음                                                |
-
-
-
 
 ---
-
-
 
 
 ### suspend 함수
@@ -1960,3 +1954,125 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     * 코루틴 내에서만 호출 가능합니다. 예를들어 viewModelScope.launch, globalScope.launch 같은 코루틴 빌더 안에서 호출 가능합니다.
   + suspend 함수를 병렬로 실행하려면?
     * coroutineScope 내에서 async를 사용하면 suspend 함수를 동시에 실행할 수 있습니다.
+
+
+---
+
+
+### 코루틴 빌더 (runBlocking, launch, async)
+- 정의
+  + 새로운 코루틴(Job) 생성해서 실행하게 해주는 함수
+  + 코루틴을 시작(launch)하거나 비동기적으로 실행(async)하거나 블로킹(runBlocking) 방식으로 시작할 때 쓰는 진입점 함수를 총칭
+  + 공통 특징
+    * 새로운 Job 생성해 코루틴 실행
+    * 부모-자식 코루틴의 구조를 구성
+    * 코루틴 컨텍스트(디스패처 등)를 함께 지정 가능
+
+- runBlocking 빌더
+  + 정의 
+    * 새 코루틴을 생성하고 현재 스레드를 블로킹해서 코루틴이 끝날 때까지 기다림
+    * 보통 테스트 or main() 진입점에서 사용
+    * 안드로이드 UI 스레드에서 금지 (ANR 발생)
+  + 샘플 코드
+    * ```kotlin
+      fun main() = runBlocking {
+        println("runBlocking start")
+            launch {
+                delay(1000)
+                println("done inside launch")
+            }
+        println("runBlocking end")
+      }
+      ```
+
+- launch 빌더
+  + 정의
+    * 새 코루틴(Job) 실행, fire-and-forget (결과 반환 X)
+    * 단순 작업, UI 업데이트, 로깅 등
+    * launch 함수는 CoroutineScope 인터페이스의 확장 함수
+    * CoroutineScope 인터페이스의 부모 코루틴과 자식 코루틴 사의 관계 정리하긴 위한 목적으로 사용되는 구조화된 동시성의 핵심
+    * 쓰레드를 호출하는 이유는 코루틴 실행하자마자 끝나므로 대기시간을 위해 설정
+  + 샘플 코드
+    * ````kotlin
+      fun main() {
+        GlobalScope.launch {
+            delay(1000L)
+            println("World!!")
+        }
+
+        Thread.sleep(2000L)
+      }
+      ````
+  + 특징
+    * 결과를 받을 수 없음
+    * 예외는 CoroutineExceptionHandler로 처리하거나 try-catch 필요 
+    * 병렬 계산값을 받아야 한다면 async가 더 적합
+    * Android 에서는 생명주기와 연관된 viewModelScope.launch 와 같이 쓰는게 좋음
+
+- async 빌더
+  + 정의
+    * launch 와 비슷하지만 값을 생성하도록 설계
+    * Deferred<T> 타입 객체를 리턴하며 T는 생성되는 값의 타입
+    * 값을 반환하는 중단 메서드인 await 이 있음
+    * 주로 비동기 결과 + 병렬 처리에 적합
+  + 샘플코드
+    * ```kotlin
+      fun main() = runBlocking {
+        // 여러 async 코루틴을 병렬 실행
+        val deferred1 = async {
+            delay(1000)
+            "Result from first"
+            }
+        
+        val deferred2 = async {
+            delay(1500)
+            "Result from second"
+            }
+
+        // 1️⃣ 개별 await()
+        val res1 = deferred1.await()
+        val res2 = deferred2.await()
+        println("await() results: $res1, $res2")    
+
+        // 2️⃣ awaitAll()
+        val deferredList = listOf(
+            async { delay(300); "One" },
+            async { delay(400); "Two" },
+            async { delay(200); "Three" }
+        )
+      
+        val results = deferredList.awaitAll()
+        println("awaitAll() results: $results")
+      }
+      ```
+  + 특징
+    * await() 호출 전에는 예외가 전파되지 않음
+    * awaitAll() 리스트나 배열 형태의 Deferred 를 한꺼번에 기다림
+    * 취소/타임아웃 등은 직접 처리해주는 편이 안전
+
+- 코루틴 빌더 비교
+  + | 항목          | launch              | async                        | runBlocking          |
+    | ----------- | ------------------- | ---------------------------- | -------------------- |
+    | **결과 반환**   | X (fire-and-forget) | Deferred<T> (await()로 결과 수신) | 없음 (결과 필요시 내부에서 변수로) |
+    | **스레드 블로킹** | X                   | X                            | O                    |
+    | **용도**      | UI 갱신, 단순 실행        | 병렬 결과 계산                     | main/test 진입점        |
+    | **코루틴 범위**  | CoroutineScope      | CoroutineScope               | 자신이 블로킹 스코프 역할       |
+    | **취소 제어**   | Job                 | Deferred (Job + 결과)          | Job (자신 블로킹)         |
+
+- 결론
+  + 코루틴 빌더(runBlocking, launch, async)는 새로운 Job을 만들어 코루틴을 실행하는 진입점 함수다.
+  + runBlocking은 테스트나 메인 진입점에서 동기적으로 블로킹하며 코루틴을 시작하고,
+  + launch는 결과가 필요 없는 fire-and-forget 코루틴을, async는 결과가 필요한 병렬 코루틴을 처리한다.
+  + launch/async는 CoroutineScope에서 사용해 구조화된 동시성을 구성하며, withContext는 빌더는 아니지만 기존 코루틴 안에서 디스패처 전환에 활용된다.
+  + Android 환경에서는 viewModelScope.launch 같이 생명주기에 맞춘 Scope를 쓰는 것이 중요하며, 각 빌더의 용도와 예외 처리 방식을 구분해서 써야 안전하다.
+
+- 면접 관련 질문
+  + 코루틴 빌더 중 launch와 async의 차이점은?
+    * `launch`는 결과를 반환하지 않는 fire-and-forget 방식이며, UI 업데이트나 단순한 동작에 적합합니다.
+      반면 `async`는 `Deferred<T> 를 반환`해서 await()로 결과를 받을 수 있는 구조라, 병렬 계산이나 비동기적으로 결과가 필요한 작업에 적합합니다.
+  + runBlocking을 안드로이드 UI 스레드에서 사용하면 안 되는 이유는?
+    * runBlocking은 현재 스레드를 블로킹하기 때문에, Android UI 스레드에서 사용하면 ANR(응답없음) 이 발생할 수 있습니다.
+      runBlocking은 메인함수나 테스트코드처럼 블로킹이 허용되는 환경에서만 사용해야 합니다.
+  + async로 여러 병렬 작업을 실행할 때 awaitAll()의 장점은?
+    * awaitAll()은 여러 Deferred를 한꺼번에 기다리면서, 코드가 깔끔하고 직관적으로 작성되도록 해줍니다.
+      또한 예외가 발생할 경우, 첫 번째 예외를 즉시 전달하고 나머지 Deferred는 자동으로 취소되기 때문에 안정적인 병렬 처리를 보장할 수 있습니다.

@@ -2076,3 +2076,113 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
   + async로 여러 병렬 작업을 실행할 때 awaitAll()의 장점은?
     * awaitAll()은 여러 Deferred를 한꺼번에 기다리면서, 코드가 깔끔하고 직관적으로 작성되도록 해줍니다.
       또한 예외가 발생할 경우, 첫 번째 예외를 즉시 전달하고 나머지 Deferred는 자동으로 취소되기 때문에 안정적인 병렬 처리를 보장할 수 있습니다.
+
+---
+
+
+
+
+### Dispatchers & Thread Context & withContext
+1. Dispatchers
+   - 코루틴이 실행되는 스레드 또는 스레드풀을 지정하는 역할
+   - (코루틴을 어디서 실행시킬지 지정하는 스케줄)
+   + | Dispatcher             | 특징                                                         |
+     |------------------------|------------------------------------------------------------|
+     | Dispatchers.Default    | CPU 집중 작업에 적합 (ex) 정렬, 계산). 기본적으로 core 수 만큼의 스레드로 구성된 풀 사용 |
+     | Dispatchers.IO         | 디스크, 네트워크 I/O 등에 적합. 더 많은 스레드를 사용하는 풀                      |
+     | Dispatchers.Main       | 안드로이드 UI 스레드. UI 조작은 반드시 이 디스패처에서 수행해야 함                   |
+     | Dispatchers.Unconfined | 처음에는 호출한 스레드에서 실행되지만, 중단 후 재개 시점에서는 호출한 스레드에서 계속되지 않을 수 있음 |
+   - 예시
+     ```kotlin
+        launch (Dispatchers.Default) {      // CPU 작업
+            doCpuIntensiveTask()
+        }
+     
+        launch (Dispatchers.IO) {           // 네트워크, DB 등 I/O
+            val result = fetchDataFromNetwork()     
+        }
+     ```
+     
+2. Thread Context (CoroutineContext)
+   - 코루틴이 실행될때 사용되는 환경정보의 집합체
+   - ("코루틴이 어떻게 실행될 것인가"를 설정하는 모든 요소의 묶음)
+   - 구성요소 예시
+     + Dispatcher -> 어떤 스레드에서 실행할지
+     + Job -> 부모-자식 관계를 만들기 위한 단위
+     + CoroutineName -> 디버깅용 이름
+     + CoroutineExceptionHandler -> 예외 처리용 핸들러
+   - 예시
+     ```kotlin
+        val context = Dispatchers.IO + CoroutineName("FetchJob")
+        // context는 IO Dispatcher에서 실행되며 이름이 "FetchJob"인 코루틴을 생성
+     ```
+     
+3. withContext
+   - suspend fun withContext(context: CoroutineContext, block: suspend () -> T): T
+   - 현재 코루틴을 일시적으로 다른 컨텍스트 (= Dispatcher 등)로 전환해서 실행
+   - 작업이 끝난 후에는 원래 컨텍스트로 자동 복귀
+   - (주로 비동기 작업을 명확한 Dispatcher로 전환하고 싶을때 사용)
+   - 예시
+     ```kotlin
+        // I/O 작업을 I/O Dispatcher로 이동
+     
+        suspend fun loadFile() : String {
+            return withContext (Dispatchers.IO) {
+                File("data.txt").readText()
+            }
+        }
+     ```
+     ```kotlin
+        // UI 작업
+     
+        viewModelScope.launch {
+            val result = withContext (Dispatchers.IO) { networkCall() }
+            withContext (Dispatchers.Main) { textView.text = result }
+        }
+     ```
+   - withContext 와 launch 의 차이
+     * | 항목       | launch                | withContext     |
+       |----------|-----------------------|-----------------|
+       | 반환값      | 없음 (Job)              | 결과를 반환          |
+       | 용도       | 병렬 실행 fire-and-forget | 컨텍스트 전환 및 결과 반환 |
+       | 중단 가능 여부 | suspend 아님            | suspend 함수      |
+   - 예제
+     ```kotlin
+        fun main() = runBlocking {
+            println("🟢 main start: ${Thread.currentThread().name}")
+
+            val result = withContext (Dispatchers.IO) {
+                println("🔵 IO 작업 실행 중: ${Thread.currentThread().name}")
+                delay(500)
+                "데이터"
+            }
+     
+            println("🟢 다시 메인으로: ${Thread.currentThread().name}")
+            println("📦 결과: $result")
+        }
+     ```
+   - 요약
+     + | 개념               | 설명                                                       |
+            |------------------|----------------------------------------------------------|
+       | Dispatcher       | 어떤 스레드(풀)에서 코루틴을 실행할지 지정                                 |
+       | CoroutineContext | Dispatcher 외에도 Job, Name, ExceptionHandler 등을 포함하는 실행 환경 |
+       | withContext      | 특정 컨텍스트를 일시적으로 전환하여 suspend 함수 실행, 결과 반환                 |
+
+- 질문
+  + withContext 와 launch의 차이는 무엇인가요?
+    * launch는 Job을 반환하고 결과값이 없으며, 병렬처리를 위해 사용됩니다.
+    * withContext는 suspend 함수로 결과값을 반환하고, 새로운 context에서 코드를 순차적으로 실행합니다
+    * withContext는 주로 전환이 필요할 때, launch는 병렬 작업이나 fire-and-forget 용도로 사용됩니다.
+  + UI 스레드에서 무거운 연산을 하면 어떤 문제가 발생하나요? 해결방안은 무엇인가요?
+    * UI 스레드에서 무거운 연산을 하면 ANR(Application Not Responding)이 발생할 수 있습니다.
+    * Dispatchers.Default 또는 Dispatchers.IO로 context를 전환하여 백그라운드에서 작업하고, UI 업데이트 시에는 다시 Dispatchers.Main으로 돌아와야 합니다.
+    ```kotlin
+        viewModelScope.launch {
+            val result = withContext (Dispatchers.Default) { doHeavyWork() }
+    
+            withContext (Dispatchers.Main) { updateUI(result) }
+        }
+    ```
+  + Coroutine에서 Dispatcher란 무엇인가요?
+    * Dispatcher는 코루틴이 어떤 스레드나 스레드 풀에서 실행될지를 결정하는 요소입니다. 
+    * Dispatchers.Main은 UI 스레드, Dispatchers.IO는 네트워크나 디스크 I/O 작업, Dispatchers.Default는 CPU 연산에 적합한 스레드 풀에서 실행됩니다.

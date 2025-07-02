@@ -39,8 +39,11 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + Interceptor
   + notification
   + GSON & Moshi
-  + jar/apk/aar
   + view & viewGroup
+  + jar/apk/aar
+  + CoroutineScope & Scope & Job
+  + 코루틴 빌더 (runBlocking, launch, async)
+  + Dispatchers & 스레드 컨텍스트
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -83,3 +86,6 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + DSL (Domain-Specific Language)
   + 예외처리
   + suspend 함수
+  + 코루틴 빌더 (runBlocking, launch, async) 
+  + Dispatchers & Thread Context & withContext
+  + CoroutineScope & Scope & Job 관리

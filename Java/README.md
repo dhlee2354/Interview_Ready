@@ -1143,3 +1143,70 @@ public class SafeCounter {
        일반적인 애플리케이션 개발에서는 직접 사용할 일이 많지 않을 수 있지만, 
        프레임워크를 개발하거나 특정 동적 기능이 필요한 경우 유용하게 활용될 수 있습니다. 
        사용할 때는 항상 성능과 캡슐화, 안정성 측면을 고려해야 합니다.
+
+
+
+---
+
+
+
+
+### throw/throws
+- throw vs throws 의 차이
+   * | 구분    | throw             | throws                |
+             |-------|-------------------|-----------------------|
+      | 역할    | 예외를 **직접 발생**시킴   | 예외를 **메서드 선언부에서 위임**함 |
+      | 위치    | 메서드 **본문 내부**     | 메서드 **선언부** ( () 뒤에 ) |
+      | 예외 개수 | **하나의 예외**만 사용 가능 | 여러개 예외를 ,로 나열 가능      |
+      | 사용대상  | Exception 개체      | Exception 클래스 명       |
+
+1. throw (예외를 직접 발생시킴)
+   - 특정 조건에서 **예외 개체를 new 해서** 직접 던지는 것
+   - 반드시 Throwable의 하위 클래스만 가능
+   - 문법
+     ```java
+        throw new 예외객체;
+     ```
+   - 예제
+     ```java
+        public void checkAge(int age) {
+            if (age < 18) {
+                throw new IllegalArgumentException("나이는 18세 이상이어야 합니다.");
+            }
+        }
+     ```
+     + 예외 객체를 new 해서 직접 던지는 것 = throw
+
+2. throws (예외를 위로 전달)
+   - 해당 메서드에서 발생할 수 있는 **예외를 호출자에게 떠넘기는 것**
+   - 메서드 선언부에 사용
+   - 문법
+     ```java
+        public void 메서드명() throws 예외클래스 { ... }
+     ```
+   - 예제
+     ```java
+        public void readFile(String path) throws IOException {
+            FileReader fr = new FileReader(path);
+        }
+     ```
+     + IOException이 발생할 수 있으니, 호출한 곳에서 처리하게 throws로 명시
+
+3. 함께 사용하는 예
+   ```java
+      public void read(String path) throws IOException {
+            if (path == null) {
+                throw new IllegalArgumentException("경로는 null일수 없습니다.");
+            }
+   
+            throw new IOException("파일을 읽을 수 없습니다.");
+      }
+   ```
+   + throw -> 실제 예외를 던짐
+   + throws -> 예외가 발생할 수 있으니 호출자에게 책임을 넘
+
+4. checked vs Unchecked
+   * | 구분           | 설명                           | 예시                        |
+                  |--------------|------------------------------|---------------------------|
+     | checked 예외   | 반드시 throws 또는 try-catch 필요   | IOException, SQLException |
+     | Unchecked 예외 | Runtime-Exception 계열 - 생략 가능 | NullPointerException, IllegalArgumentException    |

@@ -2186,3 +2186,93 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
   + Coroutine에서 Dispatcher란 무엇인가요?
     * Dispatcher는 코루틴이 어떤 스레드나 스레드 풀에서 실행될지를 결정하는 요소입니다. 
     * Dispatchers.Main은 UI 스레드, Dispatchers.IO는 네트워크나 디스크 I/O 작업, Dispatchers.Default는 CPU 연산에 적합한 스레드 풀에서 실행됩니다.
+
+
+
+___
+
+
+
+
+### Operator Overloading
+- operator 키워드를 붙히면 Kotlin이 해당 메서드를 **특수한 연산자로 해석**
+- ex) plus() 함수에 operator 붙히면 -> + 연산자로 사용 가능
+
+1. 기본 문법
+   ```kotlin
+        operator fun plus(other : T) : T
+   ```
+   + ex) + 연산자 오버로딩
+   ```kotlin
+        data class Point (val x : Int, val y : Int) {
+            operator fun plus (other : Point) : Point {
+                return Point (x + other.x, y + other.y)
+            }
+        }
+   
+        val p1 = Point(1, 2)
+        val p2 = Point(3, 4)
+        val p3 = p1 + p2    // plus()로 호출됨
+        println(p3)     // Point(x=4, y=6)
+   ```
+   
+2. 오버로딩 가능한 연산자
+   * | 연산자 | 함수 이름     | 예시 함수 시그니처                             |
+            |-----|-----------|----------------------------------------|
+     | +   | plus      | operator fun plus(other: T): T         |
+     | -   | minus     | operator fun minus(other: T): T        |
+     | *   | times     | operator fun times(other: T): T        |
+     | /   | div       | operator fun div(other: T): T          |
+     | %   | rem       | operator fun rem(other: T): T          |
+     | []  | get, set  | operator fun get(index: Int): T        |
+     | ==  | equals    | operator fun equals(other: Any?): Boolean |
+     | !=  | equals 사용 | 위와 동일                                  |
+     | ++  | inc       |   operator fun inc(): T     |
+     | --  | dec       |       operator fun dec(): T    |
+     | ()  | invoke    |   operator fun invoke(): T     |
+     | in  | contains  |     operator fun contains(value: T): Boolean     |
+     | ..  | rangeTo   |   operator fun rangeTo(other: T): ClosedRange<T>     |
+
+3. 주요예시
+   - [] 오버로딩 : get, set
+   ```kotlin
+        class MyList {
+             private val data = mutableListOf(1, 2, 3)
+
+             operator fun get(index: Int): Int = data[index]
+             operator fun set(index: Int, value: Int) {
+                  data[index] = value
+             }
+        }
+
+        val list = MyList()
+        println(list[0])     // get 호출 → 1
+        list[0] = 10         // set 호출
+   ```
+   - == 오버로딩 : equals
+   ```kotlin
+        data class User(val name: String) {
+             override operator fun equals(other: Any?): Boolean {
+                    return (other is User) && other.name == name
+             }
+        }
+
+        val u1 = User("Tom")
+        val u2 = User("Tom")
+        println(u1 == u2)  // true → equals 호출됨
+   ```
+   - () 오버로딩 : invoke
+   ```kotlin
+        class Greeter(val message: String) {
+             operator fun invoke(name: String) {
+                    println("$message, $name!")
+             }
+        }
+
+        val g = Greeter("Hello")
+        g("Bae")  // invoke 호출 → Hello, Bae!
+   ```
+   
+4. 주의사항
+   - operator 키워드는 **정해진 함수 이름**에서만 사용 가능
+   - equals를 오버로딩 하면 반드시 hashCode()를 재정의 해야함

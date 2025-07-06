@@ -39,8 +39,8 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + Interceptor
   + notification
   + GSON & Moshi
-  + jar/apk/aar
   + view & viewGroup
+  + jar/apk/aar
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -57,6 +57,8 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + OOP(객체 지향 프로그래밍)
   + 자바 메모리 모델
   + 자바 메모리 구조
+  + GC 가비지컬렉션
+  + 리플렉션
 - ### [Kotlin](./Kotlin)
   + object 키워드
   + lateinit & lazy
@@ -83,3 +85,8 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + DSL (Domain-Specific Language)
   + 예외처리
   + suspend 함수
+  + 코루틴 빌더 (runBlocking, launch, async) 
+  + Dispatchers & Thread Context & withContext
+  + CoroutineScope & Scope & Job 관리
+  + 플랫폼타입
+  + 가변인자 (vararg)

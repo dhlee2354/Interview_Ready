@@ -1210,3 +1210,55 @@ public class SafeCounter {
                   |--------------|------------------------------|---------------------------|
      | checked 예외   | 반드시 throws 또는 try-catch 필요   | IOException, SQLException |
      | Unchecked 예외 | Runtime-Exception 계열 - 생략 가능 | NullPointerException, IllegalArgumentException    |
+
+
+---
+
+
+### instanceof
+- 개념
+  + 객체가 특정 클래스 or 인터페이스 타입인지 확인하는 연산자
+  + 런타임에 타입을 검사하며 다형성(업캐스팅/다운캐스팅) 상황에서 주료 활용
+
+- 사용법
+  + ```java
+    public void typeCheck(Object obj) {
+        if (obj instanceof String){
+            String s = (String) obj; //안전하게 캐스팅
+            System.out.println(s.length());    
+        }
+    } 
+    ```
+  + `obj` 가 `String` 의 인스터인지 확인 후 안전하게 다운캐스팅
+  + null 검사할 때는 `null instanceof Something` 항상 false
+
+- 코틀린 타입 검사와 차이점
+  + 코틀린에서는 `is` 연산자를 사용하며, `instanceof` 와 개념상 동일하지만 스마트 캐스트(smart cast) 
+  + ```kotlin
+    if (obj is String) println(obj.length)
+    ```
+    * 자바처럼 별도의 명시적 캐스팅이 필요 없음
+    * 조건문 블록 안에서 자등으로 타입 보장
+    * Java 14 에서 가능 `obj instanceof String s` 로 체크
+
+- 다형성(Polymorphism) 관점에서 고려할 점
+  + `instanceof`는 부모 타입으로 업캐스팅된 객체를 다시 다운캐스팅할 떄 주로 사용
+  + 지나치게 `instanceof`에 의존하면 다형성의 장점을 살리지 못하고 타입 분기 코드가 늘어나는 문제 생길 수 있음
+  + 다형적 구조라면 메서드 오버라이딩으로 문제를 해결하는 것이 더 바람직함
+
+- `instanceof` vs `is` 비교
+  + | 항목      | Java `instanceof` | Kotlin `is` (스마트 캐스트) |
+    | ------- | ----------------- | --------------------- |
+    | 타입 검사   | `instanceof`      | `is`                  |
+    | 캐스팅 필요  | 수동 캐스팅 필요         | 자동 스마트 캐스트            |
+    | 가독성     | 비교적 장황            | 더 간결, 안전              |
+    | null 검사 | null이면 false      | null이면 false          |
+
+- 면접 관련 질문
+  + instanceof 언제 쓰면 좋을까?
+    * 업캐스팅된 객체를 다시 특정 타입으로 안전하게 캐스팅 할 때 사용하며
+    다형성을 이용하다가 하위 클래스의 메서드나 필드를 써야하는 경우 instanceof 로 타입 체크 후
+    안전하게 다운 캐스팅을 한다
+  + 코틀린의 is 와 자바의 instanceof 차이점?
+    * 코틀린의 is 는 자바의 instanceof 와 같은 역할을 하고
+    추가적으로 smart cast 가 적용되기에 형변환 없이 해당 블록안에서 사용 가능함

@@ -2569,3 +2569,45 @@ ___
     * vararg, 디폴트 파라미터 사용 불가
   + infix 함수와 operator 함수 차이
     * infix 는 중위 표기범을 위한 키워드이고 operator 는 +, -, * 연산자 오버로딩 위한 키워드
+
+
+---
+
+
+### Any 클래스
+- 정의
+  + 코틀린의 Any 클래스는 자바의 Object 클래스와 유사하게 모든 코틀린 클래스의 최상위 타입입니다.
+  + 어떤 클래스를 정의하든, 명시적으로 다른 클래스를 상속하지 않으면 자동으로 Any 클래스를 상속받게 됩니다.
+
+- 주요 특징 및 역할
+  + 모든 타입의 루트
+    * Any는 코틀린 타입 계층 구조의 정점에 위치합니다. 모든 코틀린 타입은 Any 타입으로 간주될 수 있습니다.
+    * 따라서 어떤 타입의 값이든 저장할 수 있는 변수를 선언하고 싶을 때 Any 타입을 사용할 수 있습니다.
+    * ```kotlin
+      val myVariable: Any = "Hello" // String은 Any 타입으로 취급 가능
+      val anotherVariable: Any = 123    // Int도 Any 타입으로 취급 가능
+      val yetAnotherVariable: Any = true // Boolean도 Any 타입으로 취급 가능
+      ```
+  + 기본 메서드 제공
+    * equals(other: Any?): Boolean
+    * hashCode(): Int
+    * toString(): String
+
+  + Nullable 타입 (Any?)
+    * 코틀린은 Null 안전성을 중요하게 다루므로, null 값을 가질 수 있는 모든 타입의 참조를 나타내기 위해 Any? 타입을 사용합니다.
+    * 반면, Any 타입은 null이 아닌 값만 가질 수 있음을 의미합니다.
+    * ```kotlin
+      var nonNullable: Any = "Cannot be null" // nonNullable = null // 컴파일 오류!
+      var nullable: Any? = "Can be null"
+      nullable = null // 허용됨
+      ```
+      
+  + Java Object와의 관계
+    * 코틀린이 JVM에서 실행될 때, 코틀린의 Any 타입은 Java의 java.lang.Object 타입으로 컴파일됩니다.
+    * 따라서 Java 코드와 상호 운용할 때, Java의 Object를 코틀린에서는 Any (또는 Any?)로 다룰 수 있으며, 그 반대도 마찬가지입니다.
+  
+- 요약
+  + kotlin.Any는 코틀린의 모든 클래스의 최상위 부모 클래스로, 
+    모든 객체가 가져야 할 기본적인 메서드(equals, hashCode, toString)를 제공하며, 타입 계층 구조의 루트 역할을 합니다. 
+    이를 통해 코틀린은 강력한 타입 시스템과 Null 안전성을 유지하면서도 유연한 프로그래밍을 지원합니다.
+    

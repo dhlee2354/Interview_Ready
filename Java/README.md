@@ -1262,3 +1262,62 @@ public class SafeCounter {
   + 코틀린의 is 와 자바의 instanceof 차이점?
     * 코틀린의 is 는 자바의 instanceof 와 같은 역할을 하고
     추가적으로 smart cast 가 적용되기에 형변환 없이 해당 블록안에서 사용 가능함
+
+
+---
+
+
+### Wrapper 클래스
+- 정의
+    + Java에서 **Wrapper 클래스(Wrapper Class)**는 8개의 기본 데이터 타입(primitive types)에 해당하는 값을 객체(object)로 다루기 위해 사용되는 클래스들입니다.
+    + 각 기본 타입에 대해 매칭되는 Wrapper 클래스가 존재합니다.
+
+- 기본 타입과 Wrapper 클래스 매칭
+    + | 기본 타입 (Primitive Type) | Wrapper 클래스 (Wrapper Class) | 
+      |------------------------|-----------------------------|
+      | byte                   | Byte                        | 
+      | short                  | Short                       | 
+      | int                    | Integer                     | 
+      | long                   | Long                        | 
+      | float                  | Float                       | 
+      | double                 | Double                      | 
+      | char                   | Character                   | 
+      | boolean                | Boolean                     | 
+
+- Wrapper 클래스가 필요한 이유: Java는 객체 지향 언어이지만, 성능상의 이유로 기본 데이터 타입을 객체가 아닌 값으로 직접 다룹니다. 하지만 다음과 같은 상황에서는 기본 타입을 객체로 다뤄야 할 필요가 있습니다.
+    + 컬렉션 프레임워크(Collection Framework) 사용 시
+        * ArrayList, HashMap과 같은 Java의 컬렉션 클래스들은 객체만 저장할 수 있습니다. 기본 타입의 값을 직접 저장할 수 없으므로, 해당 값을 Wrapper 클래스의 객체로 감싸서 저장해야 합니다.
+    + 제네릭(Generics) 사용 시
+        * 제네릭 타입 파라미터에는 참조 타입(객체 타입)만 올 수 있습니다. 기본 타입을 직접 사용할 수 없습니다.
+    + null 값 표현 시
+        * 기본 타입은 null 값을 가질 수 없습니다. (예: int 변수는 항상 어떤 정수 값을 가져야 함)
+        * Wrapper 클래스의 객체는 null을 가질 수 있으므로, 값이 없거나 아직 할당되지 않은 상태를 표현해야 할 때 유용합니다.
+    + 객체 지향적인 메서드 활용 시
+        * Wrapper 클래스는 해당 타입과 관련된 유용한 상수나 메서드들을 제공합니다.
+
+- 박싱(Boxing)
+  + 기본 타입의 값을 해당하는 Wrapper 클래스의 객체로 변환하는 과정을 말합니다.
+
+- 언박싱(UnBoxing)
+  + Wrapper 클래스의 객체에서 기본 타입의 값을 다시 꺼내는 과정을 말합니다.
+
+- 오토박싱(AutoBoxing)
+  + 기본 타입의 값이 필요한 곳에 Wrapper 클래스 객체가 사용되거나, Wrapper 클래스 객체가 필요한 곳에 기본 타입 값이 사용될 때 컴파일러가 자동으로 박싱/언박싱 코드를 추가해줍니다.
+  + ```java
+    Integer autoWrappedInt = 10; // 오토박싱 (int -> Integer)
+    ArrayList<Integer> list = new ArrayList<>();
+    list.add(20); // 오토박싱 (int 20 -> Integer 객체로 변환되어 리스트에 추가)
+    ```
+
+- 오토언박싱(AutoUnBoxing)
+  + 객체를 해당 기본 타입으로 자동으로 변환하는 것을 의미합니다.
+  + ```java
+    Integer someInteger = new Integer(30);
+    int autoUnboxedInt = someInteger; // 오토언박싱 (Integer -> int)
+    int result = someInteger + 5;     // someInteger가 오토언박싱되어 int로 변환된 후 연산
+    ```
+    
+- Wrapper 클래스의 주요 특징
+  + **불변(Immutable)**: Wrapper 클래스의 객체는 생성된 후 내부 값을 변경할 수 없습니다. 값을 변경하려면 새로운 객체를 생성해야 합니다. 이는 스레드 안전성을 높이고 예측 가능한 동작을 보장합니다.
+  + **java.lang 패키지**: 모든 Wrapper 클래스는 java.lang 패키지에 속해 있으므로, 별도의 import 문 없이 사용할 수 있습니다.
+  + **Number 클래스 상속**: 숫자 타입의 Wrapper 클래스들(Byte, Short, Integer, Long, Float, Double)은 추상 클래스인 Number를 상속받습니다. Number 클래스는 숫자 값을 다양한 기본 타입으로 변환하는 메서드(예: intValue(), doubleValue())를 제공합니다.

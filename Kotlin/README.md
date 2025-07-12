@@ -2666,3 +2666,100 @@ ___
   + 반공변성과 공변성은 서로 반대 방향이라고 보아도 되나요?
     * 공변성(out) 은 생산(출력) 하기에 하위 타입 허용
     * 반공변성(in) 은 소비(입력) 하기에 상위 타입 허용
+
+
+
+
+---
+
+
+
+
+### companion object
+- 클래스 내부에서 인스턴스(객체)를 만들지 않고도 사용할 수 있는 정적 영역
+- Java의 static과 비슷하지만, Kotlin은 static 키워드가 없고 **객체 기반으로 대신 구현**
+
+1. 사용 방법
+   - 문법
+      ```kotlin
+         class MyClass {
+             companion object {
+                 const val PI = 3.14
+                
+                 fun create() : MyClass {
+                     return MyClass()
+                 }
+             }
+         }
+      ```
+   - 사용 방법
+      ```kotlin
+         val obj = MyClass.create()
+         println(MyClass.PI)
+      ```
+   | MyClass를 생성하지 않아도 **create나 PI에 접근 가능**
+
+2. companion object의 특징
+   + | 항목          | 설명                                         |
+                 |-------------|--------------------------------------------|
+     | 정적 접근       | 클래스명으로 직접 접근 가능 (MyClass.x)                |
+     | 싱글턴         | companion object는 클래스 당 **하나**만 존재         |
+     | 이름 지정 가능    | companion object Nane { ... } 처럼 이름 줄 수 있음 |
+     | 인터페이스 구현 가능 | 다른 객체처럼 인터페이스 구현 가능                        |
+     | 자바와의 호환     | 자바에서는 MyClass.Companion.method()로 접근       |
+
+3. 이름 있는 companion object 예시
+    ```kotlin
+        class Logger {
+            companion object Factory {
+                fun create() : Logger = Logger() 
+            }
+        }
+   
+        // 사용
+        val logger = Logger.create()
+    ```
+   | 이름 지정하면 Logger.Factory.create()로도 접근 가능
+
+4. 사용
+   + | 상황                   | 예시                      |
+                      |----------------------|-------------------------|
+     | 팩토리 메서드 만들기          | MyClass.create()        |
+     | 정적 상수 선언             | const val VERSION = 1.0 |
+     | 자바 static과 호환        | @JvmStatic              |
+     | 클래스 내부에서 공유해야 할 util | companion object 활용     |
+
+5. 예시 (팩토리 + 상수)
+   ```kotlin
+        class User private constructor (val name : String) {
+            companion object {
+                const val DEFAULT_NAME = "Guest"
+   
+                fun create (name : String?) : User {
+                    return User (name ?: DEFAULT_NAME)
+                }        
+            }    
+        }
+   
+        val name1 = User.create("Bae")
+        val name2 = User.create(null)
+   ```
+   
+6. 주의사항
+   + | 항목                          | 주의할 점                                        |
+                           |-----------------------------|----------------------------------------------|
+     | static이 없음                  | 반드시 companion object 사용해야 함                  |
+     | const는 최상위 or companion only | const val은 반드시 companion object 또는 top-level |
+     | companion 내부는 싱글턴           | 상태(state)를 저장할 경우 thread-safe 고려             |
+
+7. 면접 질문 
+   + companion object는 어떤 특징을 가지고 있나요?
+     * 클래스 내부에 1개만 선언 가능합니다.(싱글턴 객체)
+     * 클래스 명으로 직접 접근 가능합니다. (ex) MyClass.name())
+     * 일반 객체처럼 인터페이스 구현이 가능합니다.
+   + companion object 내부에서 생성자(private constructor)를 사용할수 있는 이유는 무엇인가요?
+     * companion object는 클래스 내부에 있으므로 private constructor에도 접근 가능 하여, 외부에서는 생성자를 숨기고 
+       create() 같은 팩토리 메서드만 제공하는 패턴을 구현할 수 있습니다.
+   + companion object에 상태(state)를 저장해도 되나요?
+     * 가능하지만 companion object는 기본적으로 싱글턴이기 때문에 **여러 스레드에서 동시에 접근하면 race condition이 발생합니다.**
+     * 따라서 공유상태가 있다면 적절한 동기화 (ex) @Synchronized, volatile)가 필요합니다.

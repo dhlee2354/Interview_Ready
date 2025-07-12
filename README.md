@@ -59,6 +59,12 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + 자바 메모리 구조
   + GC 가비지컬렉션
   + 리플렉션
+  + throw / throws
+  + instanceof 키워드
+  + Wrapper 클래스
+  + 와일드카드
+  + Object 클래스
+  + Comparator & Comparable
 - ### [Kotlin](./Kotlin)
   + object 키워드
   + lateinit & lazy
@@ -90,3 +96,9 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + CoroutineScope & Scope & Job 관리
   + 플랫폼타입
   + 가변인자 (vararg)
+  + Operator Overloading
+  + infix 함수
+  + Any 클래스
+  + 반공변성
+  + companion object
+  + 공변성

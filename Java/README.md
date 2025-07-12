@@ -1379,4 +1379,81 @@ public class SafeCounter {
   + 와일드카드 사용하지 않고 제네릭을 쓰면 어떤 문제가 발생하나요?
     * 타입 고정 시 다형성 제한, List<Dog> 는 List<Animal> 서브타입 아니기에 Dog를 받으려면 오버러드 필요하기에
     재사용성과 유연성이 떨어지는 문제가 발생
-  
+
+
+---
+
+
+### object 클래스
+- java.lang.Object는 **Java의 모든 클래스가 암묵적으로 상속받는 최상위 클래스**
+```java
+    class Person {
+        // 암묵적으로 extends Object가 포함
+    }   
+```
+
+1. 사용 이유
+   - 모든 객체를 **동일한 타입(object)**으로 다룰수 있게 하기 위해 사용
+   - equals(), hashCode(), toString() 같은 **기본 동작을 모든 객체에게 제공**하기 위해 사용
+
+2. 주요 메서드 정리
+   + | 메서드                           | 설명                            | 
+           |-------------------------------|-------------------------------|
+     | equals(Object obj)            | 객체 동등성 비교                     | 
+     | hashCode()                    | 객체 고유 정수값 반환 (해시 구조에 사용)      | 
+     | toString()                    | 객체를 문자열로 표현                   | 
+     | getClass()                    | 클래스 정보를 담은 Class 객체 반환        | 
+     | clone()                       | 객체 복제 (얕은 복사, Clonable 구현 필요) | 
+     | finalize()                    | 객체가 GC될 때 호출되는 종료 처리용 메서드     | 
+     | wait(), notify(), notifiAll() | 스레드 동기화 지원 (멀티 스레드 관련)        | 
+
+3. eqauls() & hashCode()
+   ```java
+        @Override
+        public boolean eqauls (Object obj) {
+            if (!(obj instanceof Person)) return false;
+            Person other = (Person) obj;
+            return this.name.equals(other.name);
+        }
+   
+        @Override
+        public int hashCode() {
+            return name.hashCode();     // equals와 hashCode는 반드시 함께!
+        }
+   ```
+   | 두 객체가 **논리적으로 같다고 판단**되면 hashCode()도 같아야 함 -> 항상 같이 오버라이드 함
+
+4. 사용 예시
+   ```java
+        Person p1 = new Person("Bae");
+        Person p2 = new Person("Bae");
+   
+        System.out.println(p1 == p2);           // false (주소 비교)
+        System.out.println(p1.equals(p2));      // true (논리적 비교)
+        System.out.println(p1.toString());      // "Person[name=Bae]"
+   ```
+   
+5. Object 클래스와 인터페이스 비교
+   + | 항목       | Object 클래스     | 인터페이스                  |
+     |----------|----------------|------------------------|
+     | 역할       | 최상위 구현 클래스     | 행동 명세서                 |
+     | 상속 방식    | 단일 상속 (1개만 가능) | 다중 구현 가능               |
+     | 자동 상속 여부 | 모든 클래스에 자동 상속  | 명시적 구현 필요 (implements) |
+
+5. 요약
+   + | 항목       | 설명                                          | 
+                |----------|---------------------------------------------|
+     | 클래스 명    | java.lang.Object                            | 
+     | 역할       | Java 모든 클래스의 최상위 클래스                        | 
+     | 핵심 메서드   | toString(), eqauls(), hashCode(), clone() 등 | 
+     | 주 용도     | 기본 기능 제공 + 다형성 지원                           | 
+     | 자주 오버라이딩 | toString, equals, hashCode                  | 
+
+6. 면접 질문
+   + equals() 와 == 의 차이는 무엇인가요?
+        + == : 주소 비교 (레퍼런스 비교)
+        + equals() : 논리적 비교 (값이 같은지 비교)
+   + equals()와 hashCode()는 왜 같이 오버라이딩 해야하나요?
+        + equals()가 같으면 hashCode()도 같아야 해시 기반 자료구조 (Map, Set 등)에서 정상 작동하기 때문입니다. 
+   + toString()을 왜 오버라이딩 해야하나요?
+        + 객체 정보를 출력하거나 디버깅할 때 **사람이 읽을 수 있는 문자열**로 나타내기 위해서 입니다.  

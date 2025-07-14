@@ -1516,3 +1516,163 @@ public class SafeCounter {
     | 패키지      | java.lang                      | java.util                                    | 
     | 클래스 수정   | 원본 클래스 코드 수정 필요           | 원본 클래스 코드 수정 불필요                       | 
     | 사용 시점    | Collections.sort(list) (자동 사용)| Collections.sort(list, comparator) (명시적 전달)  |
+        + 객체 정보를 출력하거나 디버깅할 때 **사람이 읽을 수 있는 문자열**로 나타내기 위해서 입니다.  
+
+
+
+---
+
+
+
+### 싱글턴 (Singleton)
+- 객체를 단 하나만 생성하여 사용하는 패턴
+- **어떤 클래스의 인스턴스가 오직 하나만 생성**되도록 보장하는 디자인 패턴
+  * 메모리 낭비 막음
+  * 전역적으로 동일한 인스턴스 공유
+  * 객체 생성을 제어
+
+1. 사용 이유
+  + | 이유       | 설명                           | 
+                    |----------|------------------------------|
+    | 전역 상태 공유 | 설정 값, DB 연결, 로그기록 등을 하나로 관리  | 
+    | 리소스 절약   | 객체를 한번만 생성하여 계속 재사용          | 
+    | 제어된 접근   | 외부에서 new로 생성 불가능 -> 생성 제한 가능 | 
+
+2. 기본 구현 방법
+  ```java
+     public class Singleton {
+         // 1. 클래스 내부에 static으로 유일한 인스턴스 생성
+         private static Singleton instance = new Singleton();
+         
+         // 2. 외부에서 new로 생성하지 못하도록 생성자 private
+         private singleton() {}
+  
+         // 3. 외부에서 인스턴스에 접근하는 static 메서드 제공
+         public static Singleton getInstance() {
+             return instance();
+         } 
+     }
+  ```
+  ```java
+     Singleton s1 = Singleton.getInstance();
+     Singleton s2 = Singleton.getInstance();
+  
+     System.out.println(s1 == s2);
+  ```
+  
+3. 지연 초기화 (Lazy Initialization)
+   + 실제로 필요할 때 생성하는 방식 (메모리 절약 가능)
+    ```java
+        public class Singleton {
+            private static Singleton instance();
+  
+            private Singleton() {}
+  
+            public static Singleton getInstance() {
+                if (instance == null) {
+                 instance = new Singleton();
+                }
+                return instance();
+            }
+        }
+    ```
+   + 이 방식은 **멀티스레드 환경에서 동시 접근 시 문제가 생길 수 있음** (동기화 필요)
+
+4. Thread-safe Singleton (멀티스레드 안전)
+   + sychronized 사용
+     ```java
+         public class Singleton {
+             private static Singleton instance;
+    
+             private Singleton() {}
+    
+             public static sychronized Singleton getInstance() {
+                 if (instance == null) 
+                     instance = new Singleton();
+                
+                 return instance;
+             }
+         }
+     ```
+        * 단점 : sychronized는 성능에 영향을 줄 수 있음
+
+   + Double-checking locking (권장)
+     ```java
+        public class Singleton {
+            private static volatile Singleton instance;
+     
+            private Singleton() {}
+     
+            public static Singleton getInstance() {
+                if (instance == null) {
+                    synchronized (Singleton.class) {
+                        if (instance == null)
+                            instance = new Singleton();
+                    }
+                }
+     
+                return instance;
+            }
+        }
+     ```
+        * 단점 : volatile과 synchronized를 함께 써서 성능 + 스레드 안전을 모두 고려
+
+5. 가장 안전한 방법: 정적 내부 클래스 방식 (권장)
+   ```java
+        public class Singleton {
+            private Singleton() {}
+   
+            private static class Holder {
+                private static final Singleton INSTANCE = new Singleton();
+            }
+   
+            public static Singleton getInstance() {
+                return Holder.INSTANCE;
+            }
+        }
+   ```
+   * 클래스가 로딩될 때까지 인스턴스 생성하지 않음 -> **Lazy**
+   * JVM 클래스 로더의 **Thread-safe 보장**
+
+6. enum 싱글턴
+   ```java
+        public enum Singleton {
+            INSTANCE;
+   
+            public void doSomething() {
+                System.out.println("작동 중");
+            }
+        }    
+   ```
+   * **직렬화, 리플렉션, 멀티스레드 모두 안전**
+   * 단, **상속이 불가하고** 필요 이상의 제약이 있을 수 있음
+
+7. 자주 쓰이는 예
+   + | 사용처        | 설명                  | 
+                         |------------|---------------------|
+     | 로그 시스템     | Logger는 인스턴스 하나면 충분 | 
+     | 설정 파일      | 전역으로 공유             | 
+     | 데이터베이스 연결  | Connection Pool 관리  | 
+     | 앱 전체 상태 저장 | AppManager, Cache 등 |
+
+8. 요약
+   + | 방법                 | 특징         | Thread-safe |
+          |--------------------|------------|---------|
+     | 고전 방식              | 미리 생성      | ❌       |
+     | Lazy 방식            | 필요시 생성     | ❌       |
+     | synchronized       | 안전하지만 느림   | ✅       |
+     | double-checked     | 성능 + 안전    | ✅    |
+     | static inner class | JVM 보장 안정성 | ✅✅ |
+     | enum               | 가장 간단하고 견고 |  ✅✅✅ |
+
+9. 면접 질문
+   + Sington 패턴이란 무엇인가요?
+     * **하나의 클래스에 단 하나의 인스턴스만 존재하도록 보장하는 디자인 패턴**입니다.
+     * 주로 전역 상태 관리, 설정 객체, 로그 처리 등에서 사용합니다.
+   + Thread-safe Singleton은 어떻게 구현하나요?
+     * synchronized, Double-Checked Locking, 정적 내부 클래스 (static inner class), enum을 사용할 수 있습니다.
+     * **가장 안전하고 성능도 좋은 방법은 정적 내부 클래스 방식입니다.**
+   + Singleton의 단점은 무엇인가요?
+     * 테스트 어려움 -> 상태가 공유되므로 유닛 테스트 시 고립시키기 힘듦
+     * 상태 공유 문제 -> 여러 스레드가 같은 인스턴스에 접근하면 동기화 필요
+     * 높은 결합도 -> 클래스 간 의존성이 강해지고 유연성 저하

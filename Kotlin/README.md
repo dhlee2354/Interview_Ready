@@ -3026,3 +3026,89 @@ ___
         * 둘다 JVM 위에서 동작하고 컴파일 결과는 동일한 바이트코드(.class)이기 때문에 상호운용 가능
     + Kotlin & Java 동시 사용 시 주의해야 할 점?
         * java는 null 안정성 보장하지 않아서 코틀린의 플랫폼 타입으로 인식 되기에 이를 명확하게 구분/처리, 어노테이션 등 필요
+
+
+
+---
+
+
+
+### const
+- Kotlin에서 **컴파일 타임 상수(Const value)**를 정의할 때, 정의할때 사용하는 키워드 
+- **실행 전에 값이 정해져야 하고, primitive type 혹은 String만 가능**
+
+- 기본 사용법
+  ```kotlin
+      const val PI = 3.14
+      const val APP_NAME = "My App"
+  ```
+  + 이 값들은 **컴파일 상수로 결정되며,** 런타임에 초기화되지 않습니다.
+
+- const & val 의 차이
+  * | 항목       | const val                                      | val                 |
+                |----------|------------------------------------------------|---------------------|
+    | 초기화 시점   | **컴파일 타임**                                     | 런타임                 |
+    | 선언 위치    | **top-level, object, companion object 내부만 가능** | 어디든 가능              |
+    | 사용 가능 타입 | 기본 타입 (Int, Double, String 등)                  | 모든 타입               |
+    | 목적       | 상수 선언 (리터럴 고정 값)                               | 읽기 전용 값 (지연 초기화 가능) |
+
+- 선언 가능한 위치 제안
+  1. top-level
+    ```kotlin
+        const val BASE_URL = "https://api.example.com"
+    ```
+  2. companion object
+    ```kotlin
+        class AppConfig {
+            companion object {
+                const val VERSION = "1.0.0"
+            }
+        }
+    ```
+  
+- 사용할 수 없는 위치
+  ```kotlin
+      fun test() {
+          const val x = 10  // ❌ ERROR: const는 함수 내부에서 사용 불가
+      }  
+  ```
+  + 함수 내부에서는 val만 사용 가능하고, const는 사용할 수 없음
+
+- const가 필요한 이유
+  + **annotation parameter** 등에 리터럴 상수를 넘겨야 할 때
+  + **Java interop**에서 public static final처럼 동작해야 할 때
+  + enum/DSL에서 리터럴을 상수로 쓸 때
+
+- Java에서 접근할 경우
+  ```kotlin
+      // Kotlin
+      object Config {
+          const val TOKEN = "abc123"
+      }
+  
+      // Java
+      String Token = Config.TOKEN;  // ⚠️ public static final처럼 사용 가능
+  ```
+  
+- 요약 
+  + | 특징       | 설명                            |
+                                    |----------|-------------------------------|
+    | 선언 키워드   | const val                     |
+    | 초기화 시점   | 컴파일 타임                        |
+    | 사용 가능 타임 | Int, Long, String 등 기본 타입만 가능 |
+    | 선언 위치    |    top-level, object, companion object 내부   |
+    | 쓰임새      |   annotation 상수, 공통 리터럴 정의, Java interop    |
+
+- 면접질문
+  + val과 const val의 차이는 무엇인가요?
+    * val은 **런타임 상수**이고, const val은 **컴파일 타임 상수**이다.
+    * const는 기본 타입(Int, Long, String 등)만 가능하며, 선언 위치에 제한이 있다.
+  + const는 어디에서 선언할 수 있나요?
+    * Top-level (파일 최상단)
+    * object
+    * companion object
+    * ❌ 함수 내부나 클래스 내부에서는 사용할 수 없습니다 (→ val만 사용 가능).
+  + 왜 const를 사용하나요? 그냥 val로 하면 안 되나요?
+    * const는 컴파일 시점에 값이 확정되기 때문에 더 빠르고 안정적입니다.
+    * annotation, Java interop, DSL 상수에 꼭 필요합니다.
+    * 예: @Header("Authorization: $TOKEN") 같이 annotation 내부에 들어가야 할 값은 const여야 컴파일됩니다.

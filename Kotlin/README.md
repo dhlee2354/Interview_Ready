@@ -3173,3 +3173,65 @@ ___
     * 레이블을 과도하게 사용하면 코드의 흐름을 이해하기 어렵게 만들 수 있습니다.
     * 일반적으로 레이블은 복잡한 제어 흐름을 단순화하는 데 도움이 될 수 있지만, 때로는 코드를 리팩토링하여 레이블 없이도 명확한 구조를 만드는 것이 더 좋을 수 있습니다. 
       Kotlin의 레이블은 Java의 레이블과 유사한 개념이지만, 특히 람다 식에서의 반환 제어와 관련하여 Kotlin의 함수형 프로그래밍 특성과 잘 어우러져 사용됩니다.
+
+
+---
+
+
+### Nothing 타입
+- 개념 및 정의
+  + 값이 존재하지 않을 것을 명시적으로 표현하는 특수 타입
+  + 정상적인 반환이 절대 없는 함수의 반환 타입으로 사용
+  + 이후 코드는 절대 실행되지 않음
+
+- 왜 필요한가?
+  + | 목적        | 이유                                |
+    | --------- | --------------------------------- |
+    | 코드 가독성    | "이 함수는 절대 끝까지 반환 안 함" 을 명시        |
+    | 타입 시스템 보완 | 타입 추론 시 `Nothing`을 활용하면 더 안전하게 동작 |
+    | 예외 상황 표현  | 예외 던지기, 무한 루프 등에서 사용              |
+
+- 주요 특징
+  + | 특징    | 설명                                  |
+    | ----- | ----------------------------------- |
+    | 하위 타입 | **모든 타입의 하위 타입** (`subtype of all`) |
+    | 값 없음  | 인스턴스를 가질 수 없음                       |
+    | 종료 명시 | return, throw 등으로 코드 흐름 종료를 표현      |
+    | 주 용도  | 예외, 무한 루프, 실패 케이스 함수                |
+
+- 예시
+  + 예외 던지는 함수에 사용
+    * ```kotlin
+      fun fail(message: String): Nothing {
+        throw IllegalArgumentException(message)
+      }
+      ```
+    * 값을 반환하지 않으며 타입 추론에 도움을 줌
+  + 엘비스 연산자와 함께 사용
+    * ```kotlin
+      val name:String? = null
+      val result = name ?: fail("name cannot be null")
+      // result String 으로 타입 추론
+      ```
+    * fail() 이 Nothing 이라 result 는 String 으로 안전하게 추론
+  + when exhaustive
+    * ```kotlin
+      sealed class Result
+      object Success : Result()
+      object Failure : Result()
+      
+      fun handle(result: Result): String = when(result) {
+        is Success -> "OK"
+        is Failure -> "Fail"
+        else -> error("Unknown result") // error() 의 반환 Nothing
+      }
+      ```
+
+- 면접 관련 질문
+  + Nothing 타입이 실무에서 필요한 이유
+    * "반환되지 않는다"를 명확하게 타입 시스템에 전달해 코드 가독성 및 타입 추론 도움
+  + Nothing 은 어떤 타입의 하위 타입인가?
+    * 모든 타입의 하위 타입 (String?, List<Int> 등)
+  + Nothing 이 실무에서 쓰이는 케이스
+    * 예외를 던지는 fail(), error(), require() 같은 함수
+    * 엘비스 연산자 ?: 조합으로 타입 명확하게 유지할 때 사용

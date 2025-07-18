@@ -65,6 +65,12 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + 와일드카드
   + Object 클래스
   + Comparator & Comparable
+  + 싱글턴
+  + 암복호화 방식 및 예제 
+  + java 컴파일 및 빌드 과정
+  + 다중 상속
+  + Checked Exception &UnChecked Exception
+  + Atomic Class
 - ### [Kotlin](./Kotlin)
   + object 키워드
   + lateinit & lazy
@@ -101,4 +107,10 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + Any 클래스
   + 반공변성
   + companion object
+  + 싱글턴 패턴 및 동기화
   + 공변성
+  + 코틀린 & 자바 상호윤용
+  + Unit 키워드
+  + const 키워드
+  + label
+  + Nothing 타입

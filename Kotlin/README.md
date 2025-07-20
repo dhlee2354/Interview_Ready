@@ -3114,6 +3114,89 @@ ___
     * 예: @Header("Authorization: $TOKEN") 같이 annotation 내부에 들어가야 할 값은 const여야 컴파일됩니다.
 
 
+
+---
+
+
+
+
+### KMM (Kotlin Multiplatform Mobile)
+- Android 와 Ios 앱에서 **공통 비즈니스 로직(ex) 네트워크, DB, 유틸 등)을 하나의 코틀린 코드로 작성하고**,
+-  나머지 UI/플랫폼 특화 코드는 **각 플랫폼에 맞게 따로 구현**할 수 있게 해주는 멀티플랫폼 기술
+
+1. KMM의 핵심 구성
+   ```markdown
+        ├── shared/ (Kotlin 공통 코드)
+        │   ├── commonMain/
+        │   │   └── 공유 로직 (ViewModel, Repository, UseCase 등)
+        │   ├── androidMain/
+        │   │   └── Android-specific 코드 (Context, Room 등)
+        │   └── iosMain/
+        │       └── iOS-specific 코드 (NSURL, iOS Logger 등)
+
+        ├── androidApp/
+        │   └── Android 앱 코드 (Compose/Jetpack)
+
+        ├── iosApp/
+        │   └── iOS 앱 코드 (SwiftUI/UIKit)
+   ```
+    - commonMain: Kotlin 공통 코드 (최대한 많은 로직을 여기에 둠)
+    - androidMain, iosMain: 각 플랫폼 전용 구현
+
+2. KMM의 주요 특징 
+   + | 특징                  | 설명                                       |
+                                         |---------------------|------------------------------------------|
+     | Cross-platform 지원   | 하나의 Kotlin 코드로 Android & iOS 대응 가능       |
+     | UI는 네이티브            | UI는 각 플랫폼의 기술 유지 (Compose, SwiftUI 등)    |
+     | 비즈니스 로직 재사용         | 네트워크, DB, 유즈케이스 등 로직 공유                  |
+     | Gradle 기반           | Kotlin DSL 기반 빌드 구성                      |
+     | Native Framework 생성 | iOS에서는 XCFramework로 컴파일되어 Swift에서 호출 가능  |
+
+3. 공통화 할 수 있는 코드
+   - 비즈니스 로직, 데이터 모델, Repository, Usecase, 네트워크 처리(Ktor 등), 데이터 저장(SQLDelight 등)
+   - 🚫 UI, View, Activity, SwiftUI 같은 화면 코드 → 각 플랫폼에서 따로 구현해야 함
+
+4. 예제
+    ```kotlin
+        // shared/commonMain
+        class GreetingViewModel {
+            fun greet(): String = "Hello, KMM!"
+        }
+    ```
+   - iOS에서는 Swift에서 호출:
+   ```markdown
+        let viewModel = GreetingViewModel()
+        print(viewModel.greet())
+   ```
+   - Android에서는 일반 Kotlin처럼 사용:
+   ```kotlin
+        val vm = GreetingViewModel()
+        Log.d("Greet", vm.greet())
+   ```
+   
+5. 대표 라이브러리
+   + | 용도            | 라이브러리                 |
+                                              |---------------|-----------------------|
+     | HTTP 통신       | Ktor                  |
+     | DB 저장  | SQLDelight            |
+     | 비동기   | Kotlinx.coroutines    |
+     | DI       | Koin (KMM 지원), Kodein |
+     | 날짜/시간 | kotlinx-datetime      |
+
+6. 장점
+   - Kotlin 하나로 Android/iOS 코드 공유
+   - UI는 네이티브 그대로 사용 가능
+   - 빠른 성능 (네이티브 수준)
+   - Kotlin 코드 재사용성 극대화
+   - JetBrains + Google 지원 (공식성 ↑)
+
+7. 단점
+   - UI 코드 공유는 불가능 (Flutter보다 제한적)
+   - iOS 개발자가 Kotlin 이해 필요
+   - 아직 일부 라이브러리 생태계 미성숙
+   - 초기 설정이 복잡할 수 있음
+
+
 ---
 
 

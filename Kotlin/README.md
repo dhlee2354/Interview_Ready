@@ -3114,6 +3114,89 @@ ___
     * 예: @Header("Authorization: $TOKEN") 같이 annotation 내부에 들어가야 할 값은 const여야 컴파일됩니다.
 
 
+
+---
+
+
+
+
+### KMM (Kotlin Multiplatform Mobile)
+- Android 와 Ios 앱에서 **공통 비즈니스 로직(ex) 네트워크, DB, 유틸 등)을 하나의 코틀린 코드로 작성하고**,
+-  나머지 UI/플랫폼 특화 코드는 **각 플랫폼에 맞게 따로 구현**할 수 있게 해주는 멀티플랫폼 기술
+
+1. KMM의 핵심 구성
+   ```markdown
+        ├── shared/ (Kotlin 공통 코드)
+        │   ├── commonMain/
+        │   │   └── 공유 로직 (ViewModel, Repository, UseCase 등)
+        │   ├── androidMain/
+        │   │   └── Android-specific 코드 (Context, Room 등)
+        │   └── iosMain/
+        │       └── iOS-specific 코드 (NSURL, iOS Logger 등)
+
+        ├── androidApp/
+        │   └── Android 앱 코드 (Compose/Jetpack)
+
+        ├── iosApp/
+        │   └── iOS 앱 코드 (SwiftUI/UIKit)
+   ```
+    - commonMain: Kotlin 공통 코드 (최대한 많은 로직을 여기에 둠)
+    - androidMain, iosMain: 각 플랫폼 전용 구현
+
+2. KMM의 주요 특징 
+   + | 특징                  | 설명                                       |
+                                         |---------------------|------------------------------------------|
+     | Cross-platform 지원   | 하나의 Kotlin 코드로 Android & iOS 대응 가능       |
+     | UI는 네이티브            | UI는 각 플랫폼의 기술 유지 (Compose, SwiftUI 등)    |
+     | 비즈니스 로직 재사용         | 네트워크, DB, 유즈케이스 등 로직 공유                  |
+     | Gradle 기반           | Kotlin DSL 기반 빌드 구성                      |
+     | Native Framework 생성 | iOS에서는 XCFramework로 컴파일되어 Swift에서 호출 가능  |
+
+3. 공통화 할 수 있는 코드
+   - 비즈니스 로직, 데이터 모델, Repository, Usecase, 네트워크 처리(Ktor 등), 데이터 저장(SQLDelight 등)
+   - 🚫 UI, View, Activity, SwiftUI 같은 화면 코드 → 각 플랫폼에서 따로 구현해야 함
+
+4. 예제
+    ```kotlin
+        // shared/commonMain
+        class GreetingViewModel {
+            fun greet(): String = "Hello, KMM!"
+        }
+    ```
+   - iOS에서는 Swift에서 호출:
+   ```markdown
+        let viewModel = GreetingViewModel()
+        print(viewModel.greet())
+   ```
+   - Android에서는 일반 Kotlin처럼 사용:
+   ```kotlin
+        val vm = GreetingViewModel()
+        Log.d("Greet", vm.greet())
+   ```
+   
+5. 대표 라이브러리
+   + | 용도            | 라이브러리                 |
+                                              |---------------|-----------------------|
+     | HTTP 통신       | Ktor                  |
+     | DB 저장  | SQLDelight            |
+     | 비동기   | Kotlinx.coroutines    |
+     | DI       | Koin (KMM 지원), Kodein |
+     | 날짜/시간 | kotlinx-datetime      |
+
+6. 장점
+   - Kotlin 하나로 Android/iOS 코드 공유
+   - UI는 네이티브 그대로 사용 가능
+   - 빠른 성능 (네이티브 수준)
+   - Kotlin 코드 재사용성 극대화
+   - JetBrains + Google 지원 (공식성 ↑)
+
+7. 단점
+   - UI 코드 공유는 불가능 (Flutter보다 제한적)
+   - iOS 개발자가 Kotlin 이해 필요
+   - 아직 일부 라이브러리 생태계 미성숙
+   - 초기 설정이 복잡할 수 있음
+
+
 ---
 
 
@@ -3235,3 +3318,69 @@ ___
   + Nothing 이 실무에서 쓰이는 케이스
     * 예외를 던지는 fail(), error(), require() 같은 함수
     * 엘비스 연산자 ?: 조합으로 타입 명확하게 유지할 때 사용
+
+
+---
+
+
+### tailrec(꼬리 재귀)
+- 정의
+  + tailrec은 Kotlin에서 꼬리 재귀 최적화를 컴파일러에게 지시하는 변경자입니다. 
+  + 꼬리 재귀 최적화는 특정 형태의 재귀 함수를 반복문으로 변환하여 스택 오버플로우 오류를 방지하고 성능을 향상시키는 기법입니다.
+
+- 꼬리 재귀란 무엇일까요?
+  + 일반적인 재귀 함수는 자기 자신을 호출한 후, 그 반환된 결과를 가지고 추가적인 연산을 수행합니다.
+  + ```kotlin
+    fun factorialRecursive(n: Int): Int {
+        if (n == 1) {
+            return 1
+        }
+    // 재귀 호출 후 곱셈 연산이 남아 있음
+    return n * factorialRecursive(n - 1)
+    }
+    ```
+  + 위 함수에서 factorialRecursive(n - 1)이 반환된 후에 n과 곱하는 연산이 남아있습니다. 
+  + 이런 경우, 함수 호출 스택에는 각 재귀 호출에 대한 정보(지역 변수, 다음 실행 위치 등)가 계속 쌓이게 됩니다. 
+  + n이 매우 커지면 스택 공간이 부족해져 스택 오버플로우 오류가 발생할 수 있습니다. 
+  + 반면, 꼬리 재귀 함수는 재귀 호출이 함수의 마지막 연산이어야 합니다. 
+  + 즉, 재귀 호출의 결과를 받아와서 추가적인 작업을 하지 않고 바로 반환해야 합니다.
+
+- tailrec 변경자 사용법 및 조건
+  + Kotlin에서 꼬리 재귀 최적화를 적용하려면 함수 앞에 tailrec 변경자를 붙여야 합니다.
+  + ```kotlin
+    tailrec fun factorialTailRecursive(n: Int, accumulator: Int = 1): Int {
+        if (n == 1) {
+            return accumulator // 재귀 호출 없이 바로 결과 반환
+        }
+        // 재귀 호출이 함수의 마지막 연산임
+        return factorialTailRecursive(n - 1, n * accumulator)
+    }
+    ```
+  + tailrec 변경자: 함수 선언 앞에 tailrec을 명시했습니다.
+  + 누산기 (Accumulator) 사용: 꼬리 재귀 형태로 만들기 위해 accumulator라는 추가 파라미터를 사용했습니다. 이 파라미터는 중간 계산 결과를 계속 누적하여 다음 재귀 호출로 전달합니다.
+  + 마지막 연산이 재귀 호출: return factorialTailRecursive(n - 1, n * accumulator) 부분이 함수의 마지막 연산입니다. 재귀 호출의 결과를 받아와서 다른 연산을 하지 않습니다.
+
+- 컴파일러의 최적화
+  + 컴파일러는 tailrec으로 표시된 함수가 실제로 꼬리 재귀 형태인지 확인합니다. 만약 조건을 만족하면, 컴파일러는 이 재귀 함수를 다음과 같은 반복문 형태로 변환합니다.
+
+- tailrec 사용 시 주의사항 및 조건
+  + 함수 자신을 직접 호출해야 합니다.
+  + 재귀 호출이 함수의 마지막 연산이어야 합니다. 재귀 호출 후 어떤 연산도 수행되어서는 안 됩니다.
+  + try-catch-finally 블록 안에서 꼬리 호출을 사용할 수 없습니다.
+  + 오픈(open) 함수이거나, 상위 클래스의 함수를 오버라이드(override)한 경우에는 tailrec을 사용할 수 없습니다.
+
+- tailrec이 유용한 경우
+  + 깊은 재귀가 필요한 알고리즘: 일반 재귀로는 스택 오버플로우가 발생할 수 있는 경우.
+  + 함수형 프로그래밍 스타일: 반복문을 재귀로 표현하고자 할 때, 성능 저하 없이 사용할 수 있습니다.
+
+- 요약
+  + | 특징     | 설명                                        | 
+    |--------|-------------------------------------------| 
+    | 키워드    | tailrec                                   |
+    | 목적     | 꼬리 재귀 함수를 반복문으로 최적화하여 스택 오버플로우 방지 및 성능 향상 | 
+    | 조건     | 재귀 호출이 함수의 마지막 연산이어야 함                    | 
+    | 동작     | 컴파일러가 재귀 코드를 효율적인 반복문 코드로 변환              | 
+    | 장점     | 스택 오버플로우 방지, 잠재적인 성능 향상, 함수형 스타일 유지       | 
+    | 주의사항   | 모든 재귀 함수에 적용 가능한 것은 아니며, 특정 조건을 만족해야 함    |
+  + tailrec은 Kotlin에서 재귀를 안전하고 효율적으로 사용할 수 있도록 돕는 강력한 기능입니다. 
+    하지만 모든 재귀 함수를 tailrec으로 만들 수 있는 것은 아니므로, 함수의 구조를 꼬리 재귀 형태로 변경해야 할 수도 있습니다.

@@ -3384,3 +3384,58 @@ ___
     | 주의사항   | 모든 재귀 함수에 적용 가능한 것은 아니며, 특정 조건을 만족해야 함    |
   + tailrec은 Kotlin에서 재귀를 안전하고 효율적으로 사용할 수 있도록 돕는 강력한 기능입니다. 
     하지만 모든 재귀 함수를 tailrec으로 만들 수 있는 것은 아니므로, 함수의 구조를 꼬리 재귀 형태로 변경해야 할 수도 있습니다.
+
+
+---
+
+
+### list & array 차이
+- 개념/정의
+  + Array 고정 크기이며 같은 타입 요소의 모음
+  + List 컬렉션 인터페이스, 크기 유동적, 더 다양한 기능 제공
+
+- 공통점
+  + | 공통점            | 설명                            |
+    | -------------- | ----------------------------- |
+    | 인덱스로 접근 가능     | `list[0]`, `array[0]` 등 사용 가능 |
+    | 순서 보장          | 입력된 순서대로 요소 유지                |
+    | Iterable 인터페이스 | for-each 루프 사용 가능             |
+
+- 차이점
+  + | 항목    | **Array**    | **List**                         |
+    | ----- | ------------ | -------------------------------- |
+    | 크기    | **고정**       | **유동적 (immutable / mutable)**    |
+    | 타입    | 같은 타입 요소만    | 제네릭으로 타입 지정                      |
+    | 변경 여부 | 요소 변경 가능     | `List`는 불변, `MutableList`는 변경 가능 |
+    | 생성 방식 | `arrayOf()`  | `listOf()`, `mutableListOf()`    |
+    | 기능    | 단순 배열        | 다양한 컬렉션 기능 제공                    |
+    | 사용 목적 | 고정 크기, 성능 중심 | 컬렉션, 데이터 관리 중심                   |
+
+- 각 특징과 사용 예시
+  + Array
+    * ```kotlin
+      val arr = arrayOf(1, 2, 3)
+      arr[0] = 10  // 요소 변경 가능  
+      println(arr.joinToString()) // 출력: 10, 2, 3
+      ```
+    * 크기 고정 (추가/삭제 불가)
+    * 요소 변경 가능
+    * 배열 연산에 특화
+  + List/MutableList
+    * ```kotlin
+      val immutableList = listOf(1, 2, 3)      // 불변
+      val mutableList = mutableListOf(1, 2, 3) // 가변
+      mutableList.add(4)
+      println(mutableList)  // [1, 2, 3, 4]
+      ```
+    * List 읽기 전용 변경 불가
+    * MutableList 요소 추가/삭제 가능
+    * 고차 함수 활용에 용이 (map, filter)
+
+- 면접 관련 질문
+  + Array와 List의 가장 큰 차이는?
+    * Array 고정 크기를 사용하고 요소 변경 가능
+    * List 읽기 전용으로 사용 가변 컬렉션이 필요하면 MutableXXX 사용
+  + List와 MutableList의 차이는?
+    * List 읽기 전용이라 요소 추가/삭제 불가능
+    * MutableList 변경 가능한 컬렉션

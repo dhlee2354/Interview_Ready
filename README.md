@@ -69,8 +69,11 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + 암복호화 방식 및 예제 
   + java 컴파일 및 빌드 과정
   + 다중 상속
-  + Checked Exception &UnChecked Exception
+  + this & super 
+  + Checked Exception & UnChecked Exception
   + Atomic Class
+  + transient
+  + JUnit
 - ### [Kotlin](./Kotlin)
   + object 키워드
   + lateinit & lazy
@@ -112,5 +115,8 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + 코틀린 & 자바 상호윤용
   + Unit 키워드
   + const 키워드
+  + KMM (Kotlin Multiplatform Mobile)
   + label
   + Nothing 타입
+  + tailrec (꼬리재귀)
+  + list & array 차이

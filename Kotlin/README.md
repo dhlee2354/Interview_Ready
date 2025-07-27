@@ -171,43 +171,35 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 
 ### Safe Call / Elvis 연산자
-- 코틀린에서 Safe Call 연산자(?.)와 Elvis 연산자(?:)는 null-safety를 보장하기 위해서 자주 사용되는 두 가지 핵심 연산자 입니다.
+- 개념/정의
+  + NPE(Null Pointer Exception) 방지하기 위해 nullable 타입과 null-safe 연산자 지원
+  + `?.` safe call 과 `?:` Elvis 연산자 2가지를 주로 사용
 
 - Safe Call 연산자 (?.)
-  + 역할 : 객체가 null일 경우 메서드 호출이나 프로퍼티 접근을 건너뛰고 null을 반환합니다.
-  + NullPointerException을 방지할 수 있습니다.
+  + 객체가 null 아닐 경우에만 메서드나 프로퍼티에 접근
+  + 객체가 null 이면 연산을 건너뛰고 결과로 null 반환
+  + NPE(Null Pointer Exception) 방지
 
-- 문법
-  ```kotlin
-  val result = someObject?.someMethod()
-  ```
+- 사용법
+  + ```kotlin
+    val result = someObject?.someMethod()
 
-- 예제
-  ```kotlin
     data class User(val name: String?)
 
     val user: User? = null
     val nameLength = user?.name?.length
     println(nameLength) // 출력: null
-  ```
+    ```
   
 - Elvis 연산자 (?:)
-  + 역할 : 좌측 값이 null일 경우 우측의 기본값을 사용합니다.
+  + 좌변이 null 일 경우 우변 값 사용
+  + 기본값, 예외처리, 빠른 리턴 등에 활용
   
-- 문법
-  ```kotlin
-  val value = nullableValue ?: defaultValue
-  ```
+- 사용법
+  + ```kotlin
+    val value = nullableValue ?: defaultValue
 
-- 예제
-  ```kotlin
-    val user: User? = null
-    val nameLength = user?.name?.length ?: 0
-    println(nameLength) // 출력: 0
-  ```
-  
-- Safe Call 연산자 + Elvis 연산자 함께 쓰는 예
-  ```kotlin
+    // Safe Call 연산자 + Elvis 연산자 함께 쓰는 예
     val user: User? = null
     val nameLength = user?.name?.length ?: 0
     println(nameLength) // 출력: 0
@@ -215,7 +207,24 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     // Android 에서 자주 쓰는 패턴
     // null이면 return 처리
     val token = prefs?.getString("token", null) ?: return
-  ```
+
+    // 예외 처리
+    val user = findUser() ?: throw IllegalStateException("User not found")
+    ```
+
+- 요약
+  + | 연산자  | 역할                 | 반환 결과               |
+    | ---- | ------------------ | ------------------- |
+    | `?.` | null이면 호출 or 접근 생략 | `null`              |
+    | `?:` | null이면 우측 기본값 사용   | non-null 값 또는 throw |
+
+- 면접 관련 질문
+  + Safe Call 연산자와 Null 체크의 차이는?
+    * Safe Call 연산자(?.)는 null 여부를 명시적 조건 없이 간결하게 처리할 수 있어 가독성이 높고, 체이닝에도 적합합니다. (예: a?.b?.c?.d) 기존의 if (a != null) a.b 구조보다 훨씬 직관적입니다.   
+  + Elvis 연산자와 기본값 할당의 차이는?
+    * Elvis 연산자(?:)는 null일 경우에만 우측 값을 사용하므로, 기본값이 조건적으로만 적용 된다. 단순한 기본값 할당이 아니라 null 체크와 동시에 fallback을 처리하는 연산자임
+  + Elvis 연산자로 예외 처리가 가능한 이유는? 
+    * ?: 우측은 표현식이므로, 값을 반환하거나 예외를 던지는 것도 허용되기에 이를 통해 null이 발생할 경우 한 줄로 throw 처리가 가능해지고, 코드가 더 간결하면서도 의도를 분명하게 표현할 수 있음
 
 
 ---

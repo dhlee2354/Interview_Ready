@@ -546,8 +546,10 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 
 ### enum 열거형 클래스
-- 정의
-  > 미리 정의된 고정된 상수 집합을 표현할 때 사용하는 열거형 클래스
+- 개념 및 정의
+  + 미리 정의된 고정된 상수 집합을 표현할 때 사용하는 열거형 클래스
+  + 방향, 상태 코드, 명령어 등 한정된 선택지가 있을  때 적합
+  + 각 열거 상수는 싱글턴 객체이며 필요 시 생성자와 메서드 정의 가능
 
 - 기본 사용법
   + ```kotlin
@@ -575,7 +577,7 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       println(status.code) // 404
       println(status.desc) // Not Found
       ```
-  + 함수 정의도 가능
+  + enum 별로 다른 동작 구현 (함수 정의)
     * ```kotlin
       enum class Operation {
         PLUS {
@@ -591,9 +593,9 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       Operation.PLUS.apply(5,3).also { println(it) } // 8
       Operation.MINUS.apply(5,3).also { println(it) } // 2
       ```
-    * enum 상수마다 서로 달느 동작 구현 가능
-    * abstract 함수 -> 각 상수 오버라이드
-  + when 과 함께 쓰임
+    * 각 enum 상수가 자신만의 메서드 구현을 가질 수 있음
+    * 추상 메서드를 정의하고 override 가능
+  + `when` 과 함께 쓰임
     * ```kotlin
       fun handleDirection(dir: Direction) = when(dir) {
         Direction.NORTH -> "Going up"
@@ -602,8 +604,9 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
         Direction.WEST  -> "Going left"
       }
       ```
-    * 코틀린의 when 은 enum을 exhaustive(가능한 모든 경우를 빠짐없이 다룸) 하게 다룰 수 있어 모든 enum 을 다 처리하면 else 없어도 됨
-  + values() / valueOf()
+    * `when`과 함께 사용 시 모든 enum을 다 다루면 `else` 생략 가능
+    * enum 타입에 대해 `exhaustive`(가능한 모든 경우를 빠짐없이 다룸) 체크 수행
+  + `values()` / `valueOf()`
     * ```kotlin
       enum class Direction {
         NORTH, SOUTH, EAST, WEST
@@ -623,11 +626,16 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     | `when` 사용 | 자동 exhaustive 체크     | exhaustive 하려면 else 필요할 수도 있음 |
 
 - 면접 관련 질문
-  + enum 대신 sealed class 대신 사용하는 건 언제 적절한지?
-    * 상태나 타입이 미리 정의된 값으로 고정되어 있고, 로직이 간단할 때 enum 이 적절
-    * 복잡한 상태 표현은 sealed class 가 적절
-    * enum 동종의 데이터나 상태 묶을 때 적합
-    * sealed class 이종의 타입들을 하나의 계층으로 통합
+  + enum class는 어떤 상황에서 적합한가?
+    * enum은 가능한 값이 정해진 범위 내에 있고, 각 값이 하나의 고유한 상태나 명령을 의미할 때 적합
+    * 예: 방향(Direction), HTTP 상태 코드, 정렬 기준 등
+  + enum과 sealed class의 근본적인 차이?
+    * enum은 고정된 상수 집합만 정의할 수 있고, 각 상수는 동일한 타입
+    * 반면 sealed class는 서로 다른 구조나 속성을 가진 하위 타입을 정의할 수 있어 더 유연
+    * 복잡한 상태 분기나 타입 분기에는 sealed class가 더 적합
+  + enum 클래스에서 동작을 다르게 구현할 수 있는 이유는?
+    * Kotlin의 enum 클래스는 각 상수를 객체처럼 취급하므로, 각 상수가 자체적으로 함수를 오버라이드할 수 있음
+    * 이를 통해 Operation.PLUS, Operation.MINUS처럼 각 상수마다 다른 동작을 지정할 수 있음
 
 
 ---

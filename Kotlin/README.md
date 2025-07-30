@@ -1051,7 +1051,7 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
   + 코틀린에서 상속 제어 키워드는 클래스나 함수, 프로퍼티가 상속/재정의 가능한지 명확하게 제어하는 기능
   + Java 와 기본값이 다르며 코틀린의 안정성과 설계 철학을 보여주는 부분
 
-- 기본 개념 정리
+- 핵심 개념
   + | 키워드        | 의미                             | 기본값 여부            |
     | ---------- | ------------------------------ | ----------------- |
     | `final`    | **상속 불가**, 오버라이드 금지            | ✅ Kotlin의 기본값     |
@@ -1060,15 +1060,18 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 - 상세 설명
   + final
-    * 클래스, 메서드, 프로퍼티 기본적으로 `final`
+    * 코틀린에서는 별도 지정이 없으면 `final`
     * 오버라이드/상속 하려면 명시적으로 `open` or `abstract` 로 풀어야 함
     * ```kotlin
       class Animal {
          fun sound() { println("Animal sound") } // final이 기본
       }
+
+      // class Dog : Animal() { ... } // ❌ 컴파일 에러 (speak 오버라이드 불가)
       ```
   + open
     * 해당 클래스 or 멤버를 상속/재정의 가능하게 만듦
+    * 용도: 다형성, 테스트용 mock 클래스 등에 사용
     * ```kotlin
       open class Animal {
          open fun sound() { println("Animal sound") }
@@ -1080,17 +1083,33 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       ```
   + abstract
     * 클래스 또는 멤버가 추상적이며 하위 클래스에서 반드시 구현해야 함
-    * abstract class 인스턴스화 불가
+    * 인스턴스화 불가, 일부만 구현해도 가능 (abstract + concrete), 메서드에도 abstract 가능
+    * ```kotlin
+      abstract class Animal {
+        abstract fun speak()
+      }
+
+      class Cat : Animal() {
+        override fun speak() = println("Meow")
+      }
+      ```
+
+- 실전 주의사항
+  + `data class`는 `final` 고정 (→ 상속 불가)
+  + `abstract`에는 반드시 open이 내포되어 있음 (굳이 `open abstract` 쓸 필요 없음)
+  + `open` 없이 오버라이드 시도하면 컴파일 에러
+  + 실무에서는 의도하지 않은 상속을 막기 위해 대부분 `final`을 유지하고 필요한 경우만 `open` 지정 
 
 - 면접 관련 질문
-  + 추상 클래스와 인터페이스의 차이는?
-    * abstract class는 상태(필드)와 구현 메서드를 가질 수 있습니다.
-    * interface는 다중 구현이 가능하며, 일부 구현만 제공할 수 있습니다. (Kotlin에서는 interface도 default method 가능)
-  + data class 에 open or final 키워드 사용가능한가?
-    * data class 기본 적으로 final 이며 open 붙여서 상속 가능하게 만들 수 없음. 붙일 경우 컴파일 에러 발생
-    * 자동 생성되는 메서드 (equals(), hashCode(), copy(), toString() 등) 상속 허용 시 예상치 못한 동작이나 버그 발생 가능성 높아짐
-    * 데이터 클래스는 단일 데이터 컨테이너로서의 목적에 맞춰 설계됨. 객체지향적 확장보다는 `값 기반 비교(value equality)`가 핵심.
-    * 상속이 필요하다면 ? 일반 클래스 또는 composition 으로 써야 함
+  + Kotlin은 왜 모든 클래스가 기본적으로 final인가요?
+    * 의도하지 않은 상속이나 오버라이드를 방지하고 안정성과 예측 가능성을 높이기 위해서입니다.
+    * Java는 반대로 기본적으로 상속 가능하지만, Kotlin은 명시적 설계를 권장합니다.
+  + abstract 클래스와 interface의 차이는?
+    * abstract 클래스는 상태(필드) + 구현 가능 / 단일 상속
+    * interface는 필드 없음(기본은), 구현 가능 / 다중 구현 가능
+  + data class는 왜 상속이 불가능한가요?
+    * data class는 equals(), hashCode(), copy() 등을 자동 생성하며, 상속 시 이 동작이 깨질 수 있기 때문입니다.
+    * 명확한 데이터 표현용으로 final이 기본입니다.
 
 
 ---

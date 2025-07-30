@@ -783,117 +783,96 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ### 구조 분해 선언(Destructuring Declarations)
 - 정의
-  + 객체의 프로퍼티들을 여러 변수에 한 번에 할당할 수 있게 해주는 편리한 문법입니다.
+  + 객체의 프로퍼티들을 하ㄴ 번에 여러 변수로 분해해서 할당할 수 있게 해주는 문법
+  + `data class`, `Map`, `List`, `Pair`, `Triple` 등 사용
 
 - 기본 개념
   + ```kotlin
-      val (변수1, 변수2, ...) = 객체
-      ```
-  + 객체의 특정 프로퍼티들이 순서대로 변수1, 변수2 등에 할당 됩니다.
-
-- 동작 방식
-  + 구조 분해 선언이 동작하기 위해서는 해당 객체가 특저 ㅇ규약을 따라야합니다.
-  + 컴파일러는 componentN()이라는 이름의 연산자 함수를 찾아서 호출합니다.
-    * 첫 번째 변수에는 component1() 함수의 반환 값이 할당됩니다.
-    * 두 번째 변수에는 component2() 함수의 반환 값이 할당됩니다.
-    * 이런 식으로 componentN() 함수가 순서대로 호출됩니다.
+    val (a, b) = someObject  // someObject.component1(), component2() 호출
+    ```
+  + 구조 분해가 가능하려면 해당 클래스가 `componentN()` 연산자 함수 제공
+  + 코틀린 컴파일러는 구조 분해 선언을 만나면 내부적으로 `component1()`, `component2()` 형태로 메소드 호출
 
 - 주요 사용 사례
-  + Data Class : 데이터 클래스는 주 생성자에 선언된 프로퍼티에 대해 자동으로 componentN() 함수를 생성해줍니다.
-  + ```kotlin
-    data class User(val name: String, val age: Int)
+  + Data Class
+    * ```kotlin
+      data class User(val name: String, val age: Int)
 
-    fun main() {
-        val user = User("Alice", 30)
-        val (name, age) = user // user.component1()은 name에, user.component2()는 age에 할당
+      val user = User("Alice", 30)
+      val (name, age) = user
+      println("Name: $name, Age: $age")  // 출력: Name: Alice, Age: 30
+      ```
 
-        println("Name: $name, Age: $age") // 출력: Name: Alice, Age: 30
-    }
-    ```
+  + Map.Entry
+    * ```kotlin
+      val map = mapOf("A" to 1, "B" to 2)
 
-  + Map.Entry : 맵을 반복할 때 키와 값을 한 번에 가져오는 데 유용합니다.
-  + ```kotlin
-    fun main() {
-        val map = mapOf("A" to 1, "B" to 2, "C" to 3)
+      for ((key, value) in map) {
+        println("Key: $key, Value: $value")
+      }
 
-        for ((key, value) in map) { // map의 각 Entry에 대해 구조 분해 선언 사용
-            println("Key: $key, Value: $value")
-        }
-        // 출력:
-        // Key: A, Value: 1
-        // Key: B, Value: 2
-        // Key: C, Value: 3
-    }
-    ```
+      // 출력:
+      // Key: A, Value: 1
+      // Key: B, Value: 2
+      ```
 
-  + 컬렉션과 배열 : 리스트나 배열과 같은 컬렉션도 componentN() 함수를 통해 구조 분해를 지원합니다.
-  + ```kotlin
-    fun main() {
-        val list = listOf("Apple", "Banana", "Cherry")
-        val (first, second) = list // list[0]은 first에, list[1]은 second에 할당
+  + 리스트 or 배열
+    * ```kotlin
+      val list = listOf("Apple", "Banana", "Cherry")
+      val (first, second) = list
 
-        println("First: $first, Second: $second") // 출력: First: Apple, Second: Banana
-        // val (a, b, c, d) = list // Error: Index out of bounds, list에는 3개의 요소만 있음
-    }
-    ```
+      println("First: $first, Second: $second")  // 출력: First: Apple, Second: Banana
+      ```
 
-  + 함수에서 여러 값 반환 : 함수가 여러 값을 반환해야 할 때, 데이터 클래스나 Pair, Triple과 같은 클래스를 반환 타입으로 사용하고, 호출부에서 구조 분해 선언을 통해 각 값을 쉽게 받을 수 있습니다.
-  + ```kotlin
-    data class Result(val value: Int, val status: String)
+  + 여러 값 반환
+    * ```kotlin
+      data class Result(val value: Int, val status: String)
 
-    fun process(): Result {
-        // ... 어떤 처리 ...
-        return Result(42, "Success")
-    }
+      fun process(): Result = Result(42, "Success")
 
-    fun main() {
-        val (resultValue, resultStatus) = process()
-        println("Value: $resultValue, Status: $resultStatus") // 출력: Value: 42, Status: Success
-    }
-    ```
+      val (value, status) = process()
+      println("Value: $value, Status: $status")
+      ```
 
-  + 필요 없는 값 무시하기 : 구조 분해 선언시 특정 위치의 값이 필요 없다면 밑줄(_)을 사용하여 해당 변수를 무시할 수 있습니다.
-  + ```kotlin
-    data class Point(val x: Int, val y: Int, val z: Int)
+  + 일부 값 무시
+    * ```kotlin
+      data class Point(val x: Int, val y: Int, val z: Int)
 
-    fun main() {
       val point = Point(10, 20, 30)
-      val (x, _, z) = point // y 좌표는 무시
-  
-      println("X: $x, Z: $z") // 출력: X: 10, Z: 30
-    }
-    ```
+      val (x, _, z) = point
 
-  + 람다 파라메터에서의 구조 분해 : 람다 표현식의 파라메터에도 구조 분해 선언을 사용할 수 있습니다.
-  + ```kotlin
-    fun main() {
-      val userList = listOf(User("Bob", 25), User("Charlie", 35))
+      println("X: $x, Z: $z")
+      ```
 
-      // 람다 파라미터 (name, age)에 User 객체를 구조 분해
-      userList.forEach { (name, age) ->
+  + 람다 파라메터
+    * ```kotlin
+      val users = listOf(User("Bob", 25), User("Charlie", 35))
+
+      users.forEach { (name, age) ->
           println("$name is $age years old")
       }
-      // 출력:
-      // Bob is 25 years old
-      // Charlie is 35 years old
 
       val map = mapOf(1 to "one", 2 to "two")
-      map.forEach { (key, value) -> // Map.Entry를 key와 value로 구조 분해
+      map.forEach { (key, value) ->
           println("$key -> $value")
       }
-      // 출력:
-      // 1 -> one
-      // 2 -> two
-    }
-    ```
-    
+      ```
+
+- 성능 및 주의사항
+  + 구조 분해는 컴파일 시 componentN 호출로 변환되므로 성능 부담은 거의 없음
+  + 다만, 지나치게 많은 변수 사용은 가독성 저하나 실수를 유발할 수 있음
+  + 컴파일 시점에 componentN() 함수가 정의되어 있어야 컴파일 가능 
+
 - 질문
   + 구조 분해 선언시 componentN() 함수는 어떤 역할을 하나요?
     * 구조 분해 선언시 내부적으로 호출되는 메서드 입니다. 
       예를 들어 val (x, y) = point는 point.component1()과 point.component2()를 호출합니다. 이는 컴파일러가 자동으로 변환해주는 형태입니다.
   + 구조 분해 선언이 성능에 영향을 줄 수 있나요?
-    * 일반적으로 구조 분해는 간단한 메서드 호출로 이루어지기 때문에 큰 성능 부담은 없습니다.
-      하지만 복잡한 클래스에서 많은 componentN()을 구현하거나 무분별하게 사용할 경우 가독성이나 성능에 영향을 줄 수 있으니 주의가 필요합니다. 
+    * 아니요. 구조 분해는 컴파일 타임에 componentN() 메서드 호출로 변환되므로 오버헤드는 거의 없습니다. 
+    * 다만, 너무 많은 분해 변수는 코드 가독성을 해칠 수 있어 주의가 필요합니다.
+  + 구조 분해 선언이 가능하려면 어떤 조건이 필요한가?
+    * 해당 클래스가 componentN() 함수를 제공해야 합니다.
+    * data class는 이 함수를 자동으로 생성하며, Map.Entry, Pair, Triple 등 일부 클래스는 표준 라이브러리에서 제공됩니다.  
 
 
 ---

@@ -783,133 +783,115 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ### 구조 분해 선언(Destructuring Declarations)
 - 정의
-  + 객체의 프로퍼티들을 여러 변수에 한 번에 할당할 수 있게 해주는 편리한 문법입니다.
+  + 객체의 프로퍼티들을 하ㄴ 번에 여러 변수로 분해해서 할당할 수 있게 해주는 문법
+  + `data class`, `Map`, `List`, `Pair`, `Triple` 등 사용
 
 - 기본 개념
   + ```kotlin
-      val (변수1, 변수2, ...) = 객체
-      ```
-  + 객체의 특정 프로퍼티들이 순서대로 변수1, 변수2 등에 할당 됩니다.
-
-- 동작 방식
-  + 구조 분해 선언이 동작하기 위해서는 해당 객체가 특저 ㅇ규약을 따라야합니다.
-  + 컴파일러는 componentN()이라는 이름의 연산자 함수를 찾아서 호출합니다.
-    * 첫 번째 변수에는 component1() 함수의 반환 값이 할당됩니다.
-    * 두 번째 변수에는 component2() 함수의 반환 값이 할당됩니다.
-    * 이런 식으로 componentN() 함수가 순서대로 호출됩니다.
+    val (a, b) = someObject  // someObject.component1(), component2() 호출
+    ```
+  + 구조 분해가 가능하려면 해당 클래스가 `componentN()` 연산자 함수 제공
+  + 코틀린 컴파일러는 구조 분해 선언을 만나면 내부적으로 `component1()`, `component2()` 형태로 메소드 호출
 
 - 주요 사용 사례
-  + Data Class : 데이터 클래스는 주 생성자에 선언된 프로퍼티에 대해 자동으로 componentN() 함수를 생성해줍니다.
-  + ```kotlin
-    data class User(val name: String, val age: Int)
+  + Data Class
+    * ```kotlin
+      data class User(val name: String, val age: Int)
 
-    fun main() {
-        val user = User("Alice", 30)
-        val (name, age) = user // user.component1()은 name에, user.component2()는 age에 할당
+      val user = User("Alice", 30)
+      val (name, age) = user
+      println("Name: $name, Age: $age")  // 출력: Name: Alice, Age: 30
+      ```
 
-        println("Name: $name, Age: $age") // 출력: Name: Alice, Age: 30
-    }
-    ```
+  + Map.Entry
+    * ```kotlin
+      val map = mapOf("A" to 1, "B" to 2)
 
-  + Map.Entry : 맵을 반복할 때 키와 값을 한 번에 가져오는 데 유용합니다.
-  + ```kotlin
-    fun main() {
-        val map = mapOf("A" to 1, "B" to 2, "C" to 3)
+      for ((key, value) in map) {
+        println("Key: $key, Value: $value")
+      }
 
-        for ((key, value) in map) { // map의 각 Entry에 대해 구조 분해 선언 사용
-            println("Key: $key, Value: $value")
-        }
-        // 출력:
-        // Key: A, Value: 1
-        // Key: B, Value: 2
-        // Key: C, Value: 3
-    }
-    ```
+      // 출력:
+      // Key: A, Value: 1
+      // Key: B, Value: 2
+      ```
 
-  + 컬렉션과 배열 : 리스트나 배열과 같은 컬렉션도 componentN() 함수를 통해 구조 분해를 지원합니다.
-  + ```kotlin
-    fun main() {
-        val list = listOf("Apple", "Banana", "Cherry")
-        val (first, second) = list // list[0]은 first에, list[1]은 second에 할당
+  + 리스트 or 배열
+    * ```kotlin
+      val list = listOf("Apple", "Banana", "Cherry")
+      val (first, second) = list
 
-        println("First: $first, Second: $second") // 출력: First: Apple, Second: Banana
-        // val (a, b, c, d) = list // Error: Index out of bounds, list에는 3개의 요소만 있음
-    }
-    ```
+      println("First: $first, Second: $second")  // 출력: First: Apple, Second: Banana
+      ```
 
-  + 함수에서 여러 값 반환 : 함수가 여러 값을 반환해야 할 때, 데이터 클래스나 Pair, Triple과 같은 클래스를 반환 타입으로 사용하고, 호출부에서 구조 분해 선언을 통해 각 값을 쉽게 받을 수 있습니다.
-  + ```kotlin
-    data class Result(val value: Int, val status: String)
+  + 여러 값 반환
+    * ```kotlin
+      data class Result(val value: Int, val status: String)
 
-    fun process(): Result {
-        // ... 어떤 처리 ...
-        return Result(42, "Success")
-    }
+      fun process(): Result = Result(42, "Success")
 
-    fun main() {
-        val (resultValue, resultStatus) = process()
-        println("Value: $resultValue, Status: $resultStatus") // 출력: Value: 42, Status: Success
-    }
-    ```
+      val (value, status) = process()
+      println("Value: $value, Status: $status")
+      ```
 
-  + 필요 없는 값 무시하기 : 구조 분해 선언시 특정 위치의 값이 필요 없다면 밑줄(_)을 사용하여 해당 변수를 무시할 수 있습니다.
-  + ```kotlin
-    data class Point(val x: Int, val y: Int, val z: Int)
+  + 일부 값 무시
+    * ```kotlin
+      data class Point(val x: Int, val y: Int, val z: Int)
 
-    fun main() {
       val point = Point(10, 20, 30)
-      val (x, _, z) = point // y 좌표는 무시
-  
-      println("X: $x, Z: $z") // 출력: X: 10, Z: 30
-    }
-    ```
+      val (x, _, z) = point
 
-  + 람다 파라메터에서의 구조 분해 : 람다 표현식의 파라메터에도 구조 분해 선언을 사용할 수 있습니다.
-  + ```kotlin
-    fun main() {
-      val userList = listOf(User("Bob", 25), User("Charlie", 35))
+      println("X: $x, Z: $z")
+      ```
 
-      // 람다 파라미터 (name, age)에 User 객체를 구조 분해
-      userList.forEach { (name, age) ->
+  + 람다 파라메터
+    * ```kotlin
+      val users = listOf(User("Bob", 25), User("Charlie", 35))
+
+      users.forEach { (name, age) ->
           println("$name is $age years old")
       }
-      // 출력:
-      // Bob is 25 years old
-      // Charlie is 35 years old
 
       val map = mapOf(1 to "one", 2 to "two")
-      map.forEach { (key, value) -> // Map.Entry를 key와 value로 구조 분해
+      map.forEach { (key, value) ->
           println("$key -> $value")
       }
-      // 출력:
-      // 1 -> one
-      // 2 -> two
-    }
-    ```
-    
+      ```
+
+- 성능 및 주의사항
+  + 구조 분해는 컴파일 시 componentN 호출로 변환되므로 성능 부담은 거의 없음
+  + 다만, 지나치게 많은 변수 사용은 가독성 저하나 실수를 유발할 수 있음
+  + 컴파일 시점에 componentN() 함수가 정의되어 있어야 컴파일 가능 
+
 - 질문
   + 구조 분해 선언시 componentN() 함수는 어떤 역할을 하나요?
     * 구조 분해 선언시 내부적으로 호출되는 메서드 입니다. 
       예를 들어 val (x, y) = point는 point.component1()과 point.component2()를 호출합니다. 이는 컴파일러가 자동으로 변환해주는 형태입니다.
   + 구조 분해 선언이 성능에 영향을 줄 수 있나요?
-    * 일반적으로 구조 분해는 간단한 메서드 호출로 이루어지기 때문에 큰 성능 부담은 없습니다.
-      하지만 복잡한 클래스에서 많은 componentN()을 구현하거나 무분별하게 사용할 경우 가독성이나 성능에 영향을 줄 수 있으니 주의가 필요합니다. 
+    * 아니요. 구조 분해는 컴파일 타임에 componentN() 메서드 호출로 변환되므로 오버헤드는 거의 없습니다. 
+    * 다만, 너무 많은 분해 변수는 코드 가독성을 해칠 수 있어 주의가 필요합니다.
+  + 구조 분해 선언이 가능하려면 어떤 조건이 필요한가?
+    * 해당 클래스가 componentN() 함수를 제공해야 합니다.
+    * data class는 이 함수를 자동으로 생성하며, Map.Entry, Pair, Triple 등 일부 클래스는 표준 라이브러리에서 제공됩니다.  
 
 
 ---
 
 
-### inline
+### inline 키워드
 - 정의
-  + 함수를 호출할 때 실제로 함수 호출 코드가 생성되는 것이 아니라, 함수 본문이 호출 지점에 "그대로 복사되는" 방식으로 동작하는 함수
-  + 즉, "함수 호출 = 코드 복사 붙여넣기" → 성능 향상, 오버헤드 감소
+  + `inline` 함수란 **호출되는 대신 그 본문이 호출 위치에 '직접 복사'되어 삽입**되는 함수
+  + 주로 **고차 함수**에서 사용되며, **람다 객체 생성을 피하고 성능을 최적화**하는 목적
 
-- 필요한 이유?
-  + 고차 함수 호출 시 함수 객체와 람다 객체가 생성되기 때문
-  + inline은 이 객체 생성을 없애고 성능을 향상
-  + 또한 람다 내부에서 return 사용 가능 등 코드 흐름 유연화
+- 사용하는 이유?
+  + | 목적           | 설명                                      |
+    | ------------ | --------------------------------------- |
+    | ✅ 성능 최적화     | 함수 호출 오버헤드 제거, 특히 람다 객체 생성을 생략          |
+    | ✅ return 제어  | 람다 내부에서 return 사용 가능 (non-local return) |
+    | ✅ reified 지원 | 제네릭 타입을 런타임에도 유지할 수 있음                  |
+    | ❌ 코드 팽창 주의   | 반복 사용 시 바이너리 크기 증가 가능성 있음               |
 
-- 사용법
+- 기본 동작
   + ```kotlin
     inline fun log(block: () -> Unit) {
       println("== Start ==")
@@ -941,7 +923,7 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     | ✅ 제네릭 람다       | `inline` 덕분에 람다에서 reified 사용 가능 |
 
 - 보조 키워드 : noinline, crossinline
-  + noinline : 인라인 안하고 객체로 넘기고 싶을 때
+  + `noinline` : 인라인 안하고 객체로 넘기고 싶을 때
     * ```kotlin
       inline fun test(a: () -> Unit, noinline b: () -> Unit) {
         a() // 인라인됨
@@ -949,7 +931,7 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       }
       ```
     * 람다 여러 개 중 일부만 인라인하고 싶을 때 유용
-  + crossinline : 람다 안에서 non-local return 못하게 막기
+  + `crossinline` : 람다 안에서 non-local return 못하게 막기
     * ```kotlin
       inline fun doSomething(crossinline action: () -> Unit) {
          Thread {
@@ -959,10 +941,16 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       ```
     * 다른 스레드/콜백에서 실행될 람다에는 return 쓰면 위험하므로 금지
 
-- 실무에서 자주 쓰이는 패턴
-  + measureTimeMillis { ... }
-  + runBlocking { ... } 
-  + reified 타입 캐스팅 (ex. inline fun <reified T> ...)
+- 실무 사용 예시
+  + 성능 측정
+    * ```kotlin
+      inline fun measure(block: () -> Unit) {
+        val start = System.currentTimeMillis()
+        block()
+        println("Elapsed: ${System.currentTimeMillis() - start}ms")
+      }
+      ```
+  + 제네릭 타입 유지(`reified`)
     * ```kotlin
       inline fun <reified T> Gson.fromJson(json: String): T { 
          return this.fromJson(json, T::class.java)
@@ -971,79 +959,88 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     * 일반 함수에서는 제네릭 타입 T는 런타임에 소멸되지만, inline + reified 덕분에 런타임에도 타입 정보를 유지 가능
 
 - 면접 관련 질문
-  + inline 함수 장점
-    * 함수 호출 오버헤드를 줄이고, 람다 객체 생성을 방지해서 성능을 향상
-  + noinline 이 필요한가?
-    * 람다 중 일부만 인라인하고 싶거나, 해당 람다를 다른 곳에 전달해야 할 경우 사용
-  + reified 는 왜 inline 함수에서만 사용할 수 있는가?
-    * Kotlin의 제네릭은 기본적으로 타입 소거되지만, inline 함수는 컴파일 시 타입을 알고 있으므로 reified로 타입 유지가 가능
-    * > reified 는 제네릭 타입 정보를 런타임에도 유지할 수 있게 해주는 키워드 (단 inline 함수에서만 사용 가능)
-
-
+  + `inline` 함수 장점
+    * 고차 함수 호출 시 발생하는 람다 객체 생성을 피해서 성능 향상
+    * return 문법 유연화, reified 타입 활용 가능
+  + `noinline` 이 필요한가?
+    * 인라인 함수 내 람다 중 일부를 객체로 유지하고 싶을 때 사용
+    * 예: 람다를 다른 함수에 전달하거나 저장하려는 경우 인라인하면 안 되기 때문
+  + `reified` 는 왜 `inline` 함수에서만 사용할 수 있는가?
+    * Kotlin의 일반 제네릭은 타입 소거되지만, inline 함수는 컴파일 시점에 T의 실제 타입 정보를 알 수 있으므로 이를 런타임에도 유지하게 하기 위해 reified와 함께 사용함
 
 
 ---
-
 
 
 ### Kotlin & Java
 - 두 언어 모두 JVM에서 실행되는 언어, 안드로이드 개발이나 서버 개발에서 많이 쓰임 
 
 - 공통점
-  + | 항목                 | 설명                                     |
-          |--------------------|----------------------------------------|
-      | JVM 기반             | 둘 다 **Java Virtual Machine**에서 실행 됨    |
-      | Java 라이브러리 사용 가능   | Kotlin은 Java의 모든 API, 라이브러리를 그대로 사용 가능 |
-      | 클래스, 객체, 상속        | 객체지향 언어로서 기본 구조 동일                     |
-      | 쓰레드, 네트워크, 파일 IO 등 | 기본 기능 거의 동일                            |
-      | 안드로이드 개발 가능                   | 둘 다 안드로이드 공식 지원 언어               |
+  + | 항목            | 설명 |
+    |-----------------|------|
+    | JVM 기반        | 둘 다 Java Virtual Machine에서 실행 |
+    | Java API 호환   | Kotlin은 Java API 100% 호출 가능 |
+    | 객체지향 지원    | 클래스, 인터페이스, 상속, 다형성 등 동일 구조 |
+    | Android 개발 가능 | Android 공식 지원 언어 (Java 7+ / Kotlin 1.3+) |
+    | 스레드, 네트워크 등 | 동등 수준의 저수준 기능 지원 가능 |
 
 - 차이점
-  + | 항목                 | Java                             | Kotlin                                |
-              |--------------------|----------------------------------|---------------------------------------|
-    | 문법 간결성             | 비교적 장황함                          | 매우 간결함 (`val`, `when`, `dataclass`)   |
-    | Null 안정성           | `NullPointerException` 위험 존재     | 컴파일 단계에서 **null** 체크 지원 (`?`, `?:`)   |
-    | 데이터 클래스            | 직접 `equals`, `hashCode` 등 작성해야 함 | `data class`로 자동 생성                   |
-    | 함수형 프로그래밍          | 람다 지원은 있지만 불편                    | 고차 함수, 람다, `map/filter` 등 자연스러움       |
-    | 확장 함수              | 없음                               | 기존 클래스에 함수 추가 가능 (`String.isEmail()`) |
-    | 스마트 캐스팅            | 수동 형변환 필요                        | `is` 체크 후 자동 캐스팅                      |
-    | 기본 자료형 (Primitive) | `int`, `double` 등 존재             | 모두 객체 타입으로 통합 (`Int`, `double`)       |
-    | 코루틴 지원             | 없음 (외부 라이브러리 필요)                 | 코루틴으로 비동기 쉽게 처리 가능                    |
-    | Null 처리            | 런타임에서 터짐                         | `?`, `!!`, `?:` 로 컴파일 타임에서 경구         |
+  + | 항목                | Java                          | Kotlin                                  |
+    |---------------------|-------------------------------|------------------------------------------|
+    | 문법 간결성         | 장황한 편                      | `val`, `data class`, `when` 등 간결 |
+    | Null 안정성         | `NullPointerException` 자주 발생 | 컴파일 타임에서 null 검사 (`?`, `!!`) |
+    | 데이터 클래스        | getter/setter, equals 수동 작성 | `data class` 한 줄로 자동 생성         |
+    | 함수형 스타일        | 람다/Stream 사용 불편              | 고차 함수, 람다, `map/filter` 자연스러움 |
+    | 확장 함수           | 불가                             | 클래스 외부에서 메서드 확장 가능        |
+    | 타입 캐스팅         | 강제 `instanceof + cast`         | `is` + 스마트 캐스팅 자동화            |
+    | 비동기/코루틴 지원   | 외부 스레드/라이브러리 필요         | `suspend`, `launch`, `async` 기본 지원  |
+    | 기본 타입 분리       | `int`, `double` 등 primitive 존재 | 전부 객체(`Int`, `Double`)로 통일        |
+
 
 - 예시
-  1. 변수 선언
-     - java
-     ```java
-        String name = "철수";
-     ```
-     - kotlin
-     ```kotlin
-      val name = "철수"   // 자동 타입 추론
-     ```
-  2. Null 처리
-     - java
-     ```java
-      if (user != null) {
-        System.out.println(user.getName());  
-      }
-     ```
-     - kotlin
-     ```kotlin
-        println(user?.name ?: "이름 없음")
-     ```
-  3. 데이터 클래스
-    - java
-     ```java
-      public class User {
-        String name;
-        int age;
-      }
-     ```
-    - kotlin
-     ```kotlin
-        data class User (val name : String, val age : Int)
-     ```
+  + ```java
+    // 변수선언
+    String name = "철수";
+
+    // Null 안전 처리
+    if (user != null) {
+      System.out.println(user.getName());
+    }
+
+    // 데이터 클래스
+    public class User {
+      String name;
+      int age;
+
+      // 생성자, getter, equals, hashCode ...
+    }
+    ```
+  + ```kotlin
+    // 변수선언
+    val name = "철수"   // 자동 타입 추론
+
+    // Null 안전 처리
+    println(user?.name ?: "이름 없음") // null-safe + default
+
+    // 데이터 클래스
+    data class User(val name: String, val age: Int)
+    ```
+
+- 결론
+  + Kotlin은 간결함 + 안전성 + 현대적 문법에 중점을 둔 언어
+  + Java는 보편성 + 방대한 생태계를 갖춘 기반 언어
+  + Android 개발이나 현대 서버 개발에서는 Kotlin이 점점 우세
+  + 하지만 상호운용성 완벽 → 둘을 함께 사용하는 프로젝트도 많음 
+
+- 면접 관련 질문
+  + Kotlin이 Java보다 유리한 점은?
+    * Null 안정성, 코루틴, 간결한 문법, 고차 함수 등의 지원으로 코드 품질 및 생산성이 향상됩니다.
+  + Kotlin 코드가 Java에서 호출 가능한가요?
+    * 가능함. Kotlin은 JVM 바이트코드로 변환되므로 Java 클래스와 완전히 상호 운용됩니다. 
+    * @JvmStatic, @JvmOverloads 등으로 더 자연스러운 호환도 가능.
+  + Kotlin의 확장 함수는 Java의 어떤 대안인가요?
+    * 기존 클래스에 새로운 메서드를 추가할 수 있는 방식으로, Java의 유틸 클래스보다 가독성과 사용성이 좋습니다.
+    * 하지만 private 멤버에는 접근 불가한 제약도 있습니다.
 
 
 ---
@@ -1054,7 +1051,7 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
   + 코틀린에서 상속 제어 키워드는 클래스나 함수, 프로퍼티가 상속/재정의 가능한지 명확하게 제어하는 기능
   + Java 와 기본값이 다르며 코틀린의 안정성과 설계 철학을 보여주는 부분
 
-- 기본 개념 정리
+- 핵심 개념
   + | 키워드        | 의미                             | 기본값 여부            |
     | ---------- | ------------------------------ | ----------------- |
     | `final`    | **상속 불가**, 오버라이드 금지            | ✅ Kotlin의 기본값     |
@@ -1063,15 +1060,18 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 - 상세 설명
   + final
-    * 클래스, 메서드, 프로퍼티 기본적으로 `final`
+    * 코틀린에서는 별도 지정이 없으면 `final`
     * 오버라이드/상속 하려면 명시적으로 `open` or `abstract` 로 풀어야 함
     * ```kotlin
       class Animal {
          fun sound() { println("Animal sound") } // final이 기본
       }
+
+      // class Dog : Animal() { ... } // ❌ 컴파일 에러 (speak 오버라이드 불가)
       ```
   + open
     * 해당 클래스 or 멤버를 상속/재정의 가능하게 만듦
+    * 용도: 다형성, 테스트용 mock 클래스 등에 사용
     * ```kotlin
       open class Animal {
          open fun sound() { println("Animal sound") }
@@ -1083,17 +1083,33 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       ```
   + abstract
     * 클래스 또는 멤버가 추상적이며 하위 클래스에서 반드시 구현해야 함
-    * abstract class 인스턴스화 불가
+    * 인스턴스화 불가, 일부만 구현해도 가능 (abstract + concrete), 메서드에도 abstract 가능
+    * ```kotlin
+      abstract class Animal {
+        abstract fun speak()
+      }
+
+      class Cat : Animal() {
+        override fun speak() = println("Meow")
+      }
+      ```
+
+- 실전 주의사항
+  + `data class`는 `final` 고정 (→ 상속 불가)
+  + `abstract`에는 반드시 open이 내포되어 있음 (굳이 `open abstract` 쓸 필요 없음)
+  + `open` 없이 오버라이드 시도하면 컴파일 에러
+  + 실무에서는 의도하지 않은 상속을 막기 위해 대부분 `final`을 유지하고 필요한 경우만 `open` 지정 
 
 - 면접 관련 질문
-  + 추상 클래스와 인터페이스의 차이는?
-    * abstract class는 상태(필드)와 구현 메서드를 가질 수 있습니다.
-    * interface는 다중 구현이 가능하며, 일부 구현만 제공할 수 있습니다. (Kotlin에서는 interface도 default method 가능)
-  + data class 에 open or final 키워드 사용가능한가?
-    * data class 기본 적으로 final 이며 open 붙여서 상속 가능하게 만들 수 없음. 붙일 경우 컴파일 에러 발생
-    * 자동 생성되는 메서드 (equals(), hashCode(), copy(), toString() 등) 상속 허용 시 예상치 못한 동작이나 버그 발생 가능성 높아짐
-    * 데이터 클래스는 단일 데이터 컨테이너로서의 목적에 맞춰 설계됨. 객체지향적 확장보다는 `값 기반 비교(value equality)`가 핵심.
-    * 상속이 필요하다면 ? 일반 클래스 또는 composition 으로 써야 함
+  + Kotlin은 왜 모든 클래스가 기본적으로 final인가요?
+    * 의도하지 않은 상속이나 오버라이드를 방지하고 안정성과 예측 가능성을 높이기 위해서입니다.
+    * Java는 반대로 기본적으로 상속 가능하지만, Kotlin은 명시적 설계를 권장합니다.
+  + abstract 클래스와 interface의 차이는?
+    * abstract 클래스는 상태(필드) + 구현 가능 / 단일 상속
+    * interface는 필드 없음(기본은), 구현 가능 / 다중 구현 가능
+  + data class는 왜 상속이 불가능한가요?
+    * data class는 equals(), hashCode(), copy() 등을 자동 생성하며, 상속 시 이 동작이 깨질 수 있기 때문입니다.
+    * 명확한 데이터 표현용으로 final이 기본입니다.
 
 
 ---

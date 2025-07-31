@@ -1117,76 +1117,68 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ### Range & Progression
 - 개요
-    + 코틀린에서 Range(범위)와 Progression(수열)은 특정 타입의 값들이 순서대로 나열된 시퀀스를 표현하는 강력하고 유용한 개념입니다.
-    + 주로 숫자 타입이나 문자 타입과 함께 사용되며, 반복문, 조건문 등 다양한 상황에서 코드를 간결하고 읽기 쉽게 만들어줍니다.
+  + Range : 정해진 시작갑소가 끝값 사이의 연속된 값 집합 (ex: 1,2,3,4)
+  + Progression(수열) : 일정한 간격(step)을 가진 수열 표현. 증/감소 모두 가능
+  + 반복문, 조건문, 데이터 필터링 등 코드 가독성과 표현력 향상시킴
 
 - Range
-    + 개요
-        * 닫힌 구간 또는 반 열린 구간으로 정의되는 값들의 집합입니다. 즉, 시작 값과 끝 값을 가지며, 이 두 값 사이의 모든 값을 포함합니다.
-    + 생성 방법
-        * 표준 라이브러리 kotlin.ranges 패키지에서 제공하는 함수들을 사용하여 Range를 생성할 수 있습니다.
-        * .. 연산자 (rangeTo() 함수) : 닫힌 구간을 만듭니다. 끝 값을 포함합니다.
-      ```kotlin
-        val numbers = 1..4       // 1, 2, 3, 4를 포함하는 IntRange
-        val chars = 'a'..'d'     // 'a', 'b', 'c', 'd'를 포함하는 CharRange
+  + 닫힌 범위
+    * ```kotlin
+      val range = 1..5         // 1, 2, 3, 4를 포함하는 IntRange
+      val charRange = 'a'..'d' // 'a', 'b', 'c', 'd'를 포함하는 CharRange
       ```
-        * ..< 연산자 (rangeUntil() 함수) : 반 열린 구간을 만듭니다. 끝 값을 포함하지 않습니다.
-      ```kotlin
-        val numbersUntil = 1..<4  // 1, 2, 3을 포함하는 IntRange (4는 미포함)
-        val charsUntil = 'a'..<'d'   // 'a', 'b', 'c'를 포함하는 CharRange ('d'는 미포함)
+  + 반 열림 범위
+    * ```kotlin
+      val range = 1..<5 // 1 to 4 (5제외)
       ```
-    + 주요 특징 및 사용법
-        * 타입 : 생성되는 Range의 타입은 시작 값과 끝 값의 타입에 따라 결정됩니다.
-        * in 연산자와 함께 사용 : 특정 값이 범위 내에 포함되는지 확인하는 데 매우 유용합니다.
-      ```kotlin
-        val numbers = 1..4       // 1, 2, 3, 4를 포함하는 IntRange
-        val chars = 'a'..'d'     // 'a', 'b', 'c', 'd'를 포함하는 CharRange
-      ```
-
+  + 포함 여부 체크
+    * ```kotlin
+      val x = 3
+      if (x in 1..5) println("x는 1~5안에 있음")
+      ```   
 - Progression
-    + 개요
-        * 시작 값, 끝 값, 그리고 증가분을 가집니다.
-    + 생성 방법
-        * step 변경자 : Range 뒤에 step을 사용하여 증가분을 지정합니다.
-      ```kotlin
-        val evenNumbers = 0..10 step 2 // 0, 2, 4, 6, 8, 10
-        println(evenNumbers.toList())   // [0, 2, 4, 6, 8, 10]
-  
-        val countdown = 10..0 step 3 // 10, 7, 4, 1
-        println(countdown.toList())  // [10, 7, 4, 1] (downTo와 함께 사용하는 것이 더 일반적)
-      ```
-        * downTo 함수 : 값을 감소시키는 Progression을 만듭니다.
-      ```kotlin
-        val decreasingNumbers = 5 downTo 1 // 5, 4, 3, 2, 1
-        println(decreasingNumbers.toList()) // [5, 4, 3, 2, 1]
-  
-        val decreasingWithStep = 10 downTo 0 step 2 // 10, 8, 6, 4, 2, 0
-        println(decreasingWithStep.toList())       // [10, 8, 6, 4, 2, 0]
+  + step 키워드
+    * ```kotlin
+      val even = 0..10 step 2
+      println(even.toList())  // [0, 2, 4, 6, 8, 10]
+      ``` 
+  + downTo
+    * ```kotlin
+      val countdown = 10 downTo 0
+      println(countdown.toList())  // [10, 9, ..., 0]
+
+      val customStep = 10 downTo 0 step 2
+      println(customStep.toList())  // [10, 8, 6, 4, 2, 0]\
+      ``` 
+  + 반목문 활용
+    * ```kotlin
+      for (i in 1..5) print("$i ")         // 1 2 3 4 5
+      for (i in 5 downTo 1 step 2) print("$i ") // 5 3 1
+      ``` 
+  + reversed()
+    * ```kotlin
+      val range = 1..5
+      println(range.reversed().toList()) // [5, 4, 3, 2, 1]
       ```
 
-    + 주요 특징 및 사용법
-        * 구성 요소 : first, last, step
-        * 반복문과 함께 사용 : Progression은 Iterable을 구현하므로 for 루프에서 직접 사용할 수 있습니다.
-      ```kotlin
-        for (i in 1..5) {
-          print("$i ") // 1 2 3 4 5
-        }
-        println()
-  
-        for (i in 10 downTo 0 step 3) {
-            print("$i ") // 10 7 4 1
-        }
-        println()
-      ```
-        * reversed() : Progression의 순서를 뒤집을 수 있습니다.
-      ```kotlin
-        val numbers = 1..5
-        for (i in numbers.reversed()) {
-            print("$i ") // 5 4 3 2 1
-        }
-        println()
-      ```
-      
+- 구성요소 비교
+  + | 구분      | Range (`..`, `..<`) | Progression (`step`, `downTo`) |
+    | ------- | ------------------- | ------------------------------ |
+    | 포함 여부   | 끝값 포함 / 미포함 선택 가능   | 자동 포함 (값 생성 규칙 따름)             |
+    | step 설정 | 기본값 1 (증가)          | 자유롭게 `step` 지정 가능 (증가/감소 모두)   |
+    | 방향      | 증가만 가능              | 증가/감소 모두 지원 (`downTo`, `step`) |
+    | 활용도     | 범위 검사, 조건문, 반복문     | 커스텀 반복 조건, 특정 간격 수열 생성 등       |
+
+- 면접 관련 질문
+  + `..`와 `..<`의 차이점은?
+    * `..`는 끝 값을 포함하는 닫힌 범위이고, `..<`는 끝 값을 포함하지 않는 반 열린 범위입니다.
+    * 반복 조건이나 인덱스 조작에서 실수를 줄이기 위해 ..<를 자주 사용합니다.
+  + Progression과 Range의 가장 큰 차이는?
+    * Range는 기본적으로 1씩 증가하는 값의 집합이며 방향과 간격이 고정되어 있습니다.
+    * 반면 Progression은 증가/감소 방향과 step 조절이 자유롭습니다.
+  + Range와 함께 step을 사용하는 이유는?
+    * 일정 간격의 값만 반복하고 싶을 때 사용합니다.
+    * 예: 짝수만 반복, 역순 반복, 3단계 건너뛰기 등.       
 
 
 ---

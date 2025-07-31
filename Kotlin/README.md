@@ -1117,268 +1117,214 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ### Range & Progression
 - 개요
-    + 코틀린에서 Range(범위)와 Progression(수열)은 특정 타입의 값들이 순서대로 나열된 시퀀스를 표현하는 강력하고 유용한 개념입니다.
-    + 주로 숫자 타입이나 문자 타입과 함께 사용되며, 반복문, 조건문 등 다양한 상황에서 코드를 간결하고 읽기 쉽게 만들어줍니다.
+  + Range : 정해진 시작갑소가 끝값 사이의 연속된 값 집합 (ex: 1,2,3,4)
+  + Progression(수열) : 일정한 간격(step)을 가진 수열 표현. 증/감소 모두 가능
+  + 반복문, 조건문, 데이터 필터링 등 코드 가독성과 표현력 향상시킴
 
 - Range
-    + 개요
-        * 닫힌 구간 또는 반 열린 구간으로 정의되는 값들의 집합입니다. 즉, 시작 값과 끝 값을 가지며, 이 두 값 사이의 모든 값을 포함합니다.
-    + 생성 방법
-        * 표준 라이브러리 kotlin.ranges 패키지에서 제공하는 함수들을 사용하여 Range를 생성할 수 있습니다.
-        * .. 연산자 (rangeTo() 함수) : 닫힌 구간을 만듭니다. 끝 값을 포함합니다.
-      ```kotlin
-        val numbers = 1..4       // 1, 2, 3, 4를 포함하는 IntRange
-        val chars = 'a'..'d'     // 'a', 'b', 'c', 'd'를 포함하는 CharRange
+  + 닫힌 범위
+    * ```kotlin
+      val range = 1..5         // 1, 2, 3, 4를 포함하는 IntRange
+      val charRange = 'a'..'d' // 'a', 'b', 'c', 'd'를 포함하는 CharRange
       ```
-        * ..< 연산자 (rangeUntil() 함수) : 반 열린 구간을 만듭니다. 끝 값을 포함하지 않습니다.
-      ```kotlin
-        val numbersUntil = 1..<4  // 1, 2, 3을 포함하는 IntRange (4는 미포함)
-        val charsUntil = 'a'..<'d'   // 'a', 'b', 'c'를 포함하는 CharRange ('d'는 미포함)
+  + 반 열림 범위
+    * ```kotlin
+      val range = 1..<5 // 1 to 4 (5제외)
       ```
-    + 주요 특징 및 사용법
-        * 타입 : 생성되는 Range의 타입은 시작 값과 끝 값의 타입에 따라 결정됩니다.
-        * in 연산자와 함께 사용 : 특정 값이 범위 내에 포함되는지 확인하는 데 매우 유용합니다.
-      ```kotlin
-        val numbers = 1..4       // 1, 2, 3, 4를 포함하는 IntRange
-        val chars = 'a'..'d'     // 'a', 'b', 'c', 'd'를 포함하는 CharRange
-      ```
-
+  + 포함 여부 체크
+    * ```kotlin
+      val x = 3
+      if (x in 1..5) println("x는 1~5안에 있음")
+      ```   
 - Progression
-    + 개요
-        * 시작 값, 끝 값, 그리고 증가분을 가집니다.
-    + 생성 방법
-        * step 변경자 : Range 뒤에 step을 사용하여 증가분을 지정합니다.
-      ```kotlin
-        val evenNumbers = 0..10 step 2 // 0, 2, 4, 6, 8, 10
-        println(evenNumbers.toList())   // [0, 2, 4, 6, 8, 10]
-  
-        val countdown = 10..0 step 3 // 10, 7, 4, 1
-        println(countdown.toList())  // [10, 7, 4, 1] (downTo와 함께 사용하는 것이 더 일반적)
-      ```
-        * downTo 함수 : 값을 감소시키는 Progression을 만듭니다.
-      ```kotlin
-        val decreasingNumbers = 5 downTo 1 // 5, 4, 3, 2, 1
-        println(decreasingNumbers.toList()) // [5, 4, 3, 2, 1]
-  
-        val decreasingWithStep = 10 downTo 0 step 2 // 10, 8, 6, 4, 2, 0
-        println(decreasingWithStep.toList())       // [10, 8, 6, 4, 2, 0]
+  + step 키워드
+    * ```kotlin
+      val even = 0..10 step 2
+      println(even.toList())  // [0, 2, 4, 6, 8, 10]
+      ``` 
+  + downTo
+    * ```kotlin
+      val countdown = 10 downTo 0
+      println(countdown.toList())  // [10, 9, ..., 0]
+
+      val customStep = 10 downTo 0 step 2
+      println(customStep.toList())  // [10, 8, 6, 4, 2, 0]\
+      ``` 
+  + 반목문 활용
+    * ```kotlin
+      for (i in 1..5) print("$i ")         // 1 2 3 4 5
+      for (i in 5 downTo 1 step 2) print("$i ") // 5 3 1
+      ``` 
+  + reversed()
+    * ```kotlin
+      val range = 1..5
+      println(range.reversed().toList()) // [5, 4, 3, 2, 1]
       ```
 
-    + 주요 특징 및 사용법
-        * 구성 요소 : first, last, step
-        * 반복문과 함께 사용 : Progression은 Iterable을 구현하므로 for 루프에서 직접 사용할 수 있습니다.
-      ```kotlin
-        for (i in 1..5) {
-          print("$i ") // 1 2 3 4 5
-        }
-        println()
-  
-        for (i in 10 downTo 0 step 3) {
-            print("$i ") // 10 7 4 1
-        }
-        println()
-      ```
-        * reversed() : Progression의 순서를 뒤집을 수 있습니다.
-      ```kotlin
-        val numbers = 1..5
-        for (i in numbers.reversed()) {
-            print("$i ") // 5 4 3 2 1
-        }
-        println()
-      ```
-      
+- 구성요소 비교
+  + | 구분      | Range (`..`, `..<`) | Progression (`step`, `downTo`) |
+    | ------- | ------------------- | ------------------------------ |
+    | 포함 여부   | 끝값 포함 / 미포함 선택 가능   | 자동 포함 (값 생성 규칙 따름)             |
+    | step 설정 | 기본값 1 (증가)          | 자유롭게 `step` 지정 가능 (증가/감소 모두)   |
+    | 방향      | 증가만 가능              | 증가/감소 모두 지원 (`downTo`, `step`) |
+    | 활용도     | 범위 검사, 조건문, 반복문     | 커스텀 반복 조건, 특정 간격 수열 생성 등       |
+
+- 면접 관련 질문
+  + `..`와 `..<`의 차이점은?
+    * `..`는 끝 값을 포함하는 닫힌 범위이고, `..<`는 끝 값을 포함하지 않는 반 열린 범위입니다.
+    * 반복 조건이나 인덱스 조작에서 실수를 줄이기 위해 ..<를 자주 사용합니다.
+  + Progression과 Range의 가장 큰 차이는?
+    * Range는 기본적으로 1씩 증가하는 값의 집합이며 방향과 간격이 고정되어 있습니다.
+    * 반면 Progression은 증가/감소 방향과 step 조절이 자유롭습니다.
+  + Range와 함께 step을 사용하는 이유는?
+    * 일정 간격의 값만 반복하고 싶을 때 사용합니다.
+    * 예: 짝수만 반복, 역순 반복, 3단계 건너뛰기 등.       
 
 
 ---
 
 
-
 ### 접근제어자
-1. public (기본값, 어디서나 접근 가능)
+- 개념 및 정의
+  + 클래스, 함수, 변수 등이 어디에서 접근 가능한지 제한하는 키워드
+  + 코틀린은 기본적으로 안정성과 명확성을 중시하기 때문에 접근 범위 명시하는 것이 중요함
+
+- 접근 제어자 비교
+  + | 접근 제어자   | 클래스 외부 접근 | 상속 클래스 접근 | 같은 파일 내 접근 | 같은 모듈 접근 | 다른 모듈 접근 |
+    |---------------|------------------|------------------|-------------------|----------------|----------------|
+    | `public`      | ✅               | ✅               | ✅                | ✅             | ✅             |
+    | `internal`    | ✅               | ✅               | ✅                | ✅             | ❌             |
+    | `protected`   | ❌               | ✅               | ✅ (클래스 내)     | ✅             | ❌             |
+    | `private`     | ❌               | ❌               | ✅ (같은 클래스/파일) | ❌             | ❌             |
+
+- public (기본값, 어디서나 접근 가능)
+  + **어디서든 접근 가능**하며, 특별한 키워드 없이 선언하면 기본값으로 적용됨
     ```kotlin
-        // 파일 : Car.kt
-        package com.example.car
-   
-        class Car {         // public 생략 가능
-            fun drive() {
-                println("Car is driving")
-            }
-        }    
-   
-        // 파일 : Main.kt
-        import com.example.car.Car
+    // 파일: Car.kt
+    package com.example
 
-        fun main() {
-            val car = Car()
-            car.drive()     // ✅ 접근가능 : public 이라 어디서나 사용 가능
-        }
+    class Car {
+        fun drive() = println("Car driving")
+    }
+
+    // 다른 패키지
+    val car = Car()
+    car.drive() // ✅ 정상 접근
     ```
-    - 기본 접근 제어자
-    - 다른 패키지/모듈 에서도 접근 가능
-
-2. internal (같은 모듈 내에서만 접근 가능)
+- `internal` (같은 모듈 내에서만 접근 가능)
+  + 모듈 단위로 접근 범위 제한
+  + 모듈 기준이기 때문에 앱 내부용 코드, 라이브러리 구현 등에서 활용 높음
     ```kotlin
-        // 파일 : Engine.kt
-        internal class Engine {
-            fun start() {
-                println("Engine started")
-            }        
-        }
-        
-        // 파일 : Main.kt (같은 모듈 내)
-        fun main() {
-            val engine = Engine()
-            engine.start()      // ✅ 같은 모듈이므로 접근 가능
-        }    
-    ```
+    internal class Engine {
+      fun start() = println("Engine start")
+    }
+
+    // 같은 모듈
+    val e = Engine() // ✅ 가능
+
+    // 다른 모듈
+    val e = Engine() // ❌ 컴파일 에러
+    ``` 
+
+- protected (상속 관계 내부에서만 접근 가능)
+  + 외부에서는 보이지 않지만, 하위 클래스에서는 사용 가능
     ```kotlin
-        // ❌ 다른 모듈에서
-        import com.example.engine.Engine    // ❌ 컴파일 에러
-   
-        fun main() {
-            val engine = Engine()   // ❌ 접근 불가 : internal은 다른 모듈에서 사용 불가
-        }
-    ```
-    - **같은 Gradle 모듈 내**에서만 사용 가능 
-    - 외부 SDK로 내보낼 필요 없는 클래스/함수에 적합
+    open class Animal {
+      protected fun breathe() = println("숨 쉬는 중")
+    }
 
-3. protected (상속 받은 클래스에서만 접근 가능)
+    class Dog : Animal() {
+        fun bark() {
+            breathe() // ✅ 가능
+        }
+    }
+
+    val d = Dog()
+    // d.breathe() // ❌ 외부에서는 접근 불가
+    ```
+
+- `private` (같은 클래스 or 파일 내에서만 접근 가능)
+  + 캡슐화에 최적, 외부에 절대 노출되지 않도록 제한
     ```kotlin
-        open class Animal {
-            protected fun breathe() {
-                println("Animal breathing")
-            }
-    
-            fun walk() {
-                println("Animal walking")
-            }
-        }
-   
-        class Dog : Animal() {
-            fun sniff() {
-                breathe()   // ✅ protected 이므로 하위 클래스에서 사용 가능
-            }
-        }    
-    
-        fun main() {
-            val dog = Dog()     
-            dog.walk()      // ✅ public method
-            // dog.breathe()    // ❌ 외부에서는 접근 불가
-        }    
-    ```
-    - 외부 접근 ❌
-    - **상속받은 클래스 내부에서만 접근 가능**
-    - Java의 `protected`와 거의 동일 
+    class Secret {
+      private val code = "1234"
+      private fun unlock() = println("Unlocked with $code")
 
-4. private (같은 클래스 또는 파일 내에서만 접근 가능)
-    1. 클래스 내부 제한
-        ```kotlin
-            class SecretBox {
-                private val code = "1234"
-       
-                private fun unlock() {
-                    println("Box unlocked with $code")
-                }
-       
-                fun tryUnlock() {
-                    unlock()    // ✅ 클래스 내부이므로 접근 가능
-                }
-            }
-       
-            fun main() {
-                val box = SerectBox()
-                box.tryUnlock()         // ✅ 가능
-                // box.unlock()         // ❌ 외부 접근 불가
-                // println(box.code)    // ❌ 외부 접근 불가
-            }
-        ```
-    2. 파일 내부 제한 (Top-level)
-        ```kotlin
-            // 파일 : Utils.kt
-            private fun internalHelper() {
-                println("Used only within this file")
-            }
-       
-            fun publicApi() {
-                internalHelper()    // ✅ 같은 파일 내
-            }
-        ```
-        ```kotlin
-            // 파일 : AnotherFile.kt
-       
-            // internal Helper()    ❌ 호출 불가 - 다른 파일에서는 private 함수 접근 안됨
-        ```
-        - 클래스의 구현 세부사항 숨길 때 사용
-        - 파일 수준에서는 **다른 파일에서 접근 불가**
-- 요약정리
-    + | 접근 제어자      | 클래스 외부 접근  | 상속 관계 접근 | 같은 파일           | 같은 모듈 | 다른 모듈 |
-                                |-------------|------------|----------|-----------------|-------|-------|
-      | `public`    | ✅ |  ✅        | ✅               |   ✅    |    ✅   |
-      | `internal`  | ✅ |     ✅     | ✅               |    ✅   |    ❌   |
-      | `protected` | ❌ |    ✅      | ✅ (클래스 내)       |   ✅    |     ❌  |
-      | `private`   | ❌ |  ❌        | ✅ (같은 클래스 / 파일) |   ❌    |    ❌   |
+      fun tryUnlock() = unlock() // ✅ 내부에서 호출 가능
+    }
 
-- 실전
-    - `internal` : 앱 내부 전용 유틸, 헬퍼, Repository, ViewModel 등 노출 필요 없는 경우
-    - `protected` : BaseViewModel, BaseAdapter 등에서 상속 구조 설계 시 유용
-    - `private` : 캡슐화 (Encapsulation)를 위해 적극 사용 ()불필요한 노출 방지
+    // 파일 수준
+    // File: Util.kt
+    private fun helper() = println("File-local only")
 
-- 질문
-    + kotlin 접근제어자에는 어떤것들이 있나요?
-        * public : 기본값 (어디서나 접근 가능)
-        * internal : 같은 모듈 내에서만 접근 가능
-        * protected : 상속받은 클래스 내에서만 접근 가능
-        * private : 같은 클래스 또는 파일 내에서만 접근 가능
-    + Java와 Kotlin의 접근제어자 차이점은?
-        * kotlin에는 `default` 접근제어가 없음 -> 대신 internal 사용
-        * kotlin의 `internal`은 모듈 기준 (Java에 없음)
-        * kotlin에서 top-level 함수클래스도 `private`/`internal` 사용 가능
-    + 접근제어자를 왜 명시적으로 설정해야 하나요?
-        * 외부로 노출하지 않아야 할 정보를 보호 (캡슐화)
-        * Api의 명확한 경계를 정의
-        * 유지보수, 재사용성 향상
+    fun api() = helper() // ✅ 가능
 
+    // 다른 파일에서 helper() 호출 시 컴파일 에러
+    ```  
+
+- 실무 활용 팁
+  + | 상황                     | 권장 접근 제어자   | 이유           |
+    | ---------------------- | ----------- | ------------ |
+    | 유틸/헬퍼 함수, internal API | `internal`  | SDK 외부 노출 방지 |
+    | 상속 구조 내 공통 로직          | `protected` | 하위 클래스 전용    |
+    | 민감한 로직, 상태 캡슐화         | `private`   | 완전 은닉화       |
+    | 외부에서 호출 가능한 API        | `public`    | API 명확히 노출   |
+
+- 면접 관련 질문
+  + Kotlin에만 있는 접근제어자는?
+    * internal. 모듈 단위 접근 제어로 Java에는 존재하지 않음.
+  + Java의 default 접근제어자와 Kotlin의 internal 차이?
+    * Java의 default는 패키지 단위이고, Kotlin의 internal은 모듈 단위임.
+    * internal은 multi-module 프로젝트에서 코드 은닉에 효과적
+  + Kotlin에서는 top-level 함수에도 접근제어자를 붙일 수 있는가?
+    * 가능. 함수, 클래스, 변수 모두 top-level일 경우에도 private, internal 등 설정 가능.
+ 
 
 ---
 
 
 ### reified & 제네릭
 - 정의
-  + reified
-    * `구체화된` 컴파일된 코드 안에서 타입 T가 지워지지 않고 유지됨을 의미
-    * 코틀린 제네릭 타입 파라미터를 런타임에 사용할 수 있게 해주는 키워드
-    * `inline` 함수의 타입 파라미터에서만 사용 가능하며 
-    * 일반적으로 불가능한 T::class, T::class.java, is T, as T 같은 표현 사용 가능
   + 제네릭
-    * 클래스나 함수가 타입에 의존하지 않고 재사용성 있게 동작할 수 있게 해줌
-    * 제네릭은 런타임 시점 타입 정보가 지워짐. 이를 타입 소거라고 부름 (T::class, T::class.java 같은 작업 불가)
+    * 타입에 의존하지 않고 유연하고 재사용 가능한 코드를 작성할 수 있게 해주는 문법
     * ```kotlin
       fun <T> printItem(item: T) {
         println(item)
       }
       ```
-    * 문제점은 일반 제네릭은 런타임 타입을 알 수 없음
+    * ⚠️ 타입 소거(Type Erasure) 발생
+      1. 컴파일 후 T의 실제 타입 정보가 런타임에 사라짐
+      2. 예: T::class, T::class.java, is T, as T 사용 ❌불가
+  + reified
+    * reified: "구체화된"이라는 의미. 제네릭 타입 T를 런타임에도 타입 정보로 유지
+    * 사용 조건:
+      1. inline 함수의 타입 파라미터에만 사용 가능
+      2. 컴파일 시 실제 타입으로 치환(inline + 타입 구체화)  
     * ```kotlin
-      fun <T> getTypeClass(): Class<T> {
-        return T::class.java // compile error cannot use 'T' as reified type parameter
+      inline fun <reified T> getType(): Class<T> {
+        return T::class.java // ✅ 가능!
       }
-      
-      inline fun <reified T> getTypeClass(): Class<T> {
-        return T::class.java
-      }
-      ```
+      ``` 
 
-- 활용 방안
-  + JSON 파싱 with Gson
+- 일반 제네릭과의 차이
+  + | 기능                             | 일반 제네릭    | reified 제네릭      |
+    | ------------------------------ | --------- | ---------------- |
+    | `T::class`, `T::class.java` 사용 | ❌         | ✅ 가능             |
+    | `is T`, `as T` 타입 검사           | ❌         | ✅ 가능             |
+    | 런타임 타입 유지                      | ❌ (타입 소거) | ✅ (컴파일 시 타입 삽입)  |
+    | 사용 가능 위치                       | 어디든       | `inline` 함수 안에서만 |
+   
+- 주요 활용 예시
+  + Gson JSON 파싱
     * ```kotlin
       inline fun <reified T> parseJson(json: String): T {
         return Gson().fromJson(json, T::class.java)
       }
-      
+
       val user: User = parseJson(jsonString)
-      ```
-    * reified 없으면 TypeToken<T>() 같이 우회하는 복잡한 코드 필요
-  + 타입 검사
+      ``` 
+    * 일반 제네릭이라면 TypeToken<T>().type을 써야 해서 복잡함
+  + 타입 검사/필터링
     * ```kotlin
       inline fun <reified T> isOfType(value: Any): Boolean {
         return value is T
@@ -1386,35 +1332,29 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       
       val result = isOfType<String>("Hello") // true
       ```
-  + ViewModel Factory in Android
+  + ViewModel Factory 
     * ```kotlin
       inline fun <reified VM : ViewModel> createViewModel(): VM {
         return ViewModelProvider(this).get(VM::class.java)
       }
       ```
-      
-- 정리
-  + | 상황                             | `reified` 필요 여부 |
-    | ------------------------------ | --------------- |
-    | 런타임에 타입 검사 (`is`, `as`)        | ✅ 필요            |
-    | `T::class`, `T::class.java` 사용 | ✅ 필요            |
-    | 단순 타입 재사용, 타입 전달 X             | ❌ 불필요           |
-  + 제네릭은 컴파일 시점에만 타입 정보를 가짐 → 런타임엔 지워짐
-  + reified는 이 타입 정보를 런타임까지 유지하게 함
-  + inline 함수에서만 사용 가능
-  + 안드로이드에서 Gson, ViewModel, Retrofit 등과 함께 자주 활용됨
 
+- 상황별 사용 정리
+  + | 상황                                   | `reified` 필요 여부 |
+    | ------------------------------------ | --------------- |
+    | 런타임 타입 검사 (`is T`, `as T`)           | ✅ 필요            |
+    | `T::class`, `T::class.java` 사용       | ✅ 필요            |
+    | 단순한 타입 재사용 / 전달                      | ❌ 불필요           |
+    | Gson/Retrofit/뷰모델 등 런타임 타입 반영 필요한 경우 | ✅ 매우 유용         |
+       
 - 면접 관련 질문
-  + reified 키워드 언제 왜 사용?
-    * reified는 제네릭 타입의 런타임 타입 정보를 유지하고 싶을 때 사용
-    * 코틀린의 일반 제네릭은 타입 소거 때문에 런타임에 T::class, is T 같은 연산이 불가능
-    * reified를 사용하면 이런 제약을 우회할 수 있음 (단, reified는 inline 함수에서만)
-    * 예로 Gson 파싱, 타입 필터링, ViewModelFactory 로 뷰 모델 생성 시
-  + 왜 reified는 inline 함수에서만 사용?
-    * reified는 타입 정보를 런타임까지 보존해야 하므로, 컴파일 시점에 해당 타입이 코드에 구체적으로 삽입 
-    * inline 함수는 컴파일 시점에 함수 본문이 호출된 위치에 직접 복사되기에 제네릭 타입도 실제 타입으로 치환
-    * 이 구조 덕분에 T::class, is T 같은 코드가 가능해짐
-    * 일반 함수는 이 치환이 일어나지 않기 때문에 reified를 사용 불가
+  + `reified` 키워드 필요한 이유?
+    * Kotlin의 제네릭은 타입 소거 때문에 T::class, is T 같은 연산이 불가
+    * reified는 실제 타입 정보를 코드에 삽입해서 런타임에도 활용 가능하게 해줌
+  + `inline` 함수에서만 `reified`를 쓸 수 있는가?
+    * inline 함수는 컴파일 시 함수 본문이 호출 위치에 복사됨
+    * 이때 T가 실제 타입으로 치환되므로 타입 정보 유지 가능
+    * 일반 함수는 이 치환이 안 되기 때문에 타입 소거 발생 → reified 사용 불가
 
 
 ---

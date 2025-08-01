@@ -1686,100 +1686,104 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 
 ### Iterable, Sequence
-- 코틀린에서 컬렉션 데이터를 다룰 때 Iterable과 Sequence는 중요한 역할을 합니다.
-- 두 인터페이스 모두 요소의 시퀀스를 나타내지만, 데이터 처리 방식과 성능 특성에서 큰 차이를 보입니다.
-
 - Iterable
-  + 코틀린 표준 라이브러리에서 가장 기본적인 컬렉션 인터페이스 중 하나입니다.
-  + 요소들을 반복(iterate) 할 수 있는 능력을 제공합니다. List, Set, Map 등 대부분 코틀린 컬렉션 타입이 Iterable을 구현합니다
+  + `List`, `Set`, `Map` 등 대부분의 컬렉션이 `Iterable<T>` 구현
+  + 즉시 계산 방식(Eager evaluation)
+  + 각 연산 시 중간 컬렉션 생성
   + 특징
-    * 반복자(Iterator) 제공 : Iterable 인터페이스는 iterator() 메서드를 정의하며, 이 메서드는 Iterator<T> 객체를 반환합니다.
-    * 이 반복자를 통해 컬렉션의 요소를 순차적으로 접근할 수 있습니다.
-    ```kotlin
-    interface Iterable<out T> {
-        operator fun iterator(): Iterator<T>
-    }
+    * `map`, `filter`, `forEach` 등 다양한 확장 함수 제공
+    * 컬렉션 전체를 한 연산씩 처리 (ex: `map` 전체 -> `filter` 전체)
+    * ```kotlin
+      interface Iterable<out T> {
+          operator fun iterator(): Iterator<T>
+      }
 
-    interface Iterator<out T> {
-        operator fun next(): T
-        operator fun hasNext(): Boolean
-    }
-    ```
-    * 다양한 확장 함수 : Iterable에는 map, filter, foreEach, find, groupBy 등과 같이 데이터를 변환하고 조작하는 수 많은 유용한 확장 함수가 정의되어 있습니다.
-    * 즉시 계산 / 중간 컬렉션 생성 : Iterable에 대한 대부분의 연산은 즉시 계싼됩니다. 즉, 각 연산이 호출될 때마다 새로운 중간 컬렉션이 생성됩니다.
-    ```kotlin
-    val numbersList: List<Int> = listOf(1, 2, 3, 4, 5)
+      interface Iterator<out T> {
+          operator fun next(): T
+          operator fun hasNext(): Boolean
+      }
 
-    // Iterable의 확장 함수 사용
-    val doubledAndEven = numbersList
+      val numbersList: List<Int> = listOf(1, 2, 3, 4, 5)
+
+      // Iterable의 확장 함수 사용
+      val doubledAndEven = numbersList
         .map { it * 2 }       // [2, 4, 6, 8, 10] - 중간 리스트 생성
         .filter { it % 2 == 0 } // [2, 4, 6, 8, 10] - 또 다른 중간 리스트 생성 (이 경우엔 동일)
 
-    println(doubledAndEven) // 출력: [2, 4, 6, 8, 10]
-
-    // for 루프를 통한 반복 (내부적으로 iterator 사용)
-    for (number in numbersList) {
-        println(number)
-    }
-    ```
-  + 장점
-    * 구현이 간단하고 직관적입니다.
-    * 작은 크기의 컬렉션이나 연산의 수가 적을 때는 충분히 효율적입니다.
-    * 결과 컬렉션이 즉시 필요할 때 유용합니다.
-  + 단점
-    * 큰 데이터셋이나 여러 단계의 연산 체인에서는 성능 저하가 발생할 수 있습니다.
-    * 각 단계마다 새로운 중간 컬렉션을 생성하기 때문에 메모리 사용량과 처리 시간이 늘어날 수 있습니다.
+      // for 루프를 통한 반복 (내부적으로 iterator 사용)
+      for (number in numbersList) {
+          println(number)
+      }  
+      ```
+  + 장단점
+    * | 장점               | 단점                         |
+      | ---------------- | -------------------------- |
+      | 간단하고 직관적인 구조     | 큰 데이터셋에서 성능 저하 가능          |
+      | 컬렉션 전체를 쉽게 반복 가능 | 연산마다 새로운 리스트(중간 컬렉션) 생성됨   |
+      | 결과를 즉시 확인 가능     | 연산 체인이 길어질수록 메모리/CPU 부담 증가 |
 
 - Sequence
-  + Sequence<T>는 Iterable과 유사하게 요소의 시퀀스를 나타내지만, 지연 계산을 통해 데이터를 처리하도록 설계되었습니다.
-  + 즉, 실제 연산은 최종 결과가 필요할 때까지 지연됩니다.
+  + `Sequence<T>`는 지연 계산 방식(Lazy evaluation)
+  + `map`, `filter` 등 중간 연산은 실행하지 않고 계획만 수립
+    * ```kotlin
+      val sequence = sequenceOf(1, 2, 3, 4, 5)
+
+      val result = sequence
+          .map {
+              println("map: $it")
+              it * 2
+          }
+          .filter {
+              println("filter: $it")
+              it % 2 == 0
+          }
+
+      println("정의만 되었고 아직 실행 안됨")
+
+      val first = result.first() // 연산 시작! 1개만 처리
+      ``` 
   + 특징
-    * 지연 계산 : Sequence의 가장 큰 특징입니다. 중간 연산은 즉시 실행되지 않고, 최종 연산이 호출될 때까지 연산 계획만 세워둡니다.
-    * 요소별 처리 : 최종 연산이 호출되면, Sequence는 각 요소를 개별적으로 전체 연산 파이프라인에 통과시킵니다. 첫 번째 요소가 map -> filter -> 과정을 거치고, 그 다음 두번째 요소가 같은 과정을 거칩니다.
-    * 중간 컬렉션 생성 최소화 : 지연 계산과 요소별 처리 덕분에, Sequence는 중간 단계에서 불필요한 컬렉션을 생성하지 않습니다. 이는 특히 큰 데이터셋을 다룰 때 메모리 효율성과 성능 향상에 크게 기여합니다.
+    * 요소 단위로 전체 파이프라인을 순차 처리
+    * 중간 컬렉션을 만들지 않음
+    * 최종 연산 (first(), toList(), count() 등) 호출 시 연산이 시작됨
     ```kotlin
     val numbersSequence: Sequence<Int> = sequenceOf(1, 2, 3, 4, 5)
     // 또는 기존 컬렉션을 Sequence로 변환
     // val numbersSequence = listOf(1, 2, 3, 4, 5).asSequence()
-
-    println("Sequence 연산 시작 전")
-
-    val resultSequence = numbersSequence
-        .map {
-            println("map: $it")
-            it * 2
-        }
-        .filter {
-            println("filter: $it")
-            it % 2 == 0
-        }
-
-    println("Sequence 연산 정의 완료 (아직 실행 안 됨)")
-
-    // 최종 연산 호출 시 실제 연산 시작
-    val firstResult = resultSequence.first() // 첫 번째 요소만 필요
-    println("첫 번째 결과: $firstResult")
-
-    println("\ntoList() 호출 시 전체 연산")
-    val fullResultList = resultSequence.toList() // 모든 요소를 처리하여 리스트로 변환
-    println("전체 결과 리스트: $fullResultList")
     ```
-  + 장점
-    * 큰 데이터셋 처리 시 성능 향상: 중간 컬렉션을 생성하지 않으므로 메모리 사용량이 적고, 불필요한 연산을 줄일 수 있습니다.
-    * 무한 시퀀스(Infinite sequences) 처리 가능: generateSequence 등을 사용하여 무한한 요소를 가진 시퀀스를 정의하고, take와 같은 연산으로 필요한 만큼만 잘라내어 사용할 수 있습니다.
-    * 효율적인 연산 순서: 각 요소가 전체 파이프라인을 통과하므로, 특정 조건에서 일찍 연산을 중단할 수 있습니다
-  + 단점
-    * 작은 컬렉션이나 간단한 연산에서는 Iterable보다 약간의 오버헤드가 있을 수 있습니다.
-    * 지연 계산의 특성상 디버깅이 조금 더 복잡할 수 있습니다. 
+  + 장단점
+    * | 장점                 | 단점                                  |
+      | ------------------ | ----------------------------------- |
+      | 성능 효율적 (중간 컬렉션 없음) | 소규모 연산에서는 약간의 오버헤드 존재               |
+      | 큰 데이터, 복잡 연산에서 유리  | 디버깅이 어려울 수 있음                       |
+      | **무한 시퀀스 처리 가능**   | 모든 API에서 지원되지 않음 (`randomAccess` 등) |
+\
+- Iterable vs. Sequence 정리
+  + | 항목        | `Iterable`                          | `Sequence`                     |
+    | --------- | ----------------------------------- | ------------------------------ |
+    | 계산 방식     | 즉시 계산 (Eager)                       | 지연 계산 (Lazy)                   |
+    | 중간 컬렉션 생성 | 매 연산마다 생성됨                          | 최종 연산까지 생성되지 않음                |
+    | 연산 처리 순서  | 전체 컬렉션 → 각 연산별 처리                   | 각 요소 → 전체 파이프라인 순차 처리          |
+    | 예시 메서드    | `.map()`, `.filter()`, `.forEach()` | `.asSequence().map().filter()` |
+    | 사용 추천 상황  | 적은 데이터, 결과 즉시 필요할 때                 | 대용량, 복잡한 체인, 무한 처리 필요할 때       |
+    | 성능        | 상대적으로 낮음                            | 성능 최적화 가능                      |
 
-- Iterable vs. Sequence: 언제 무엇을 사용할까?
-  + | 특징         | Iterable (예: List, Set)                  | Sequence                                                | 
-    |------------|------------------------------------------|---------------------------------------------------------|
-    | 계산 방식      | 즉시 계산 (Eager)                            | 지연 계산 (Lazy)                                            | 
-    | 중간 컬렉션 생성  | 각 연산마다 생성                                | 최종 연산 시까지 생성 안 함 (최소화)                                  |
-    | 요소 처리 순서   | 컬렉션 전체에 대해 단계별로 처리 (map 전체 -> filter 전체) | 각 요소별로 전체 파이프라인 처리 (요소1: map->filter, 요소2: map->filter) |
-    | 주요 사용 사례   | 작은 컬렉션, 간단한 연산, 결과가 즉시 필요할 때             | 큰 컬렉션, 여러 단계의 복잡한 연산, 무한 시퀀스, 성능 최적화 필요 시               |
-    | 성능 (큰 데이터) | 상대적으로 낮음                                 | 상대적으로 높음                                                | 
+- 언제 무엇을 써야 할까?
+  + | 상황                             | 추천 타입        |
+    | ------------------------------ | ------------ |
+    | 단순 변환, 소규모 컬렉션                 | ✅ `Iterable` |
+    | 수십만 건 이상, 다단계 연산               | ✅ `Sequence` |
+    | 무한 시퀀스 (`generateSequence {}`) | ✅ `Sequence` |
+    | 연산 결과를 바로 써야 함                 | ✅ `Iterable` |
+    | `first()`, `find()`로 빠르게 추출    | ✅ `Sequence` |
+
+- 면접 관련 질문
+  + Iterable과 Sequence의 차이점은?
+    * Iterable은 즉시 계산, Sequence는 지연 계산
+    * Iterable은 중간 컬렉션 생성, Sequence는 요소 단위 처리로 메모리 효율적
+  + Sequence는 언제 쓰는 게 좋은가요?
+    * 큰 데이터셋이나 무한 스트림 처리, 또는 중간 리스트 생성을 피하고 싶을 때
+    * 예: asSequence().map().filter().first() 
 
 
 ---

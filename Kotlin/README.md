@@ -1686,100 +1686,104 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 
 ### Iterable, Sequence
-- 코틀린에서 컬렉션 데이터를 다룰 때 Iterable과 Sequence는 중요한 역할을 합니다.
-- 두 인터페이스 모두 요소의 시퀀스를 나타내지만, 데이터 처리 방식과 성능 특성에서 큰 차이를 보입니다.
-
 - Iterable
-  + 코틀린 표준 라이브러리에서 가장 기본적인 컬렉션 인터페이스 중 하나입니다.
-  + 요소들을 반복(iterate) 할 수 있는 능력을 제공합니다. List, Set, Map 등 대부분 코틀린 컬렉션 타입이 Iterable을 구현합니다
+  + `List`, `Set`, `Map` 등 대부분의 컬렉션이 `Iterable<T>` 구현
+  + 즉시 계산 방식(Eager evaluation)
+  + 각 연산 시 중간 컬렉션 생성
   + 특징
-    * 반복자(Iterator) 제공 : Iterable 인터페이스는 iterator() 메서드를 정의하며, 이 메서드는 Iterator<T> 객체를 반환합니다.
-    * 이 반복자를 통해 컬렉션의 요소를 순차적으로 접근할 수 있습니다.
-    ```kotlin
-    interface Iterable<out T> {
-        operator fun iterator(): Iterator<T>
-    }
+    * `map`, `filter`, `forEach` 등 다양한 확장 함수 제공
+    * 컬렉션 전체를 한 연산씩 처리 (ex: `map` 전체 -> `filter` 전체)
+    * ```kotlin
+      interface Iterable<out T> {
+          operator fun iterator(): Iterator<T>
+      }
 
-    interface Iterator<out T> {
-        operator fun next(): T
-        operator fun hasNext(): Boolean
-    }
-    ```
-    * 다양한 확장 함수 : Iterable에는 map, filter, foreEach, find, groupBy 등과 같이 데이터를 변환하고 조작하는 수 많은 유용한 확장 함수가 정의되어 있습니다.
-    * 즉시 계산 / 중간 컬렉션 생성 : Iterable에 대한 대부분의 연산은 즉시 계싼됩니다. 즉, 각 연산이 호출될 때마다 새로운 중간 컬렉션이 생성됩니다.
-    ```kotlin
-    val numbersList: List<Int> = listOf(1, 2, 3, 4, 5)
+      interface Iterator<out T> {
+          operator fun next(): T
+          operator fun hasNext(): Boolean
+      }
 
-    // Iterable의 확장 함수 사용
-    val doubledAndEven = numbersList
+      val numbersList: List<Int> = listOf(1, 2, 3, 4, 5)
+
+      // Iterable의 확장 함수 사용
+      val doubledAndEven = numbersList
         .map { it * 2 }       // [2, 4, 6, 8, 10] - 중간 리스트 생성
         .filter { it % 2 == 0 } // [2, 4, 6, 8, 10] - 또 다른 중간 리스트 생성 (이 경우엔 동일)
 
-    println(doubledAndEven) // 출력: [2, 4, 6, 8, 10]
-
-    // for 루프를 통한 반복 (내부적으로 iterator 사용)
-    for (number in numbersList) {
-        println(number)
-    }
-    ```
-  + 장점
-    * 구현이 간단하고 직관적입니다.
-    * 작은 크기의 컬렉션이나 연산의 수가 적을 때는 충분히 효율적입니다.
-    * 결과 컬렉션이 즉시 필요할 때 유용합니다.
-  + 단점
-    * 큰 데이터셋이나 여러 단계의 연산 체인에서는 성능 저하가 발생할 수 있습니다.
-    * 각 단계마다 새로운 중간 컬렉션을 생성하기 때문에 메모리 사용량과 처리 시간이 늘어날 수 있습니다.
+      // for 루프를 통한 반복 (내부적으로 iterator 사용)
+      for (number in numbersList) {
+          println(number)
+      }  
+      ```
+  + 장단점
+    * | 장점               | 단점                         |
+      | ---------------- | -------------------------- |
+      | 간단하고 직관적인 구조     | 큰 데이터셋에서 성능 저하 가능          |
+      | 컬렉션 전체를 쉽게 반복 가능 | 연산마다 새로운 리스트(중간 컬렉션) 생성됨   |
+      | 결과를 즉시 확인 가능     | 연산 체인이 길어질수록 메모리/CPU 부담 증가 |
 
 - Sequence
-  + Sequence<T>는 Iterable과 유사하게 요소의 시퀀스를 나타내지만, 지연 계산을 통해 데이터를 처리하도록 설계되었습니다.
-  + 즉, 실제 연산은 최종 결과가 필요할 때까지 지연됩니다.
+  + `Sequence<T>`는 지연 계산 방식(Lazy evaluation)
+  + `map`, `filter` 등 중간 연산은 실행하지 않고 계획만 수립
+    * ```kotlin
+      val sequence = sequenceOf(1, 2, 3, 4, 5)
+
+      val result = sequence
+          .map {
+              println("map: $it")
+              it * 2
+          }
+          .filter {
+              println("filter: $it")
+              it % 2 == 0
+          }
+
+      println("정의만 되었고 아직 실행 안됨")
+
+      val first = result.first() // 연산 시작! 1개만 처리
+      ``` 
   + 특징
-    * 지연 계산 : Sequence의 가장 큰 특징입니다. 중간 연산은 즉시 실행되지 않고, 최종 연산이 호출될 때까지 연산 계획만 세워둡니다.
-    * 요소별 처리 : 최종 연산이 호출되면, Sequence는 각 요소를 개별적으로 전체 연산 파이프라인에 통과시킵니다. 첫 번째 요소가 map -> filter -> 과정을 거치고, 그 다음 두번째 요소가 같은 과정을 거칩니다.
-    * 중간 컬렉션 생성 최소화 : 지연 계산과 요소별 처리 덕분에, Sequence는 중간 단계에서 불필요한 컬렉션을 생성하지 않습니다. 이는 특히 큰 데이터셋을 다룰 때 메모리 효율성과 성능 향상에 크게 기여합니다.
+    * 요소 단위로 전체 파이프라인을 순차 처리
+    * 중간 컬렉션을 만들지 않음
+    * 최종 연산 (first(), toList(), count() 등) 호출 시 연산이 시작됨
     ```kotlin
     val numbersSequence: Sequence<Int> = sequenceOf(1, 2, 3, 4, 5)
     // 또는 기존 컬렉션을 Sequence로 변환
     // val numbersSequence = listOf(1, 2, 3, 4, 5).asSequence()
-
-    println("Sequence 연산 시작 전")
-
-    val resultSequence = numbersSequence
-        .map {
-            println("map: $it")
-            it * 2
-        }
-        .filter {
-            println("filter: $it")
-            it % 2 == 0
-        }
-
-    println("Sequence 연산 정의 완료 (아직 실행 안 됨)")
-
-    // 최종 연산 호출 시 실제 연산 시작
-    val firstResult = resultSequence.first() // 첫 번째 요소만 필요
-    println("첫 번째 결과: $firstResult")
-
-    println("\ntoList() 호출 시 전체 연산")
-    val fullResultList = resultSequence.toList() // 모든 요소를 처리하여 리스트로 변환
-    println("전체 결과 리스트: $fullResultList")
     ```
-  + 장점
-    * 큰 데이터셋 처리 시 성능 향상: 중간 컬렉션을 생성하지 않으므로 메모리 사용량이 적고, 불필요한 연산을 줄일 수 있습니다.
-    * 무한 시퀀스(Infinite sequences) 처리 가능: generateSequence 등을 사용하여 무한한 요소를 가진 시퀀스를 정의하고, take와 같은 연산으로 필요한 만큼만 잘라내어 사용할 수 있습니다.
-    * 효율적인 연산 순서: 각 요소가 전체 파이프라인을 통과하므로, 특정 조건에서 일찍 연산을 중단할 수 있습니다
-  + 단점
-    * 작은 컬렉션이나 간단한 연산에서는 Iterable보다 약간의 오버헤드가 있을 수 있습니다.
-    * 지연 계산의 특성상 디버깅이 조금 더 복잡할 수 있습니다. 
+  + 장단점
+    * | 장점                 | 단점                                  |
+      | ------------------ | ----------------------------------- |
+      | 성능 효율적 (중간 컬렉션 없음) | 소규모 연산에서는 약간의 오버헤드 존재               |
+      | 큰 데이터, 복잡 연산에서 유리  | 디버깅이 어려울 수 있음                       |
+      | **무한 시퀀스 처리 가능**   | 모든 API에서 지원되지 않음 (`randomAccess` 등) |
+\
+- Iterable vs. Sequence 정리
+  + | 항목        | `Iterable`                          | `Sequence`                     |
+    | --------- | ----------------------------------- | ------------------------------ |
+    | 계산 방식     | 즉시 계산 (Eager)                       | 지연 계산 (Lazy)                   |
+    | 중간 컬렉션 생성 | 매 연산마다 생성됨                          | 최종 연산까지 생성되지 않음                |
+    | 연산 처리 순서  | 전체 컬렉션 → 각 연산별 처리                   | 각 요소 → 전체 파이프라인 순차 처리          |
+    | 예시 메서드    | `.map()`, `.filter()`, `.forEach()` | `.asSequence().map().filter()` |
+    | 사용 추천 상황  | 적은 데이터, 결과 즉시 필요할 때                 | 대용량, 복잡한 체인, 무한 처리 필요할 때       |
+    | 성능        | 상대적으로 낮음                            | 성능 최적화 가능                      |
 
-- Iterable vs. Sequence: 언제 무엇을 사용할까?
-  + | 특징         | Iterable (예: List, Set)                  | Sequence                                                | 
-    |------------|------------------------------------------|---------------------------------------------------------|
-    | 계산 방식      | 즉시 계산 (Eager)                            | 지연 계산 (Lazy)                                            | 
-    | 중간 컬렉션 생성  | 각 연산마다 생성                                | 최종 연산 시까지 생성 안 함 (최소화)                                  |
-    | 요소 처리 순서   | 컬렉션 전체에 대해 단계별로 처리 (map 전체 -> filter 전체) | 각 요소별로 전체 파이프라인 처리 (요소1: map->filter, 요소2: map->filter) |
-    | 주요 사용 사례   | 작은 컬렉션, 간단한 연산, 결과가 즉시 필요할 때             | 큰 컬렉션, 여러 단계의 복잡한 연산, 무한 시퀀스, 성능 최적화 필요 시               |
-    | 성능 (큰 데이터) | 상대적으로 낮음                                 | 상대적으로 높음                                                | 
+- 언제 무엇을 써야 할까?
+  + | 상황                             | 추천 타입        |
+    | ------------------------------ | ------------ |
+    | 단순 변환, 소규모 컬렉션                 | ✅ `Iterable` |
+    | 수십만 건 이상, 다단계 연산               | ✅ `Sequence` |
+    | 무한 시퀀스 (`generateSequence {}`) | ✅ `Sequence` |
+    | 연산 결과를 바로 써야 함                 | ✅ `Iterable` |
+    | `first()`, `find()`로 빠르게 추출    | ✅ `Sequence` |
+
+- 면접 관련 질문
+  + Iterable과 Sequence의 차이점은?
+    * Iterable은 즉시 계산, Sequence는 지연 계산
+    * Iterable은 중간 컬렉션 생성, Sequence는 요소 단위 처리로 메모리 효율적
+  + Sequence는 언제 쓰는 게 좋은가요?
+    * 큰 데이터셋이나 무한 스트림 처리, 또는 중간 리스트 생성을 피하고 싶을 때
+    * 예: asSequence().map().filter().first() 
 
 
 ---
@@ -1787,20 +1791,22 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ### DSL (Domain-Specific Language)
 - 정의
-  + 특정 목적(domain)에 맞게 설계된 **맞춤형 언어 스타일 코드**를 Kotlin 문법 위에서 구현할 수 있는 기능
-  + 대표적인 예로 `Gradle Kotlin DSL`, `Jetpack Compose`, `Anko`, `HTML DSL` 등이 있습니다.
-  + Kotlin 문법을 활용해서 **내 도메인에 특화된 코드를 자연어처럼 작성**할 수 있게 해줌
+  + **도메인 특화 언어** (Domain-Specific Language)
+  + Kotlin 문법을 활용해서 **내 도메인에 특화된 코드를 자연어처럼 작성**
+  + 일반적인 코드보다 **선언적(declarative)**이고 **가독성 높음** 
+  + 대표적인 예로 `Gradle Kotlin DSL`, `Jetpack Compose`, `Anko`, `HTML DSL` 
 
 - 구성 핵심 요소
-  + | 요소                       | 설명                      |
-    | ------------------------ | ----------------------- |
-    | **Lambda with Receiver** | 람다 내부에서 객체(this)에 접근 가능 |
-    | **Extension Function**   | 기존 타입에 새로운 함수 추가 가능     |
-    | **Function Literals**    | 함수 자체를 값처럼 전달           |
-    | **Named Arguments**      | 매개변수 이름을 코드 안에서 명확하게 표현 |
+  + | 요소                  | 설명                                            |
+    |---------------------|-----------------------------------------------|
+    | `Lambda with receiver` | 람다 블록 내에서 `this`로 대상 객체의 함수/프로퍼티 사용 가능 |
+    | `Extension function`   | 기존 타입에 함수를 추가하여 DSL 문법처럼 사용 가능         |
+    | `Named arguments`      | 인자명을 명확하게 지정하여 의도를 코드에 드러낼 수 있음     |
+    | `Function literals`    | 함수를 값처럼 전달 가능 → 고차함수 기반 DSL 구현 가능       |
 
-- 샘플
+- 대표 예제
   + HTML DSL
+    * 각 블록은 수신 객체(this)를 가진 람다로 동작
     * ```kotlin
       fun html(block: HtmlBuilder.() -> Unit): String {
         val builder = HtmlBuilder()
@@ -1833,15 +1839,16 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
       }
 
         // 사용
-        val result = html {
-            body {
-                p("Hello, Kotlin DSL!")
-                p("This is a paragraph.")
-            }
-        }
-        println(result) // <body><p>Hello, Kotlin DSL!</p><p>This is a paragraph.</p></body>
+      val result = html {
+          body {
+              p("Hello, Kotlin DSL!")
+              p("This is a paragraph.")
+          }
+      }
+      println(result) // <body><p>Hello, Kotlin DSL!</p><p>This is a paragraph.</p></body>
       ```
-  + Gradle
+  + Gradle Kotlin DSL (build.gradle.kts)
+    * plugins {}, repositories {}, dependencies {} 전부 DSL
     * ```kotlin
       plugins {
         kotlin("jvm") version "1.9.0"
@@ -1861,8 +1868,6 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
         mainClass.set("com.example.MainKt")
       }
       ```
-      plugins {}, repositories {}, dependencies {} 전부 DSL
-      * 중괄호 안은 this 수신 객체를 활용하는 람다 블록
   + SQL
     * JetBrains 의 Exposed 는 코틀린 DSL 로 SQL 작성할 수 있게 해주는 QRM 쿼리 빌더
     * ```kotlin
@@ -1916,177 +1921,213 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
     | Android UI DSL    | Anko (JetBrains, 구버전) |
 
 - 면접 관련 질문 
-  + Q1. Kotlin DSL은 어떤 상황에서 사용하는 게 적절하다고 생각하나요?
-    * Kotlin DSL은 특정 도메인에 맞는 구조화된 코드를 더 선언적이고 읽기 쉽게 표현하고 싶을 때 사용하면 좋습니다.
-      예를 들어 Gradle 빌드 스크립트, Jetpack Compose UI, SQL 쿼리 등과 같이 구조가 반복되거나 계층적인 데이터를 다룰 때 DSL이 효과적입니다.
-      또한, DSL은 특정 API 사용 방식을 제한하거나 직관적으로 만들고 싶을 때도 유용합니다.
-  + Q2. Jetpack Compose는 어떻게 DSL로 작동하나요?
-    * Jetpack Compose는 Kotlin의 함수형 DSL 문법을 기반으로 설계된 UI 프레임워크입니다.
-      각 UI 요소는 @Composable로 표시된 함수이며, 내부적으로는 수신 객체를 가진 람다(lambda with receiver)를 활용해 중첩된 UI 구조를 만들 수 있습니다.
-      예를 들어 Column { Text(...) }는 ColumnScope.() -> Unit 형태의 DSL 블록을 받는 구조로, 코드의 가독성과 유지보수성이 좋아집니다.
-  + Q3. build.gradle.kts vs build.gradle
-    * | 항목       | `build.gradle` (Groovy DSL) | `build.gradle.kts` (Kotlin DSL) |
-      | -------- | --------------------------- | ------------------------------- |
-      | 언어       | Groovy                      | Kotlin                          |
-      | 정적 타입 검사 | ❌ (런타임 에러 가능)               | ✅ (컴파일 타임 타입 체크 가능)             |
-      | 코드 완성    | 제한적, IDE 자동완성 잘 안 됨         | 훨씬 우수함 (IntelliJ 완전 지원)         |
-      | 문법 유연성   | 더 관대함 (익숙한 Gradle 스타일)      | 문법 더 엄격함, 타입 명확히 필요             |
-      | 학습 곡선    | 초반 진입 쉬움                    | Kotlin 익숙하면 훨씬 강력하지만 초반 헷갈림     |
-      | 유지보수     | 동적 타입으로 인해 오류 찾기 어려움        | 타입 안정성으로 유지보수 유리                |
+  + Kotlin DSL은 어떤 상황에서 사용하는 게 적절하다고 생각하나요?
+    * 특정 도메인 작업을 명확하고 선언적으로 표현하고 싶을 때
+    * 반복적 구조, 트리 형태, 구성형 API 등에서 효과적 (예: Gradle, UI, SQL, HTML, JSON 등)
+  + Jetpack Compose는 어떻게 DSL로 작동하나요?
+    * Compose 함수들은 대부분 수신 객체를 가진 고차 함수
+    * 예: Column { Text(...) }는 ColumnScope.() -> Unit 형태
+    * 이로써 UI 구조를 중첩함수 + 선언형 스타일로 자연스럽게 표현 가능
+  + build.gradle.kts vs build.gradle
+    * | 항목     | Groovy DSL (`.gradle`) | Kotlin DSL (`.gradle.kts`) |
+      | ------ | ---------------------- | -------------------------- |
+      | 언어     | Groovy (동적)            | Kotlin (정적)                |
+      | 타입 안정성 | ❌ 없음 (런타임 오류 가능)       | ✅ 컴파일 타임 검사 가능             |
+      | IDE 지원 | 제한적 자동완성               | 강력한 자동완성 및 타입 추론           |
+      | 유연성    | 문법 유연함 (다소 혼란스러울 수 있음) | 명확한 문법 필요 (컴파일 엄격)         |
+      | 학습 난이도 | 진입 장벽 낮음               | Kotlin 익숙해야 쉽게 사용 가능       |
 
 
 ---
 
 
 ### 예외 처리
-- 코틀린에서 예외 처리는 프로그램 실행 중 발생할 수 있는 오류나 예기치 않은 상황에 대처하여 프로그램이 비정상적으로 종료되는 것을 방지하고, 안정적으로 실행될 수 있도록 하는 중요한 매커니즘입니다.
+- 예외란
+  + 실행 중 발생하는 오류 상황을 **객체로 표현**
+  + 모든 예외는 `Throwable`을 상속
+  + ```text
+    Throwable
+    ├── Error               // 시스템 레벨 심각 오류 (복구 불가)
+    └── Exception           // 애플리케이션 수준 예외
+        ├── RuntimeException // 주로 프로그래밍 오류
+        └── IOException      // 입출력 중 발생
+    ```
 
-- 예외의 개념
-    + 예외는 프로그램 실행 중 발생하는 오류 상황을 나타내는 객체입니다.
-    + 코틀린의 모든 예외 클래스는 Throwable클래스를 상속 받습니다.
-    + Exception 클래스는 Throwable의 하위 클래스이며. 일반적으로 애플리케이션 레벨에서 처리해야 하는 예외들을 나타냅니다.
-    + 주요 예외 계층 구조
-        * Throwable
-          |- Error (일반적으로 앱에서 복구 불가능한 심각한 시스템 오류)
-          |- Exception (앱에서 처리 가능한 예외)
-          |= RuntimeException (주로 프로그래밍 오류로 인해 발생)
-          |- IOException (입출력 작업 중 발생하는 예외)
+- 코틀린 예외 처리 특징
+  + | 특징                  | 설명                                          |
+    | ------------------- | ------------------------------------------- |
+    | Unchecked Exception | Java처럼 강제 예외 선언 없음                          |
+    | throw는 표현식          | `throw`는 값처럼 동작 가능 (`Nothing` 반환)           |
+    | try도 표현식            | `val result = try { ... } catch { ... }` 가능 |
 
-- 코틀린 예외 처리의 특징
-    + 모든 예외는 Unchecked Exception : 자바와 달리 코틀린은 Checked Exception과 Unchecked Exception을 구분하지 않습니다.
-    + throw 표현식 : 코틀린에서 throw는 문장이 아닌 표현식입니다. 즉, throw는 값을 반환할 수 있으며, 다른 표현식의 일부로 사용될 수 있습니다.
-  ```kotlin
-  fun fail(message: String): Nothing {
-        throw IllegalArgumentException(message)
+- 예외 발생
+  + ```kotlin
+    fun checkAge(age: Int) {
+      if (age < 0) throw IllegalArgumentException("Age cannot be negative")
+    }
+    ``` 
+
+- 전제 조건 함수
+  + ```kotlin
+    fun process(input: String?) {
+      require(!input.isNullOrEmpty()) { "Input must not be null or empty" } // IllegalArgumentException
     }
 
-    val name: String? = null
-    val s = name ?: fail("Name required") // Elvis 연산자와 함께 사용
-    println(s) // 이 코드는 실행되지 않음
-  ```
-
-- 예외 발생시키기(throw)
-    + throw 키워드를 사용하여 예외 객체의 인스턴스를 명시적으로 발생시킬 수 있습니다.
-  ```kotlin
-  fun checkAge(age: Int) {
-      if (age < 0) {
-          throw IllegalArgumentException("Age cannot be negative: $age")
+    class User(val id: Int, var name: String) {
+      fun rename(newName: String) {
+          check(newName.length > 1) { "Name too short" } // IllegalStateException
       }
-      println("Age is valid: $age")
-  }
-  fun main() {
+    }
+
+    fun fail(message: String): Nothing = throw IllegalArgumentException(message)
+    val user = name ?: fail("No name!")
+    ```
+  + | 함수        | 예외 타입                      | 사용 용도                 |
+    | --------- | -------------------------- | --------------------- |
+    | `require` | `IllegalArgumentException` | 함수 인자 검증              |
+    | `check`   | `IllegalStateException`    | 객체 상태 검증              |
+    | `error`   | `IllegalStateException`    | 무조건 예외 발생 (불가능한 분기 등) |
+
+- 예외 잡기 (try-catch-finally)
+  + ```kotlin
+    fun readFile(path: String) {
+      var reader: BufferedReader? = null
+      
       try {
-          checkAge(-5)
-      } catch (e: IllegalArgumentException) {
-          println("Error: ${e.message}") // 출력: Error: Age cannot be negative: -5
+          reader = File(path).bufferedReader()
+          println(reader.readLine())
+      } catch (e: FileNotFoundException) {
+          println("File not found: $path")
+      } catch (e: IOException) {
+          println("I/O error: ${e.message}")
+      } finally {
+          reader?.close()
+          println("Always runs!")
       }
-  }
-  ```
+    }
+    ``` 
 
-- 전제 조건 함수 : 코틀린 표준라이브러리는 특정 조건을 만족하지 않을 때 예외를 발생시키는 유용한 함수들을 제공합니다.
-    + require(value: Boolean, lazyMessage: () -> Any): 인자가 특정 조건을 만족하는지 검사합니다. value가 false이면 IllegalArgumentException을 발생시킵니다.
-    + check(value: Boolean, lazyMessage: () -> Any): 객체의 상태가 특정 조건을 만족하는지 검사합니다. value가 false이면 IllegalStateException을 발생시킵니다.
-    + error(message: Any): 무조건 IllegalStateException을 발생시킵니다. 주로 도달해서는 안 되는 코드 경로에 사용됩니다.
-  ```kotlin
-  fun processInput(input: String?) {
-      require(input != null && input.isNotEmpty()) { "Input cannot be null or empty" }
-      // ...
-  }
+- try 표현식
+  + ```kotlin
+    val message = try {
+      "Success"
+    } catch (e: Exception) {
+      "Failure: ${e.message}"
+    }
+    ``` 
 
-  class User(val id: Int, var name: String) {
-      fun updateName(newName: String) {
-          check(newName.length > 2) { "Name must be longer than 2 characters" }
-          this.name = newName
-      }
-  }
-  ```
-
-- 예외 잡기
-    + try-catch-finally 블록을 사용하여 예외를 처리합니다.
-        * try 블록 : 예외가 발생할 가능성이 있는 코드를 이 블록안에 작성합니다.
-        * catch 블록 : try 블록에서 특정 타입의 예외가 발생했을 때 실행될 코드를 작성합니다. 여러 개의 catch 블록을 사용하여 다양한 타입의 예외를 처리할 수 있습니다.
-        * finally 블록 : 예외 발생 여부와 관계없이 항상 실행되어야 하는 코드를 작성합니다. finally 블록은 선택 사항입니다.
-      ```kotlin
-      fun readFile(path: String) {
-          var reader: java.io.BufferedReader? = null
-          try {
-              reader = java.io.File(path).bufferedReader()
-              println(reader.readLine())
-          } catch (e: java.io.FileNotFoundException) {
-              println("Error: File not found at path $path")
-          } catch (e: java.io.IOException) {
-              println("Error: An IO error occurred: ${e.message}")
-          } catch (e: Exception) { // 모든 Exception 타입의 예외를 잡음 (가장 마지막에 두는 것이 일반적)
-              println("An unexpected error occurred: ${e.message}")
-          } finally {
-              try {
-                  reader?.close() // 리소스 해제
-              } catch (e: java.io.IOException) {
-                  println("Error closing reader: ${e.message}")
-              }
-              println("Finally block executed.")
-          }
-      }
-  
-      fun main() {
-          readFile("non_existent_file.txt")
-          // 출력:
-          // Error: File not found at path non_existent_file.txt
-          // Finally block executed.
-      }
-      ```
+- 핵심 요약
+  + | 개념              | 요약 설명                                        |
+    | --------------- | -------------------------------------------- |
+    | 예외 구조           | `Throwable` → `Exception` / `Error`          |
+    | `throw`         | 표현식 (리턴 값처럼 사용됨) → 보통 `Nothing` 리턴 함수와 함께 사용 |
+    | `require/check` | 조건 위반 시 예외 → 명확한 계약(Contract) 문서화 가능         |
+    | try-catch       | 예외 발생 가능 코드 감싸기 + 다양한 예외 분기 + 자원 정리까지        |
+ 
+- 면접 관련 질문
+  + 코틀린은 Checked Exception을 지원하나요?
+    * 아니요. Kotlin은 모든 예외가 Unchecked입니다.
+    * Java의 throws와 같은 선언이 필요 없습니다.
+  + `require`, `check` 차이점
+    * | 함수      | 목적               | 예외 타입                    |
+      | ------- | ---------------- | ------------------------ |
+      | require | 함수에 넘긴 **인자 검증** | IllegalArgumentException |
+      | check   | 객체의 **상태 검증**    | IllegalStateException    |
+  + throw는 왜 표현식인가요?
+    * throw는 Nothing 타입을 반환하므로, 삼항 연산자나 Elvis (?:) 등과 함께 사용할 수 있어 제어 흐름을 깔끔하게 구성할 수 있습니다.
+  + 예외가 발생한 이후 finally는 반드시 실행되나요?
+    * 네, finally는 예외 발생 여부와 관계없이 항상 실행됩니다. 
+    * 단, System.exit()나 JVM 자체 종료 같은 상황은 예외입니다.
 
 
 ---
 
 
 ### suspend 함수
-- 일시 중단 가능한 함수
-  1. 일반 함수처럼 실행 되지만, 실행 중 일시 중단 가능
-  2. 일시 중단 후, 중단 된 시점부터 실행
-  3. **코루틴 (Coroutine)** 내에서 호출 되어야 함
-  4. 내부에서 네트워크, DB 작업 등을 사용할 때 적절한 Dispatcher를 지정해야 함 (withContext(Dispatchers.IO) 같이)
+- 개념 및 정의
+  + `suspend` 함수 = **일시 중단 가능한 함수**
+  + 코루틴 내에서만 호출 가능
+  + **Thread는 차단하지 않고**, 함수 실행만 잠깐 멈췄다가 재개 가능
+  + **네트워크 요청, DB 쿼리, delay** 등에서 주로 사용 
 
-- 사용 이유
-  - Thread.sleep()은 **스레드를 멈추기 때문에 UI를 멈춤** -> 버벅임 현상 발생
-  - suspend 함수는 **스레드는 유지한 채, 함수 실행만 중단** -> 부드럽고 효율적인 처리 가능
-
-- 사용 방법
-  ```kotlin
-    suspend fun fetchData() : String {
-        delay(1000)           // 1초 일시 중단 (non-blocking)
-        return "데이터 완료"  
-    }
-  ```
-  ```kotlin
-    lifecycleScope.launch {
-        val result = fetcData()     // suspend 함수는 반드시 Coroutine 함수 내에서 호출
-        println(result)
-    }
-  ```
-  
 - 특징
-  + | 항목              | 설명                                        |
-    |-----------------|-------------------------------------------|
-    | 일시 중단 가능        | delay, network, IO 작업에서 중단하고 나중에 이어서 실행 가능 |
-    | 블로킹 아님          | UI 스레드 (block) 하지 않음                      |
-    | 코루틴 내부에서만 사용 가능 |  일반 함수나 Main 쓰레드에서 직접 호출 불가능    |
+  + | 항목                | 설명                                                            |
+    |-------------------|-----------------------------------------------------------------|
+    | 💤 중단 가능           | `delay()`, 네트워크/IO 작업 중 일시 정지 후 재개 가능                         |
+    | 🧵 Non-blocking      | 스레드를 멈추지 않음 → **UI 스레드에서 안전**                                 |
+    | 🔄 Resume 가능       | 중단된 지점부터 이어서 실행됨                                         |
+    | 🚫 일반 함수에서 직접 호출 불가 | `launch`, `async` 같은 **코루틴 블록 내에서만 호출 가능**                 |
 
-- 일반 함수와의 차이
-  + | 일반 함수        | suspend 함수                 |
-        |--------------|----------------------------|
-    | 중단 불가        | 일시 중단 가능                   |
-    | Thread 차단 가능 | Thread 차단하지 않음             |
-    | 비동기 처리 어려움   | 비동기 처리 쉽게 가능 (callback 없이) |
+- 사용 예제
+  + 기본
+    * ```kotlin
+      suspend fun fetchData(): String {
+        delay(1000)  // 1초 대기 (Thread.sleep 아님!)
+        return "데이터 완료"
+      }
+
+      lifecycleScope.launch {
+        val result = fetchData()  // ✅ suspend 함수는 코루틴 안에서 호출
+        println(result)
+      }
+      ```
+  + Dispatcher 지정 (withContext)
+    * ```kotlin
+      suspend fun loadData(): String {
+        return withContext(Dispatchers.IO) {
+          // IO 작업 수행
+          val data = File("file.txt").readText()
+          data
+        }
+      }
+      ```
+    * withContext() 사용 이유:
+      1. 작업에 적합한 스레드 풀에서 실행
+      2. Main, IO, Default 등 명확히 분리 가능
+  + 병렬 실행 (async)
+    * ```kotlin
+      suspend fun parallelWork() = coroutineScope {
+        val task1 = async { fetchData1() }
+        val task2 = async { fetchData2() }
+        println("${task1.await()} + ${task2.await()}")
+      }
+      ```
+    * async는 병렬 작업, await()는 결과 대기
+    * launch는 결과 없는 단순 실행용
+
+- 일반 함수와 suspend 함수 비교
+  + | 항목        | 일반 함수                 | suspend 함수                            |
+    | --------- | --------------------- | ------------------------------------- |
+    | 중단 가능     | ❌                     | ✅ `delay()`, `IO`, `network` 등에서 일시정지 |
+    | 스레드 차단 여부 | 차단 (ex. Thread.sleep) | 비차단 (non-blocking)                    |
+    | 실행 환경     | 어디서든 호출 가능            | 코루틴 안에서만 호출 가능                        |
+    | 비동기 처리 방식 | Callback, Thread 등 필요 | `async/await` 등으로 간단하게 구현 가능          |
+
+- suspend 호출 위치 예시
+  + | 컨텍스트              | 사용 방법                           |
+    | ----------------- | ------------------------------- |
+    | ViewModel         | `viewModelScope.launch { ... }` |
+    | Activity/Fragment | `lifecycleScope.launch { ... }` |
+    | 단순 진입점            | `runBlocking { ... }`           |
+    | 테스트               | `runTest { ... }` (코루틴 테스트용)    |
+ 
 
 - 면접 질문
+  + suspend 함수란?
+    * 일시 중단 가능한 함수입니다.
+    * 코루틴 안에서 실행되어야 하며, 스레드는 차단하지 않습니다.
+    * 비동기 처리에서 콜백 없이 순차 코드처럼 사용 가능합니다.
   + 일반 함수와 suspend 함수의 차이는 무엇인가요?
-    * 일반 함수는 호출되면 바로 실행되고, 실행이 끝날때까지 블로킹 됩니다.
-    * suspend 함수는 일시 중단이 가능하여 비동기 실행을 할 수 있으며, 스레드를 차단하지 않기 때문에 UI 스레드에서 안전하게 실행 가능합니다.
-  + suspend 함수는 어디서 호출할 수 있나요?
-    * 코루틴 내에서만 호출 가능합니다. 예를들어 viewModelScope.launch, globalScope.launch 같은 코루틴 빌더 안에서 호출 가능합니다.
+    * | 일반 함수      | suspend 함수     |
+      | ---------- | -------------- |
+      | 블로킹        | 논블로킹           |
+      | 중단 불가      | 중단 가능          |
+      | 어디서든 호출 가능 | 코루틴 내에서만 호출 가능 |
+  + 왜 UI 스레드에서 suspend 함수가 유용한가요? 
+    * `Thread.sleep()`과 달리 UI thread를 멈추지 않고 작업을 일시 중단하므로, 앱이 멈추지 않고 부드럽게 동작할 수 있습니다.
   + suspend 함수를 병렬로 실행하려면?
-    * coroutineScope 내에서 async를 사용하면 suspend 함수를 동시에 실행할 수 있습니다.
+    * async {} 와 await() 사용
+    * coroutineScope 내에서 실행
 
 
 ---
@@ -2094,121 +2135,96 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ### 코루틴 빌더 (runBlocking, launch, async)
 - 정의
-  + 새로운 코루틴(Job) 생성해서 실행하게 해주는 함수
-  + 코루틴을 시작(launch)하거나 비동기적으로 실행(async)하거나 블로킹(runBlocking) 방식으로 시작할 때 쓰는 진입점 함수를 총칭
-  + 공통 특징
-    * 새로운 Job 생성해 코루틴 실행
-    * 부모-자식 코루틴의 구조를 구성
-    * 코루틴 컨텍스트(디스패처 등)를 함께 지정 가능
+  + **코루틴 빌더** = 코루틴을 시작하는 진입점 함수
+  + 대표: `runBlocking`, `launch`, `async`
+  + 모두 내부적으로 새로운 `Job`을 생성하여 코루틴 실행
 
 - runBlocking 빌더
-  + 정의 
-    * 새 코루틴을 생성하고 현재 스레드를 블로킹해서 코루틴이 끝날 때까지 기다림
-    * 보통 테스트 or main() 진입점에서 사용
-    * 안드로이드 UI 스레드에서 금지 (ANR 발생)
-  + 샘플 코드
-    * ```kotlin
-      fun main() = runBlocking {
-        println("runBlocking start")
-            launch {
-                delay(1000)
-                println("done inside launch")
-            }
-        println("runBlocking end")
-      }
-      ```
+  + | 항목         | 내용                                 |
+    |------------|------------------------------------|
+    | 목적         | **블로킹 방식**으로 코루틴 실행             |
+    | 사용 위치      | `main()`, 테스트 코드 등 진입점               |
+    | UI 스레드 사용 | ❌ 금지 (ANR 발생 가능)                   |
+    | 리턴 타입      | T (마지막 표현식)                        |
+    | 특징         | 블로킹 스코프, 내부 코루틴이 끝날 때까지 현재 스레드 대기 |
+  + ```kotlin
+    fun main() = runBlocking {
+      println("runBlocking start")
+          launch {
+              delay(1000)
+              println("done inside launch")
+          }
+      println("runBlocking end")
+    }
+    ```
 
 - launch 빌더
-  + 정의
-    * 새 코루틴(Job) 실행, fire-and-forget (결과 반환 X)
-    * 단순 작업, UI 업데이트, 로깅 등
-    * launch 함수는 CoroutineScope 인터페이스의 확장 함수
-    * CoroutineScope 인터페이스의 부모 코루틴과 자식 코루틴 사의 관계 정리하긴 위한 목적으로 사용되는 구조화된 동시성의 핵심
-    * 쓰레드를 호출하는 이유는 코루틴 실행하자마자 끝나므로 대기시간을 위해 설정
-  + 샘플 코드
-    * ````kotlin
-      fun main() {
-        GlobalScope.launch {
-            delay(1000L)
-            println("World!!")
-        }
-
-        Thread.sleep(2000L)
-      }
-      ````
-  + 특징
-    * 결과를 받을 수 없음
-    * 예외는 CoroutineExceptionHandler로 처리하거나 try-catch 필요 
-    * 병렬 계산값을 받아야 한다면 async가 더 적합
-    * Android 에서는 생명주기와 연관된 viewModelScope.launch 와 같이 쓰는게 좋음
+  + | 항목    | 내용                                |
+    | ----- | --------------------------------- |
+    | 목적    | 결과 없이 **작업 실행** (fire-and-forget) |
+    | 리턴 타입 | `Job` (취소, 완료 추적용)                |
+    | 사용 예  | UI 업데이트, 로그, 애니메이션 등              |
+    | 실행 방식 | 비동기, 블로킹 없음                       |
+  + ```kotlin
+    GlobalScope.launch {
+      delay(1000)
+      println("World!")
+    }
+    Thread.sleep(2000) // main이 먼저 끝나지 않게 대기
+    ```
 
 - async 빌더
-  + 정의
-    * launch 와 비슷하지만 값을 생성하도록 설계
-    * Deferred<T> 타입 객체를 리턴하며 T는 생성되는 값의 타입
-    * 값을 반환하는 중단 메서드인 await 이 있음
-    * 주로 비동기 결과 + 병렬 처리에 적합
-  + 샘플코드
-    * ```kotlin
-      fun main() = runBlocking {
-        // 여러 async 코루틴을 병렬 실행
-        val deferred1 = async {
-            delay(1000)
-            "Result from first"
-            }
-        
-        val deferred2 = async {
-            delay(1500)
-            "Result from second"
-            }
+  + | 항목    | 내용                          |
+    | ----- | --------------------------- |
+    | 목적    | **결과 반환이 필요한 비동기 작업** 수행    |
+    | 리턴 타입 | `Deferred<T>`               |
+    | 결과 받기 | `await()` 사용                |
+    | 사용 예  | 계산 작업, API 호출 등 병렬 결과 필요할 때 |
+  + ```kotlin
+    runBlocking {
+      val a = async { delay(1000); "A" }
+      val b = async { delay(1500); "B" }
+      println("${a.await()}, ${b.await()}")
+    }
+    ```
 
-        // 1️⃣ 개별 await()
-        val res1 = deferred1.await()
-        val res2 = deferred2.await()
-        println("await() results: $res1, $res2")    
+- async + awaitAll()
+  + ```kotlin
+    val result = listOf(
+      async { delay(300); "One" },
+      async { delay(200); "Two" },
+      async { delay(100); "Three" }
+    ).awaitAll()
 
-        // 2️⃣ awaitAll()
-        val deferredList = listOf(
-            async { delay(300); "One" },
-            async { delay(400); "Two" },
-            async { delay(200); "Three" }
-        )
-      
-        val results = deferredList.awaitAll()
-        println("awaitAll() results: $results")
-      }
-      ```
-  + 특징
-    * await() 호출 전에는 예외가 전파되지 않음
-    * awaitAll() 리스트나 배열 형태의 Deferred 를 한꺼번에 기다림
-    * 취소/타임아웃 등은 직접 처리해주는 편이 안전
+    println(result) // ["One", "Two", "Three"]
+    ```  
+  + `awaitAll()`은 여러 결과를 동시에 기다리고, 첫 예외 발생 시 나머지를 자동 취소해줌.
 
-- 코루틴 빌더 비교
-  + | 항목          | launch              | async                        | runBlocking          |
-    | ----------- | ------------------- | ---------------------------- | -------------------- |
-    | **결과 반환**   | X (fire-and-forget) | Deferred<T> (await()로 결과 수신) | 없음 (결과 필요시 내부에서 변수로) |
-    | **스레드 블로킹** | X                   | X                            | O                    |
-    | **용도**      | UI 갱신, 단순 실행        | 병렬 결과 계산                     | main/test 진입점        |
-    | **코루틴 범위**  | CoroutineScope      | CoroutineScope               | 자신이 블로킹 스코프 역할       |
-    | **취소 제어**   | Job                 | Deferred (Job + 결과)          | Job (자신 블로킹)         |
-
-- 결론
-  + 코루틴 빌더(runBlocking, launch, async)는 새로운 Job을 만들어 코루틴을 실행하는 진입점 함수다.
-  + runBlocking은 테스트나 메인 진입점에서 동기적으로 블로킹하며 코루틴을 시작하고,
-  + launch는 결과가 필요 없는 fire-and-forget 코루틴을, async는 결과가 필요한 병렬 코루틴을 처리한다.
-  + launch/async는 CoroutineScope에서 사용해 구조화된 동시성을 구성하며, withContext는 빌더는 아니지만 기존 코루틴 안에서 디스패처 전환에 활용된다.
-  + Android 환경에서는 viewModelScope.launch 같이 생명주기에 맞춘 Scope를 쓰는 것이 중요하며, 각 빌더의 용도와 예외 처리 방식을 구분해서 써야 안전하다.
+- 비교 정리
+  + | 항목           | launch           | async                       | runBlocking        |
+    | ------------ | ---------------- | --------------------------- | ------------------ |
+    | 결과 반환        | ❌ 없음             | ✅ `Deferred<T>` → `await()` | ❌ (내부에서 변수로 반환 가능) |
+    | 블로킹 여부       | ❌ (비차단)          | ❌ (비차단)                     | ✅ 현재 스레드 블로킹       |
+    | 대표 용도        | UI 작업, 로그 등      | API, 계산 결과 등                | 테스트, main 진입점      |
+    | 코루틴 범위 설정 가능 | ✅ CoroutineScope | ✅ CoroutineScope            | 자체가 Scope          |
 
 - 면접 관련 질문
   + 코루틴 빌더 중 launch와 async의 차이점은?
-    * `launch`는 결과를 반환하지 않는 fire-and-forget 방식이며, UI 업데이트나 단순한 동작에 적합합니다.
-      반면 `async`는 `Deferred<T> 를 반환`해서 await()로 결과를 받을 수 있는 구조라, 병렬 계산이나 비동기적으로 결과가 필요한 작업에 적합합니다.
-  + runBlocking을 안드로이드 UI 스레드에서 사용하면 안 되는 이유는?
-    * runBlocking은 현재 스레드를 블로킹하기 때문에, Android UI 스레드에서 사용하면 ANR(응답없음) 이 발생할 수 있습니다.
-      runBlocking은 메인함수나 테스트코드처럼 블로킹이 허용되는 환경에서만 사용해야 합니다.
-  + async로 여러 병렬 작업을 실행할 때 awaitAll()의 장점은?
+    * `launch`는 결과 없이 작업 실행 (`Job`)
+    * `async`는 결과 반환 (`Deferred`) → `await()`로 결과 수신
+  + `runBlocking`을 언제 쓰나요?
+    * `main()` 함수, 테스트 진입점에서만 사용
+    * 스레드를 블로킹하므로 UI에서는 절대 사용 금지
+  + `async` 병렬 사용하려면?
+    * ```kotlin
+      val a = async { workA() }
+      val b = async { workB() }
+      val result = a.await() + b.await()
+      ```
+  + `awaitAll()`과 `joinAll()`의 차이는?
     * awaitAll()은 여러 Deferred를 한꺼번에 기다리면서, 코드가 깔끔하고 직관적으로 작성되도록 해줍니다.
-      또한 예외가 발생할 경우, 첫 번째 예외를 즉시 전달하고 나머지 Deferred는 자동으로 취소되기 때문에 안정적인 병렬 처리를 보장할 수 있습니다.
+    * 또한 예외가 발생할 경우, 첫 번째 예외를 즉시 전달하고 나머지 Deferred는 자동으로 취소되기 때문에 안정적인 병렬 처리를 보장할 수 있습니다.
+
 
 ---
 

@@ -2473,18 +2473,35 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 - 샘플코드
   + ````java
     public class User {
-        public String getName() {
-            return null; // 실수로 null 리턴해도 java 는 컴파일 오류 없음
-        }
+      public String getName() {
+        return null; // 실수로 null 리턴해도 java 는 컴파일 오류 없음
+      }
+
+      @NotNull
+      public String getNameAnnotation() { return "John"; }
+
+      @Nullable
+      public String getNicknameAnnotation() { return null; }
     }
     ````
   + ```kotlin
     val user = User()
     val name = user.name // platform type: String! -> null 체크 강제 안됨
     println(name.length) // NPE 발생 가능 (코틀린이 강제 체크 못함)
+
+    val nameAnnotation: String = user.getNameAnnotation()    // NotNull → String
+    val nicknameAnnotation: String? = user.getNicknameAnnotation() // Nullable → String?
     ```
   + user.name 의 타입은 String! 으로 플랫폼 타입으로 처리되며 null이 올 수도 있다는 사실을 코틀린이 보류하고 있음
 
+- 자주 쓰는 안전 패턴
+  + | 상황                          | 추천 방식                                |
+    | --------------------------- | ------------------------------------ |
+    | 의심되는 플랫폼 타입 호출              | `val value = user.name ?: "default"` |
+    | 널일 경우 처리 분기 필요              | `user.name?.let { use(it) }`         |
+    | 확신이 있으면 강제 unwrap (`!!`) 사용 | `val name = user.name!!` (권장하지 않음)   |
+    | 자바 코드 수정 가능                 | `@Nullable` / `@NotNull` 붙이기         |
+ 
 - 결론
   + 플랫폼 타입은 코틀린과 자바를 연결하기 위한 타협
   + 코틀린이 null 안정성을 유지하면서도 Java 코드를 그대로 쓸 수 있도록 
@@ -2510,179 +2527,202 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 ### 가변인자(vararg)
 - 정의
-  + 코틀린에서 가변인자는 함수를 호출할 때 동일한 타입의 인자를 여러 개 전달하거나, 아예 전달하지 않을 수도 있도록 하는 기능입니다.
-  + 함수를 정의할 때 파라미터 이름 앞에 vararg 키워드를 붙여서 사용합니다.
-- 기본사용법
-  ```kotlin
-    fun printNumbers(vararg numbers: Int) {
+  + `vararg` 코틀린 함수에서 같은 타입의 인자를 0개 이상 받을 수 있도록 해주는 기능
+  + 호출 시 인자 개수를 유동적으로 전달할 수 있어 함수의 유연성과 간결성 높여줌
+  + 기본사용법
+    * ```kotlin
+      fun printNumbers(vararg numbers: Int) {
         for (number in numbers) {
             print("$number ")
         }
         println()
-    }
+      }
 
-    fun main() {
+      fun main() {
         printNumbers(1, 2, 3)       // 출력: 1 2 3
         printNumbers(4, 5, 6, 7, 8) // 출력: 4 5 6 7 8
         printNumbers()              // 출력: (아무것도 출력 안 함, 빈 줄)
-    }
-  ```
+      }
+      ```
+
 - 주요 특징 및 설명
-  + **vararg 키워드:** 함수 파라미터를 선언할 때 타입 앞에 vararg를 붙입니다.
-  + **내부적으로 배열(Array)로 처리:** vararg 파라미터는 함수 내부에서 해당 타입의 배열로 취급됩니다. 위 printNumbers 예제에서 numbers는 Array<Int> 타입입니다. 따라서 배열과 관련된 모든 연산(반복, 인덱스 접근 등)을 사용할 수 있습니다. 
-  + **인자 전달 방식:**
-    * 쉼표로 구분하여 여러 개 전달: myFunction("a", "b", "c")
-    * 아무것도 전달하지 않음: myFunction() (이 경우 함수 내부에서는 빈 배열로 처리됨)
-    * 이미 배열이 있는 경우 (스프레드 연산자 *): 이미 생성된 배열의 요소들을 가변인자로 전달하고 싶을 때는 배열 이름 앞에 스프레드(spread) 연산자 * 를 사용합니다.
-    ```kotlin
-    fun printValues(vararg values: String) {
-            values.forEach { println(it) }
-        }
+  + | 항목          | 설명                                                                         |
+    | ----------- | -------------------------------------------------------------------------- |
+    | `vararg` 위치 | 함수 파라미터 선언 시 타입 앞에 `vararg` 키워드 사용                                         |
+    | 내부 처리 방식    | 인자들은 내부적으로 배열(`Array<T>`)로 처리됨                                             |
+    | 인자 전달 방식    | - 개별 값: `funA(1, 2, 3)` <br> - 배열 사용 시: `funA(*intArray)` (스프레드 연산자 사용 필수) |
+    | 제약 사항       | - 함수 당 하나의 `vararg`만 사용 가능 <br> - 가급적 파라미터 목록의 마지막에 위치시켜야 함                |
+    | 제네릭과의 결합    | 제네릭 타입으로도 사용 가능 (`fun <T> example(vararg items: T)`)                       |
 
-        fun main() {
-            val messages = arrayOf("Hello", "World")
-            printValues(*messages) // 배열의 각 요소를 개별 인자로 전달
-            // 위 코드는 printValues("Hello", "World")와 동일하게 동작합니다.
+- 활용 방법
+  + 스프레드 연산자 `*`
+    * 배열을 가변인자 함수에 전달할 경우 배열 앞에 * 사용
+    * `printValues(messages)`처럼 `*` 없이 배열을 직접 전달하면 컴파일 오류 발생
+    * ```kotlin
+      fun printValues(vararg values: String) {
+        values.forEach { println(it) }
+      }
 
-            // 스프레드 연산자 없이 배열을 직접 전달하면 컴파일 오류 발생
-            // printValues(messages) // 오류!
+      fun main() {
+        val messages = arrayOf("Hello", "World")
+        printValues(*messages) // "Hello", "World"가 개별 인자로 전달됨
+      }
+      ```
+  + 위치 제약과 Named Argument 사용  
+    * vararg 뒤에 다른 파라미터가 있다면, 해당 파라미터는 이름을 명시해서 전달해야 합니다. 
+    * ```kotlin
+      fun processData(vararg values: Int, multiplier: Int) {
+        for (value in values) {
+          println(value * multiplier)
         }
-    ```
-  + **위치 제약:**
-    * 하나의 함수에는 하나의 vararg 파라미터만 허용됩니다.
-    * vararg 파라미터는 일반적으로 파라미터 목록의 가장 마지막에 위치하는 것이 좋습니다. 만약 vararg 파라미터 뒤에 다른 파라미터가 온다면, 해당 파라미터에 값을 전달할 때 이름 있는 인자(named argument)를 사용해야 합니다.
-    ```kotlin
-    fun processData(vararg values: Int, multiplier: Int) {
-            for (value in values) {
-                println(value * multiplier)
-            }
-        }
+      }
 
-        fun main() {
-            // vararg 뒤의 파라미터는 이름 있는 인자로 전달해야 함
-            processData(1, 2, 3, multiplier = 10)
-            // processData(multiplier = 10, 1, 2, 3) // 이렇게는 안됨 (vararg가 먼저 와야 함)
-            // processData(1, 2, 3, 10) // 오류! 10이 values에 포함될지 multiplier에 갈지 모호함
-        }
-    ```
-  + **제네릭과 함께 사용:** vararg는 제네릭 타입과 함께 사용될 수 있습니다.
-    ```kotlin
-    fun <T> printAll(vararg items: T) {
+      fun main() {
+        processData(1, 2, 3, multiplier = 10) // OK
+        // processData(1, 2, 3, 10)         // 오류! multiplier인지 구분 불가
+      }
+      ```
+  + 제네릭과 vararg
+    * 제네릭과 함께 쓰면 다양한 타입의 가변 인자를 받아들일 수 있음 
+    * ```kotlin
+      fun <T> printAll(vararg items: T) {
         for (item in items) {
-            println(item)
+          println(item)
         }
-    }
+      }
 
-    fun main() {
-        printAll("apple", "banana", "cherry")
-        printAll(10, 20, 30)
-        printAll(true, false, true)
-    }
-    ```
-    
-- vararg를 사용하는 경우:
-  + 함수가 가변적인 수의 인자를 받아야 할 때 (예: String.format, 로깅 함수, 컬렉션 빌더 함수 등)
-  + 인자의 개수가 명확하지 않거나, 0개부터 여러 개까지 유연하게 처리해야 할 때 
+      fun main() {
+        printAll("apple", "banana")
+        printAll(1, 2, 3)
+        printAll(true, false)
+      }
+      ``` 
 
-- 장점:
-  + 유연성: 함수 호출 시 전달하는 인자의 개수를 자유롭게 조절할 수 있습니다. 
-  + 간결성: 여러 개의 오버로딩된 함수를 만들 필요 없이 하나의 함수로 다양한 인자 개수를 처리할 수 있습니다. 
+- vararg 유용한 경우
+  + 로깅 함수: log("message1", "message2", "message3")
+  + 문자열 포맷팅: String.format("%s %s", "Hello", "World")
+  + 빌더 패턴: listOf(vararg elements: T)
+  + 테스트 코드에서 복수의 테스트 데이터 전달
 
-- 주의사항:
-  + vararg 파라미터는 내부적으로 배열을 생성하므로, 매우 빈번하게 호출되거나 성능에 민감한 코드에서는 약간의 오버헤드가 발생할 수 있습니다. 하지만 대부분의 경우 이는 무시할 만한 수준입니다. 
-  + Java와의 상호운용성: 코틀린의 vararg는 Java의 가변인자(...)와 호환됩니다. 가변인자는 코틀린에서 함수를 더 유연하고 편리하게 작성할 수 있도록 도와주는 강력한 기능입니다.
-    
-    
+- 장점 & 주의 사항
+  + | 장점                        | 주의사항                                               |
+    | ------------------------- | -------------------------------------------------- |
+    | 다양한 인자 수를 유연하게 처리 가능      | 호출 시마다 배열이 생성되어 성능에 약간의 영향                         |
+    | 코드 간결성 – 여러 개의 오버로딩 필요 없음 | Java와 상호 운용 시 `@JvmOverloads`, `@JvmVarargs` 고려 필요 |
 
+- 면접 관련 질문
+  + vararg 파라미터 뒤에 일반 파라미터를 둘 수 있나요?
+    * 가능은 하지만, 반드시 이름 있는 인자(named argument) 로 호출해야 합니다.
+    * 그렇지 않으면 어떤 인자가 어디에 매핑되는지 모호해져 컴파일 오류가 발생합니다.
+  + vararg와 스프레드 연산자의 차이점은 무엇인가요?
+    * vararg: 함수 정의 시, 가변 인자 선언에 사용
+    * `*` (스프레드 연산자): 배열을 함수에 개별 인자로 펼쳐서 전달할 때 사용
+  + vararg는 내부적으로 어떻게 처리되며, 성능상 단점은 없나요?
+    * vararg 파라미터는 내부적으로 배열로 변환되어 처리됩니다. 
+    * 그 때문에 함수가 자주 호출되는 상황에서는 불필요한 배열 생성으로 인한 약간의 오버헤드가 발생할 수 있지만, 대부분의 경우 실질적인 성능 저하는 크지 않습니다. 
 
 
 ___
 
 
-
-
 ### Operator Overloading
-- operator 키워드를 붙히면 Kotlin이 해당 메서드를 **특수한 연산자로 해석**
-- ex) plus() 함수에 operator 붙히면 -> + 연산자로 사용 가능
+- 개념 및 정의
+  + operator 키워드를 사용해, 클래스의 메서드에 특정 연산자 기능을 부여할 수 있음
+  + 예를 들어 `plus()` 메서드에 `operator`를 붙이면 `+` 연산자로 사용할 수 있게 됩니다.
+  + ```kotlin
+    operator fun plus(other: T): T
 
-1. 기본 문법
-   ```kotlin
-        operator fun plus(other : T) : T
-   ```
-   + ex) + 연산자 오버로딩
-   ```kotlin
-        data class Point (val x : Int, val y : Int) {
-            operator fun plus (other : Point) : Point {
-                return Point (x + other.x, y + other.y)
-            }
+    data class Point(val x: Int, val y: Int) {
+      operator fun plus(other: Point): Point {
+        return Point(x + other.x, y + other.y)
+      }
+    }
+
+    val p1 = Point(1, 2)
+    val p2 = Point(3, 4)
+    val p3 = p1 + p2      // 내부적으로 p1.plus(p2)
+    println(p3)           // 출력: Point(x=4, y=6)
+    ```
+
+- 오버로딩 가능한 연산자
+  + | 연산자  | 함수 이름        | 예시 시그니처                                          |
+    | ---- | ------------ | ------------------------------------------------ |
+    | `+`  | `plus`       | `operator fun plus(other: T): T`                 |
+    | `-`  | `minus`      | `operator fun minus(other: T): T`                |
+    | `*`  | `times`      | `operator fun times(other: T): T`                |
+    | `/`  | `div`        | `operator fun div(other: T): T`                  |
+    | `%`  | `rem`        | `operator fun rem(other: T): T`                  |
+    | `[]` | `get`, `set` | `operator fun get(index: Int): T`                |
+    | `==` | `equals`     | `operator fun equals(other: Any?): Boolean`      |
+    | `!=` | `equals` 사용  | 위와 동일                                            |
+    | `++` | `inc`        | `operator fun inc(): T`                          |
+    | `--` | `dec`        | `operator fun dec(): T`                          |
+    | `()` | `invoke`     | `operator fun invoke(): T`                       |
+    | `in` | `contains`   | `operator fun contains(value: T): Boolean`       |
+    | `..` | `rangeTo`    | `operator fun rangeTo(other: T): ClosedRange<T>` |
+
+- 주요 예시
+  + `[]` 오버로딩 : `get`, `set`
+    * ```kotlin
+      class MyList {
+        private val data = mutableListOf(1, 2, 3)
+
+        operator fun get(index: Int): Int = data[index]
+
+        operator fun set(index: Int, value: Int) {
+          data[index] = value
         }
+      }
+
+      val list = MyList()
+      println(list[0])    // 1 → get 호출
+      list[0] = 10        // set 호출
+      ```
+  + `==` 오버로딩 : `equals`
+    * 💡 equals()를 오버라이드할 경우 반드시 hashCode()도 재정의해야 Map, Set 등의 자료구조에서 일관된 동작을 보장합니다. 
+    * ```kotlin
+      data class User(val name: String) {
+        override operator fun equals(other: Any?): Boolean {
+          return (other is User) && other.name == name
+        }
+
+        override fun hashCode(): Int = name.hashCode()
+      }
+
+      val u1 = User("Tom")
+      val u2 = User("Tom")
+      println(u1 == u2)    // true → equals 호출됨
+      ```
+  + `()` 오버로딩 : `invoke`
+    * ```kotlin
+      class Greeter(val message: String) {
+        operator fun invoke(name: String) {
+          println("$message, $name!")
+        }
+      }
+
+      val g = Greeter("Hello")
+      g("Bae")   // invoke 호출 → Hello, Bae!
+      ``` 
    
-        val p1 = Point(1, 2)
-        val p2 = Point(3, 4)
-        val p3 = p1 + p2    // plus()로 호출됨
-        println(p3)     // Point(x=4, y=6)
-   ```
-   
-2. 오버로딩 가능한 연산자
-   * | 연산자 | 함수 이름     | 예시 함수 시그니처                             |
-            |-----|-----------|----------------------------------------|
-     | +   | plus      | operator fun plus(other: T): T         |
-     | -   | minus     | operator fun minus(other: T): T        |
-     | *   | times     | operator fun times(other: T): T        |
-     | /   | div       | operator fun div(other: T): T          |
-     | %   | rem       | operator fun rem(other: T): T          |
-     | []  | get, set  | operator fun get(index: Int): T        |
-     | ==  | equals    | operator fun equals(other: Any?): Boolean |
-     | !=  | equals 사용 | 위와 동일                                  |
-     | ++  | inc       |   operator fun inc(): T     |
-     | --  | dec       |       operator fun dec(): T    |
-     | ()  | invoke    |   operator fun invoke(): T     |
-     | in  | contains  |     operator fun contains(value: T): Boolean     |
-     | ..  | rangeTo   |   operator fun rangeTo(other: T): ClosedRange<T>     |
+- 주의사항
+  + | 항목                                            | 설명                       |
+    | --------------------------------------------- | ------------------------ |
+    | `operator`는 제한된 함수 이름에만 사용 가능                 | 정해진 메서드 시그니처 외에는 오버로딩 불가 |
+    | `equals()`를 오버라이드하면 반드시 `hashCode()`도 재정의해야 함 | 객체의 동등성 비교시 오류 방지        |
+    | 연산자 오버로딩은 **가독성**에 해로울 수 있음                   | 의미가 불분명한 오버로딩은 피할 것      |
 
-3. 주요예시
-   - [] 오버로딩 : get, set
-   ```kotlin
-        class MyList {
-             private val data = mutableListOf(1, 2, 3)
-
-             operator fun get(index: Int): Int = data[index]
-             operator fun set(index: Int, value: Int) {
-                  data[index] = value
-             }
-        }
-
-        val list = MyList()
-        println(list[0])     // get 호출 → 1
-        list[0] = 10         // set 호출
-   ```
-   - == 오버로딩 : equals
-   ```kotlin
-        data class User(val name: String) {
-             override operator fun equals(other: Any?): Boolean {
-                    return (other is User) && other.name == name
-             }
-        }
-
-        val u1 = User("Tom")
-        val u2 = User("Tom")
-        println(u1 == u2)  // true → equals 호출됨
-   ```
-   - () 오버로딩 : invoke
-   ```kotlin
-        class Greeter(val message: String) {
-             operator fun invoke(name: String) {
-                    println("$message, $name!")
-             }
-        }
-
-        val g = Greeter("Hello")
-        g("Bae")  // invoke 호출 → Hello, Bae!
-   ```
-   
-4. 주의사항
-   - operator 키워드는 **정해진 함수 이름**에서만 사용 가능
-   - equals를 오버로딩 하면 반드시 hashCode()를 재정의 해야함
+- 면접 관련 질문
+  + Kotlin에서 `+` 연산자를 오버로딩하려면 어떤 조건을 만족해야 하나요?
+    * `plus()` 함수에 `operator` 키워드를 붙여야 하며, 해당 클래스의 멤버 함수이거나 확장 함수여야 합니다.
+    * 시그니처는 `operator fun plus(other: T): T` 형태여야 하며, T는 원하는 타입으로 지정할 수 있습니다.
+  + `==` 연산자와 `equals()`는 어떤 관계인가요?
+    * `==` 연산자는 내부적으로 `equals()`를 호출합니다. 따라서 `==`를 오버로딩하고 싶다면 `equals()` 메서드를 오버라이드해야 합니다. 
+    * 또한 `equals()`를 수정한 경우 `hashCode()`도 반드시 일치하는 방식으로 재정의해야 합니다.
+  + operator 오버로딩을 남용하면 어떤 문제가 생길 수 있나요?
+    * 코드 가독성이 떨어집니다.
+    * 예를 들어 *, [], () 같은 연산자를 비표준 용도로 오버로딩하면, 함수 호출 의도가 불분명해져 유지보수가 어려워질 수 있습니다. 
+    * 오버로딩은 자연스러운 의미를 가진 연산자만 선택적으로 사용하는 것이 좋습니다.
 
 
 ---

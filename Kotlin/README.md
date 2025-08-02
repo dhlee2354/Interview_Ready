@@ -2431,7 +2431,28 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
   | 생명주기     | 식별자가 선언된 영역의 실행 흐름에 따름                  | New, Active, Completing, Completed, Cancelling, Cancelled | 스코프 자체의 생명주기 (예: ViewModel 소멸 시 viewModelScope 취소) | 
   | 주요 기능/연산 | - (언어 규칙에 의해 정의됨)                       | join(), cancel(), isActive, isCompleted, isCancelled | launch(), async(), cancel() (스코프의 Job을 통해) | 
   | 비유       | 도구나 재료를 사용할 수 있는 "작업 공간" (방, 책상)        | 특정 작업을 수행하는 "개별 작업자" 또는 "작업 지시서" | 여러 작업자(코루틴)를 관리하는 "프로젝트 관리 사무실"   |
-   
+
+- SupervisorJob vs 일반 Job 예제
+  + ```kotlin
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    scope.launch {
+      launch {
+          throw RuntimeException("이 코루틴만 죽고")
+      }
+      launch {
+          delay(1000)
+          println("이 코루틴은 살아 있음") // 실행됨
+      }
+    }
+    ```
+  + 일반 Job()에서는 첫 번째 코루틴 예외가 발생하면 두 번째 코루틴도 취소됨
+  + | 항목            | `coroutineScope {}`  | `supervisorScope {}` |
+    | ------------- | -------------------- | -------------------- |
+    | 예외 전파         | 자식 중 하나 실패 → 전부 취소   | 자식 중 하나 실패해도 나머지 생존  |
+    | 사용 목적         | 실패를 함께 처리하는 단위 작업 그룹 | 실패와 무관한 독립 작업 그룹 구성  |
+    | Dispatcher 상속 | 상속함                  | 상속함                  |
+
 
 ---
 

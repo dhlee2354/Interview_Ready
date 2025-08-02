@@ -1942,102 +1942,102 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 
 
 ### 예외 처리
-- 코틀린에서 예외 처리는 프로그램 실행 중 발생할 수 있는 오류나 예기치 않은 상황에 대처하여 프로그램이 비정상적으로 종료되는 것을 방지하고, 안정적으로 실행될 수 있도록 하는 중요한 매커니즘입니다.
+- 예외란
+  + 실행 중 발생하는 오류 상황을 **객체로 표현**
+  + 모든 예외는 `Throwable`을 상속
+  + ```text
+    Throwable
+    ├── Error               // 시스템 레벨 심각 오류 (복구 불가)
+    └── Exception           // 애플리케이션 수준 예외
+        ├── RuntimeException // 주로 프로그래밍 오류
+        └── IOException      // 입출력 중 발생
+    ```
 
-- 예외의 개념
-    + 예외는 프로그램 실행 중 발생하는 오류 상황을 나타내는 객체입니다.
-    + 코틀린의 모든 예외 클래스는 Throwable클래스를 상속 받습니다.
-    + Exception 클래스는 Throwable의 하위 클래스이며. 일반적으로 애플리케이션 레벨에서 처리해야 하는 예외들을 나타냅니다.
-    + 주요 예외 계층 구조
-        * Throwable
-          |- Error (일반적으로 앱에서 복구 불가능한 심각한 시스템 오류)
-          |- Exception (앱에서 처리 가능한 예외)
-          |= RuntimeException (주로 프로그래밍 오류로 인해 발생)
-          |- IOException (입출력 작업 중 발생하는 예외)
+- 코틀린 예외 처리 특징
+  + | 특징                  | 설명                                          |
+    | ------------------- | ------------------------------------------- |
+    | Unchecked Exception | Java처럼 강제 예외 선언 없음                          |
+    | throw는 표현식          | `throw`는 값처럼 동작 가능 (`Nothing` 반환)           |
+    | try도 표현식            | `val result = try { ... } catch { ... }` 가능 |
 
-- 코틀린 예외 처리의 특징
-    + 모든 예외는 Unchecked Exception : 자바와 달리 코틀린은 Checked Exception과 Unchecked Exception을 구분하지 않습니다.
-    + throw 표현식 : 코틀린에서 throw는 문장이 아닌 표현식입니다. 즉, throw는 값을 반환할 수 있으며, 다른 표현식의 일부로 사용될 수 있습니다.
-  ```kotlin
-  fun fail(message: String): Nothing {
-        throw IllegalArgumentException(message)
+- 예외 발생
+  + ```kotlin
+    fun checkAge(age: Int) {
+      if (age < 0) throw IllegalArgumentException("Age cannot be negative")
+    }
+    ``` 
+
+- 전제 조건 함수
+  + ```kotlin
+    fun process(input: String?) {
+      require(!input.isNullOrEmpty()) { "Input must not be null or empty" } // IllegalArgumentException
     }
 
-    val name: String? = null
-    val s = name ?: fail("Name required") // Elvis 연산자와 함께 사용
-    println(s) // 이 코드는 실행되지 않음
-  ```
-
-- 예외 발생시키기(throw)
-    + throw 키워드를 사용하여 예외 객체의 인스턴스를 명시적으로 발생시킬 수 있습니다.
-  ```kotlin
-  fun checkAge(age: Int) {
-      if (age < 0) {
-          throw IllegalArgumentException("Age cannot be negative: $age")
+    class User(val id: Int, var name: String) {
+      fun rename(newName: String) {
+          check(newName.length > 1) { "Name too short" } // IllegalStateException
       }
-      println("Age is valid: $age")
-  }
-  fun main() {
+    }
+
+    fun fail(message: String): Nothing = throw IllegalArgumentException(message)
+    val user = name ?: fail("No name!")
+    ```
+  + | 함수        | 예외 타입                      | 사용 용도                 |
+    | --------- | -------------------------- | --------------------- |
+    | `require` | `IllegalArgumentException` | 함수 인자 검증              |
+    | `check`   | `IllegalStateException`    | 객체 상태 검증              |
+    | `error`   | `IllegalStateException`    | 무조건 예외 발생 (불가능한 분기 등) |
+
+- 예외 잡기 (try-catch-finally)
+  + ```kotlin
+    fun readFile(path: String) {
+      var reader: BufferedReader? = null
+      
       try {
-          checkAge(-5)
-      } catch (e: IllegalArgumentException) {
-          println("Error: ${e.message}") // 출력: Error: Age cannot be negative: -5
+          reader = File(path).bufferedReader()
+          println(reader.readLine())
+      } catch (e: FileNotFoundException) {
+          println("File not found: $path")
+      } catch (e: IOException) {
+          println("I/O error: ${e.message}")
+      } finally {
+          reader?.close()
+          println("Always runs!")
       }
-  }
-  ```
+    }
+    ``` 
 
-- 전제 조건 함수 : 코틀린 표준라이브러리는 특정 조건을 만족하지 않을 때 예외를 발생시키는 유용한 함수들을 제공합니다.
-    + require(value: Boolean, lazyMessage: () -> Any): 인자가 특정 조건을 만족하는지 검사합니다. value가 false이면 IllegalArgumentException을 발생시킵니다.
-    + check(value: Boolean, lazyMessage: () -> Any): 객체의 상태가 특정 조건을 만족하는지 검사합니다. value가 false이면 IllegalStateException을 발생시킵니다.
-    + error(message: Any): 무조건 IllegalStateException을 발생시킵니다. 주로 도달해서는 안 되는 코드 경로에 사용됩니다.
-  ```kotlin
-  fun processInput(input: String?) {
-      require(input != null && input.isNotEmpty()) { "Input cannot be null or empty" }
-      // ...
-  }
+- try 표현식
+  + ```kotlin
+    val message = try {
+      "Success"
+    } catch (e: Exception) {
+      "Failure: ${e.message}"
+    }
+    ``` 
 
-  class User(val id: Int, var name: String) {
-      fun updateName(newName: String) {
-          check(newName.length > 2) { "Name must be longer than 2 characters" }
-          this.name = newName
-      }
-  }
-  ```
-
-- 예외 잡기
-    + try-catch-finally 블록을 사용하여 예외를 처리합니다.
-        * try 블록 : 예외가 발생할 가능성이 있는 코드를 이 블록안에 작성합니다.
-        * catch 블록 : try 블록에서 특정 타입의 예외가 발생했을 때 실행될 코드를 작성합니다. 여러 개의 catch 블록을 사용하여 다양한 타입의 예외를 처리할 수 있습니다.
-        * finally 블록 : 예외 발생 여부와 관계없이 항상 실행되어야 하는 코드를 작성합니다. finally 블록은 선택 사항입니다.
-      ```kotlin
-      fun readFile(path: String) {
-          var reader: java.io.BufferedReader? = null
-          try {
-              reader = java.io.File(path).bufferedReader()
-              println(reader.readLine())
-          } catch (e: java.io.FileNotFoundException) {
-              println("Error: File not found at path $path")
-          } catch (e: java.io.IOException) {
-              println("Error: An IO error occurred: ${e.message}")
-          } catch (e: Exception) { // 모든 Exception 타입의 예외를 잡음 (가장 마지막에 두는 것이 일반적)
-              println("An unexpected error occurred: ${e.message}")
-          } finally {
-              try {
-                  reader?.close() // 리소스 해제
-              } catch (e: java.io.IOException) {
-                  println("Error closing reader: ${e.message}")
-              }
-              println("Finally block executed.")
-          }
-      }
-  
-      fun main() {
-          readFile("non_existent_file.txt")
-          // 출력:
-          // Error: File not found at path non_existent_file.txt
-          // Finally block executed.
-      }
-      ```
+- 핵심 요약
+  + | 개념              | 요약 설명                                        |
+    | --------------- | -------------------------------------------- |
+    | 예외 구조           | `Throwable` → `Exception` / `Error`          |
+    | `throw`         | 표현식 (리턴 값처럼 사용됨) → 보통 `Nothing` 리턴 함수와 함께 사용 |
+    | `require/check` | 조건 위반 시 예외 → 명확한 계약(Contract) 문서화 가능         |
+    | try-catch       | 예외 발생 가능 코드 감싸기 + 다양한 예외 분기 + 자원 정리까지        |
+ 
+- 면접 관련 질문
+  + 코틀린은 Checked Exception을 지원하나요?
+    * 아니요. Kotlin은 모든 예외가 Unchecked입니다.
+    * Java의 throws와 같은 선언이 필요 없습니다.
+  + `require`, `check` 차이점
+    * | 함수      | 목적               | 예외 타입                    |
+      | ------- | ---------------- | ------------------------ |
+      | require | 함수에 넘긴 **인자 검증** | IllegalArgumentException |
+      | check   | 객체의 **상태 검증**    | IllegalStateException    |
+  + throw는 왜 표현식인가요?
+    * throw는 Nothing 타입을 반환하므로, 삼항 연산자나 Elvis (?:) 등과 함께 사용할 수 있어 제어 흐름을 깔끔하게 구성할 수 있습니다.
+  + 예외가 발생한 이후 finally는 반드시 실행되나요?
+    * 네, finally는 예외 발생 여부와 관계없이 항상 실행됩니다. 
+    * 단, System.exit()나 JVM 자체 종료 같은 상황은 예외입니다.
 
 
 ---

@@ -2473,18 +2473,35 @@ Kotlin 언어의 문법, 함수형 프로그래밍, 코루틴 등 안드로이�
 - 샘플코드
   + ````java
     public class User {
-        public String getName() {
-            return null; // 실수로 null 리턴해도 java 는 컴파일 오류 없음
-        }
+      public String getName() {
+        return null; // 실수로 null 리턴해도 java 는 컴파일 오류 없음
+      }
+
+      @NotNull
+      public String getNameAnnotation() { return "John"; }
+
+      @Nullable
+      public String getNicknameAnnotation() { return null; }
     }
     ````
   + ```kotlin
     val user = User()
     val name = user.name // platform type: String! -> null 체크 강제 안됨
     println(name.length) // NPE 발생 가능 (코틀린이 강제 체크 못함)
+
+    val nameAnnotation: String = user.getNameAnnotation()    // NotNull → String
+    val nicknameAnnotation: String? = user.getNicknameAnnotation() // Nullable → String?
     ```
   + user.name 의 타입은 String! 으로 플랫폼 타입으로 처리되며 null이 올 수도 있다는 사실을 코틀린이 보류하고 있음
 
+- 자주 쓰는 안전 패턴
+  + | 상황                          | 추천 방식                                |
+    | --------------------------- | ------------------------------------ |
+    | 의심되는 플랫폼 타입 호출              | `val value = user.name ?: "default"` |
+    | 널일 경우 처리 분기 필요              | `user.name?.let { use(it) }`         |
+    | 확신이 있으면 강제 unwrap (`!!`) 사용 | `val name = user.name!!` (권장하지 않음)   |
+    | 자바 코드 수정 가능                 | `@Nullable` / `@NotNull` 붙이기         |
+ 
 - 결론
   + 플랫폼 타입은 코틀린과 자바를 연결하기 위한 타협
   + 코틀린이 null 안정성을 유지하면서도 Java 코드를 그대로 쓸 수 있도록 

@@ -2730,13 +2730,21 @@ ___
 
 ### infix 함수
 - 개념/정의
-  + 점(.) or 괄호 없이 중위 포기법으로 호출할 수 있는 함수
-  + 마치 연산저처럼 자연스러운 문장형 코드 스타일 (ex a.plus(b) -> a plus b)
+  + 점(`.`) or 괄호 없이 중위 표기법(infix notation)으로 호출할 수 있는 함수
+  + 일반 함수 호출 방식인 `a.method(b)`를 `a method b` 형태로 더 자연스럽게 사용 가능
+  + ```kotlin
+    a.plus(b)        // 일반 호출
+    a plus b         // infix 호출 (infix fun plus 정의되어 있다면)
+    ```
 
-- 사용법
-  + 선언 시 `infix` 키워드
-  + 수신 객체에 대해 하나의 파라미터만 받는 멤버 함수나 확장 함수여야 함
-  + vararg or 디폴트 값 매개변수는 불가
+- 사용 조건
+  + | 조건                 | 설명                       |
+    | ------------------ | ------------------------ |
+    | `infix` 키워드 필수     | 함수 정의 앞에 `infix`를 붙여야 함  |
+    | **멤버 함수 or 확장 함수** | 둘 중 하나여야 함               |
+    | **파라미터는 하나만 허용**   | `vararg`, 디폴트 파라미터 모두 불가 |
+
+- 예제
   + ```kotlin
     infix fun Int.multiply(x:Int): Int {
         return this * x
@@ -2745,18 +2753,23 @@ ___
     ```
 
 - 특징
-  + 점(.) 연산자를 쓰지 않기에 가독성 높임
-  + DSL 스타일 코드에 잘 어울림
+  + 괄호/점 생략 → 코드 가독성 향상
+  + Kotlin DSL 작성에 자주 사용됨 (예: 안드로이드 build.gradle.kts)
+  + 연산자처럼 사용할 수 있어 의도 전달이 쉬움
 
 - 면접 관련 질문
-  + infix 함수 왜 필요한가?
-    * 점 표기나 괄호를 줄여서 자연스럽게 표현할 수 있게 하여 코드 가독성을 높임
-  + infix 함수 사용 조건?
-    * 클래스의 멤버 함수 or 확장함수
-    * 하나의 파라미터만 받아야 함
-    * vararg, 디폴트 파라미터 사용 불가
-  + infix 함수와 operator 함수 차이
-    * infix 는 중위 표기범을 위한 키워드이고 operator 는 +, -, * 연산자 오버로딩 위한 키워드
+  + infix 함수는 왜 필요한가요?
+    * 함수 호출을 자연어처럼 읽을 수 있게 해줘 가독성이 좋아집니다.
+    * 특히 DSL(Domain Specific Language)이나 수학적 표현에 적합합니다.
+  + infix 함수의 사용 조건은?
+    * infix 키워드를 붙여야 하며, 클래스의 멤버 함수 또는 확장 함수여야 하고, 하나의 인자만 받을 수 있으며, vararg, 디폴트 파라미터는 사용할 수 없습니다.
+  + infix 함수와 operator 함수의 차이점은?
+    * | 항목    | infix                    | operator                  |
+      | ----- | ------------------------ | ------------------------- |
+      | 목적    | 중위 표기 지원                 | 연산자 오버로딩 지원               |
+      | 표기 방식 | `a myFunc b`             | `a + b`, `a * b` 등        |
+      | 키워드   | `infix`                  | `operator`                |
+      | 사용 예시 | `a to b`, `5 multiply 3` | `Point(1,2) + Point(3,4)` |
 
 
 ---
@@ -2764,40 +2777,57 @@ ___
 
 ### Any 클래스
 - 정의
-  + 코틀린의 Any 클래스는 자바의 Object 클래스와 유사하게 모든 코틀린 클래스의 최상위 타입입니다.
-  + 어떤 클래스를 정의하든, 명시적으로 다른 클래스를 상속하지 않으면 자동으로 Any 클래스를 상속받게 됩니다.
+  + `Any`는 Kotlin의 모든 클래스가 암묵적으로 상속하는 최상위 타입
+  + Java의 `Ojbect`와 유사한 역할을 하지만, 더 간결하고 null 허용하지 않음
+  + ```kotlin
+    open class MyClass // 내부적으로 Any를 상속함
+    ```
 
-- 주요 특징 및 역할
-  + 모든 타입의 루트
-    * Any는 코틀린 타입 계층 구조의 정점에 위치합니다. 모든 코틀린 타입은 Any 타입으로 간주될 수 있습니다.
-    * 따라서 어떤 타입의 값이든 저장할 수 있는 변수를 선언하고 싶을 때 Any 타입을 사용할 수 있습니다.
+- 주요 특징
+  + 모든 클래스의 루트
+    * Kotlin의 모든 객체는 Any 타입으로 간주될 수 있음.
+    * 따라서 어떤 타입이든 담을 수 있는 변수 선언 가능.
     * ```kotlin
-      val myVariable: Any = "Hello" // String은 Any 타입으로 취급 가능
-      val anotherVariable: Any = 123    // Int도 Any 타입으로 취급 가능
-      val yetAnotherVariable: Any = true // Boolean도 Any 타입으로 취급 가능
+      val v1: Any = "문자열"     // String
+      val v2: Any = 123         // Int
+      val v3: Any = true        // Boolean
       ```
-  + 기본 메서드 제공
-    * equals(other: Any?): Boolean
-    * hashCode(): Int
-    * toString(): String
+  + 기본 제공 메서드
+    * `Any`는 객체가 가져야 할 최소한의 메서드 3가지 포함 
+    * | 메서드 이름                | 설명           |
+      | --------------------- | ------------ |
+      | `equals(other: Any?)` | 두 객체가 같은지 비교 |
+      | `hashCode()`          | 해시값 반환       |
+      | `toString()`          | 객체를 문자열로 변환  |
+  + Nullable 버전 (Any?)
+    * `Any`: null 담을 수 없음
+    * `Any?`: null 포함 가능
+    * ```kotlin
+      val nonNull: Any = "값"  
+      // nonNull = null    // ❌ 컴파일 오류
 
-  + Nullable 타입 (Any?)
-    * 코틀린은 Null 안전성을 중요하게 다루므로, null 값을 가질 수 있는 모든 타입의 참조를 나타내기 위해 Any? 타입을 사용합니다.
-    * 반면, Any 타입은 null이 아닌 값만 가질 수 있음을 의미합니다.
-    * ```kotlin
-      var nonNullable: Any = "Cannot be null" // nonNullable = null // 컴파일 오류!
-      var nullable: Any? = "Can be null"
-      nullable = null // 허용됨
+      var nullable: Any? = "값"
+      nullable = null        // ✅ 가능
       ```
-      
-  + Java Object와의 관계
-    * 코틀린이 JVM에서 실행될 때, 코틀린의 Any 타입은 Java의 java.lang.Object 타입으로 컴파일됩니다.
-    * 따라서 Java 코드와 상호 운용할 때, Java의 Object를 코틀린에서는 Any (또는 Any?)로 다룰 수 있으며, 그 반대도 마찬가지입니다.
+  + Java `Object`와의 관계
+    * JVM에서는 Kotlin의 `Any`가 Java의 `java.lang.Object`로 컴파일됩니다.
+    * Kotlin ↔ Java 상호 운용 시, Java의 Object는 Kotlin에서 `Any` 또는 `Any?`로 취급됩니다.
   
 - 요약
-  + kotlin.Any는 코틀린의 모든 클래스의 최상위 부모 클래스로, 
-    모든 객체가 가져야 할 기본적인 메서드(equals, hashCode, toString)를 제공하며, 타입 계층 구조의 루트 역할을 합니다. 
-    이를 통해 코틀린은 강력한 타입 시스템과 Null 안전성을 유지하면서도 유연한 프로그래밍을 지원합니다.
+  + Any: Kotlin의 모든 클래스의 부모
+  + 기본 메서드 3개만 포함: equals, hashCode, toString
+  + null 불가 → Any?로 사용 시 가능
+  + Java와의 호환성을 고려해 Object와 대응됨
+
+- 면접 관련 질문
+  + `Any` 클래스 역할?
+    * Kotlin 클래스 계층의 최상위 부모. 모든 객체의 루트 
+  + `Any` null 담을 수 있나?
+    *	❌ `Any`는 null 불가. null 허용하려면 `Any?` 사용 
+  + Java의 Object와 차이점?
+    * `Any`는 Java `Object`보다 가볍고, 기본 메서드만 포함. 동기화, clone 등은 없음 
+  + `Any` vs `Unit` vs `Nothing` 
+    * 모두 Kotlin 기본 타입이지만 역할이 다름 → 필요하면 비교표 제공 가능 
     
 
 ---

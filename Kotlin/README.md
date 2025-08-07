@@ -3164,97 +3164,172 @@ ___
 
 ---
 
+
 ### Unit
 - 개념
-  + 코틀린에서 Unit은 특별한 의미를 가지는 타입입니다.
-  + Java의 void와 유사한 역할을 하지만 몇 가지 중요한 차이점이 있습니다.
+  + Kotlin에서 Unit은 값을 반환하지 않는 함수의 반환 타입을 명시할 때 사용되는 타입입니다.
+  + 자바의 void와 유사한 역할을 하지만, Unit은 실제 존재하는 객체입니다.
 
 - Unit의 주요특징
-  + 값을 반환하지 않는 함수의 반환 타입
-    * 함수가 명시적으로 어떤 값을 반환하지 않을 때, 그 함수의 반환 타입은 Unit이 됩니다.
-    * Java에서 void 키워드를 사용하는 것과 동일한 목적입니다.
+  + | 특징              | 설명                                           |
+    | --------------- | -------------------------------------------- |
+    | 반환 없는 함수의 반환 타입 | 함수가 명시적으로 값을 반환하지 않으면 `Unit` 타입              |
+    | 실제 객체           | `Unit`은 `object`로 정의된 싱글톤 (Java의 `void`와 다름) |
+    | 생략 가능           | `: Unit`은 생략 가능 – 컴파일러가 자동 추론                |
+    | 제네릭에 사용 가능      | `Unit`은 타입이므로 제네릭 함수의 타입 파라미터로 사용 가능         |
+    | 명시적 `return` 지원 | `return` 또는 `return Unit` 모두 가능, 관용적으로는 생략   |
+
+- 사용법
+  + 기본
     * ```kotlin
-      fun printMessage(message: String): Unit { // Unit 반환 타입 명시
+      fun printMessage(message: String): Unit {
         println(message)
       }
 
-      fun Greet() { // 반환 타입 생략 시 컴파일러가 Unit으로 추론
+      fun greet() { // Unit 생략, 컴파일러가 추론
         println("Hello!")
       }
-      ```
-  + 실제 객체(싱글톤)
-    * Java의 void는 단순히 "값이 없음"을 나타내는 키워드인 반면, Kotlin의 Unit은 실제로 object로 선언된 싱글톤 객체입니다.
-    * Unit 타입의 값은 단 하나, Unit 객체 그 자체입니다.
-    * void와의 가장 큰 차이점 중 하나입니다.
-  + 반환 타입 생략 가능
-    * 함수의 반환 타입이 Unit일 경우, 명시적으로 : Unit을 적지 않아도 컴파일러가 자동으로 추론합니다.
-    * 대부분의 경우 Unit을 직접 코드에 작성할 일은 적습니다.
+      ``` 
+  + Unit은 실제 싱글톤 객체다
+    * Kotlin의 `Unit`은 다음처럼 선언된 실제 객체입니다
     * ```kotlin
-      fun sayGoodbye() { // 반환 타입이 Unit으로 자동 추론됨
-        println("Goodbye!")
-      }
+      object Unit
       ```
-  + 제네릭에서 사용 가능
-    * Unit은 실제 타입이기 때문에 제네릭 함수의 타입 인자로 사용될 수 있습니다. 이는 void가 불가능한 부분입니다.
-    * 어떤 작업을 수행하고 결과는 반환하지 않지만, 작업 완료 여부 등을 다른 방식으로 처리하는 콜백이나 고차 함수에서 유용하게 사용될 수 있습니다.
-  + 명시적인 return Unit 또는 return
-    * Unit을 반환하는 함수에서는 return Unit을 명시적으로 작성할 수 있지만, 이는 불필요하며 관용적으로 사용되지 않습니다.
-    * 단순히 return 키워드만 사용해도 Unit이 반환되는 것과 동일한 효과를 가집니다 (함수 중간에서 빠져나올 때).
+    * 즉, `Unit` 타입의 값은 단 하나 – `Unit` 객체 그 자체입니다.
+    * Java의 `void`는 그 자체로 타입이 아니므로, 제네릭에 쓸 수 없고, 객체로 다룰 수도 없습니다.  
+  + 제네릭에서의 활용
+    * ```kotlin
+      fun <T> doSomething(block: () -> T) {
+        val result = block()
+        println("Done")
+      }
+
+      fun main() {
+        doSomething<Unit> {
+          println("작업 실행 중")
+        }
+      }
+      ```  
+    * Unit은 void와 달리 제네릭 함수의 타입 인자로 사용 가능
+    * 함수형 프로그래밍 스타일에서 특히 유용
+  + 명시적인 `return Unit`?
     * ```kotlin
       fun checkAge(age: Int): Unit {
         if (age < 18) {
           println("Minor")
-          return // 여기서 함수 종료, Unit 반환
+          return // 또는 return Unit
         }
         println("Adult")
       }
-      ```
+      ``` 
+    * `return`만 사용해도 Unit 반환과 동일
+    * `return Unit`은 가능하지만 권장되지 않음
+
+- void vs Unit 비교
+  + | 항목            | Kotlin `Unit`      | Java `void`    |
+    | ------------- | ------------------ | -------------- |
+    | 타입인가?         | ✅ 실제 타입 (`object`) | ❌ 타입이 아님 (키워드) |
+    | 값이 존재하는가?     | ✅ `Unit` 싱글톤 객체    | ❌ 값 자체가 없음     |
+    | 제네릭에 사용 가능한가? | ✅ 사용 가능            | ❌ 불가능          |
+    | 반환 타입 생략 가능?  | ✅ 생략 시 자동 추론       | ❌ 명시적 void 필요  |
+  
 
 - 왜 void 대신 Unit을 사용할까?
-  + 일관성: Kotlin은 모든 것을 객체로 취급하려는 경향이 있습니다. Unit을 객체로 만듦으로써 "값이 없음"조차도 타입 시스템 내에서 일관되게 다룰 수 있습니다.
-  + 제네릭 지원: 위에서 언급했듯이, 제네릭 타입 파라미터로 Unit을 사용할 수 있게 되어 함수형 프로그래밍 패턴 등에서 유용합니다.
-  + 함수형 프로그래밍과의 조화: 함수형 프로그래밍에서는 모든 함수가 값을 반환하는 것을 선호합니다. Unit은 "의미 있는 값은 없지만, 작업은 완료되었음"을 나타내는 일종의 신호로 볼 수 있습니다. 
+  + 일관된 타입 시스템: Kotlin은 모든 것을 객체로 취급하려는 경향이 있습니다. Unit을 객체로 만듦으로써 "값이 없음"조차도 타입 시스템 내에서 일관되게 다룰 수 있습니다.
+  + 제네릭 활용 가: 위에서 언급했듯이, 제네릭 타입 파라미터로 Unit을 사용할 수 있게 되어 함수형 프로그래밍 패턴 등에서 유용합니다.
+  + 함수형 프로그래밍 적합: 함수형 프로그래밍에서는 모든 함수가 값을 반환하는 것을 선호합니다. Unit은 "의미 있는 값은 없지만, 작업은 완료되었음"을 나타내는 일종의 신호로 볼 수 있습니다. 
 
-- 요약
-  + Unit은 Kotlin에서 함수가 아무 값도 반환하지 않음을 나타내는 타입입니다.
-  + Java의 void와 유사하지만, Unit은 실제 싱글톤 객체입니다.
-  + 반환 타입이 Unit일 경우 생략 가능합니다.
-  + 제네릭과 함께 사용될 수 있다는 점이 void와의 중요한 차이점입니다. 일상적인 코딩에서는 Unit을 직접 명시하는 경우는 드물지만, Kotlin의 타입 시스템과 함수형 프로그래밍 패러다임을 이해하는 데 중요한 개념입니다.
+- 면접 관련 질문
+  + Kotlin의 `Unit`과 Java의 `void`는 어떤 차이가 있나요?
+    * `Unit`은 실제 객체이며 타입이 존재합니다.
+    * `void`는 단지 "값 없음"을 나타내는 키워드입니다.
+    * Kotlin에서는 `Unit`을 통해 값이 없더라도 타입 시스템 내에서 일관되게 처리할 수 있습니다.
+    * 또한 `Unit`은 제네릭에 사용할 수 있는 반면, `void`는 불가능합니다.
+  + 반환 타입이 `Unit`인 경우, 함수 선언에서 생략해도 괜찮나요?
+    * Kotlin 컴파일러가 자동으로 `Unit`을 추론합니다.
+    * `fun myFunc()`처럼 선언하면, 내부적으로는 `fun myFunc(): Unit`과 동일하게 처리됩니다.
+  + `Unit`을 반환하는 함수에서 `return`은 꼭 써야 하나요?
+    * 아니요. `return`은 생략 가능합니다.
+    * 단, 함수 중간에서 빠져나가고 싶다면 `return`을 사용할 수 있습니다.
+    * `return Unit`처럼 명시하는 것도 가능하지만 관용적으로는 단순히 `return`만 사용합니다. 
 
 
 ---
 
 
 ### 코틀린 & Java 상호운용성
-- 상호운용성
-    + Kotlin <-> Java 는 100% 상호운용 가능하도록 설계
-        * 코틀린 컴파일러는 .kt 파일은 .class (JVM 바이트코드)로 컴파일 함
-        * 실행 가능한 Jva 코드와 완전히 동일한 JVM 언어로 변환
+- 개요
+  + Kotlin은 Java와 100% 상호운용 되도록 설계된 언어입니다. Kotlin으로 작성된 .kt 파일은 컴파일 시 .class 파일로 변환되어 Java와 동일한 JVM 바이트코드를 생성합니다. 따라서 Java 코드와 Kotlin 코드를 동일 프로젝트 내에서 섞어서 사용할 수 있습니다.
 
-- 필요 이유
-    + 대부분의 안드로이드 프로젝트는 Java 레거시 코드를 유지하고 또는 코틀린과 섞여있는 경우가 다수
-    + 유지보수가 필요하기에 점진적으로 변환 중
+- 왜 상호윤용성이 중요한가?
+  + | 이유           | 설명                                           |
+    | ------------ | -------------------------------------------- |
+    | ✅ 레거시 코드 유지  | 대부분의 Android 프로젝트는 기존 Java 기반의 코드가 포함되어 있음   |
+    | ✅ 점진적 마이그레이션 | Kotlin 도입 시 전체 코드를 한 번에 바꾸기보다는 단계적으로 이전      |
+    | ✅ 생태계 활용     | Java 라이브러리, 프레임워크, 도구 등을 Kotlin에서도 그대로 활용 가능 |
+ 
 
-- Kotlin -> Java 호출 주요 문법
-    + Top-Level function -> 클래스명.function
-    + Object -> INSTANCE 로 접근
-    + Companion object -> ClassName.Companion
-    + @JvmStatic -> static
-    + @JvmField -> get/set 없이 필드 접근
-    + @JvmOverloads -> 오버로드 자동 생성
-    + @file: JvmName("MyUtils") -> 클래스 이름 변경 가능
-        * 이름 충돌 가능성 존재
+- Kotlin -> Java 호출 시 유의사항
+  + | Kotlin 요소                  | Java에서 호출 방식                                           | 설명                                    |
+    | -------------------------- | ------------------------------------------------------ | ------------------------------------- |
+    | Top-level 함수               | `UtilsKt.function()` 또는 `@file:JvmName("Utils")` 설정 가능 | 파일명 기반 클래스 생성됨                        |
+    | `object` 키워드 사용 객체         | `ObjectName.INSTANCE`                                  | Kotlin의 싱글톤 객체 접근 방식                  |
+    | `companion object`         | `ClassName.Companion`                                  | 정적 멤버처럼 접근                            |
+    | `@JvmStatic`               | 정적 메서드처럼 `ClassName.method()` 호출 가능                    | `companion object` 또는 `object` 안에서 사용 |
+    | `@JvmField`                | 필드처럼 접근 (`obj.field`)                                  | getter/setter 없이 직접 접근 가능             |
+    | `@JvmOverloads`            | 자바에서 오버로딩 메서드 자동 생성                                    | Kotlin 기본 인자값이 Java에선 없기 때문           |
+    | `@file:JvmName("MyUtils")` | 생성되는 클래스 이름 지정 가능                                      | 이름 충돌 방지 또는 가독성 향상 목적                 |
+ 
+- Java -> Kotlin 호출 시 주의점
+  + | 이슈                | 설명                                        | 해결 방법                                      |
+    | ----------------- | ----------------------------------------- | ------------------------------------------ |
+    | **Null 안정성 부족**   | Java는 null에 대한 명확한 정보가 없음                 | Kotlin에서 \*\*플랫폼 타입(T!)\*\*으로 처리됨          |
+    | **명확한 타입 보장 어려움** | Java 메서드의 반환값이 null인지 아닌지 알 수 없음          | `@Nullable`, `@NotNull` 어노테이션을 Java 코드에 명시 |
+    | **오버로드된 메서드 처리**  | Kotlin은 기본 인자로 오버로드를 줄이지만 Java는 직접 정의해야 함 | Kotlin에서 `@JvmOverloads` 사용                |
+ 
+- 예시 : 코틀린 코드를 Java 에서 호출
+  + ```kotlin
+    // File: MyUtils.kt
+    @file:JvmName("MyUtils")
 
-- Java -> Kotlin 호출
-    + java 는 null 안전성 정보 없음 -> 코틀린에서 Platform Type(T!) 으로 인식하기에 개발자 처리 필요
-    + @Nullable, @NotNull 어너테이션 필요
+    object Logger {
+      @JvmStatic
+      fun log(message: String) = println("Log: $message")
+    }
+
+    @JvmOverloads
+    fun greet(name: String = "Guest") {
+      println("Hello, $name")
+    }
+    ``` 
+  + ```java
+    // Java code
+    MyUtils.greet(); // 기본값 사용
+    MyUtils.greet("Tom");
+
+    Logger.log("Hi"); // static 메서드처럼 사용
+    ```  
 
 - 면접 관련 질문
-    + Kotlin & Java 는 상호운용 가능한가?
-        * 둘다 JVM 위에서 동작하고 컴파일 결과는 동일한 바이트코드(.class)이기 때문에 상호운용 가능
-    + Kotlin & Java 동시 사용 시 주의해야 할 점?
-        * java는 null 안정성 보장하지 않아서 코틀린의 플랫폼 타입으로 인식 되기에 이를 명확하게 구분/처리, 어노테이션 등 필요
-
+  + Kotlin과 Java는 정말 100% 상호운용되나요?
+    * 기술적으로는 거의 100% 호환되도록 설계되었습니다.
+    * Kotlin 컴파일러는 Java와 동일한 .class 파일을 생성하고, JVM 기반에서 동일하게 동작합니다.
+    * 단, 일부 언어적 특성(Null 안전성 등)은 개발자가 명시적으로 관리해야 합니다.
+  + Kotlin과 Java를 혼용할 때 가장 주의할 점은?
+    * Java는 null 안전성 정보가 없기 때문에 Kotlin에서는 플랫폼 타입(T!) 으로 인식되어 NPE 위험이 존재합니다.
+    * 이를 방지하려면 Java 코드에 @Nullable, @NotNull 어노테이션을 명확히 지정해야 합니다.
+  + Kotlin의 @JvmOverloads는 어떤 상황에서 사용하나요?
+    * Kotlin은 기본 인자를 지원하지만, Java는 이를 이해하지 못합니다.
+    * 그래서 Java에서 호출 가능하도록, 기본 인자에 따라 오버로드된 메서드를 자동으로 생성하려면 @JvmOverloads를 사용해야 합니다.
+    * ```kotlin
+      @JvmOverloads
+      fun greet(name: String = "Guest", message: String = "Welcome") { ... }
+      ```
+    * ```java
+      greet(); // Guest, Welcome
+      greet("Tom"); // Tom, Welcome
+      greet("Tom", "Hi"); // Tom, Hi
+      ```
 
 
 ---

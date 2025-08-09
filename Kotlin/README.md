@@ -3335,230 +3335,219 @@ ___
 ---
 
 
-
 ### const
-- Kotlin에서 **컴파일 타임 상수(Const value)**를 정의할 때, 정의할때 사용하는 키워드 
-- **실행 전에 값이 정해져야 하고, primitive type 혹은 String만 가능**
+- 개념 및 정의
+  + Kotlin에서 const는 **컴파일 타임 상수(compile-time constant)**를 선언할 때 사용하는 키워드입니다.
+  + 자바의 public static final과 유사하며, 값이 프로그램 실행 전에 결정되어야 합니다.
 
 - 기본 사용법
-  ```kotlin
-      const val PI = 3.14
-      const val APP_NAME = "My App"
-  ```
-  + 이 값들은 **컴파일 상수로 결정되며,** 런타임에 초기화되지 않습니다.
-
-- const & val 의 차이
-  * | 항목       | const val                                      | val                 |
-                |----------|------------------------------------------------|---------------------|
-    | 초기화 시점   | **컴파일 타임**                                     | 런타임                 |
-    | 선언 위치    | **top-level, object, companion object 내부만 가능** | 어디든 가능              |
-    | 사용 가능 타입 | 기본 타입 (Int, Double, String 등)                  | 모든 타입               |
-    | 목적       | 상수 선언 (리터럴 고정 값)                               | 읽기 전용 값 (지연 초기화 가능) |
-
-- 선언 가능한 위치 제안
-  1. top-level
-    ```kotlin
-        const val BASE_URL = "https://api.example.com"
+  + ```kotlin
+    const val PI = 3.14
+    const val APP_NAME = "My App"
     ```
-  2. companion object
-    ```kotlin
-        class AppConfig {
-            companion object {
-                const val VERSION = "1.0.0"
-            }
-        }
-    ```
-  
-- 사용할 수 없는 위치
-  ```kotlin
-      fun test() {
-          const val x = 10  // ❌ ERROR: const는 함수 내부에서 사용 불가
-      }  
-  ```
-  + 함수 내부에서는 val만 사용 가능하고, const는 사용할 수 없음
+  + 위 값들은 컴파일 시점에 확정되며, 변경 불가합니다.
+
+- const & val 비교
+  + | 항목          | `const val`                                    | `val`                            |
+    | ----------- | ---------------------------------------------- | -------------------------------- |
+    | 초기화 시점      | **컴파일 타임**                                     | **런타임**                          |
+    | 사용 가능 타입    | 기본 타입만 가능 (`Int`, `String`, `Double` 등)        | 모든 타입 가능 (`List`, `Object` 등 포함) |
+    | 선언 가능한 위치   | **top-level**, `object`, `companion object` 내부 | 어디든 가능                           |
+    | 목적          | 상수 값(리터럴)을 정의                                  | 변경 불가능한 값 정의 (지연 초기화 가능)         |
+    | Java에서 사용 시 | `public static final`처럼 노출                     | 일반 필드처럼 접근됨 (getter 필요)          |
+
+
+- 선언 가능한 위치
+  + | 위치                 | 설명               | 예시                                               |
+    | ------------------ | ---------------- | ------------------------------------------------ |
+    | ✅ top-level        | Kotlin 파일 최상단    | `const val BASE_URL = "https://api.com"`         |
+    | ✅ object 내부        | 싱글톤 객체 내부        | `object Config { const val TOKEN = "abc" }`      |
+    | ✅ companion object | 클래스의 companion 내 | `companion object { const val VERSION = "1.0" }` |
+    | ❌ 함수 내부            | 함수 블록 내 선언 불가    | `fun test() { const val X = 1 } // 오류!`          |
+
 
 - const가 필요한 이유
-  + **annotation parameter** 등에 리터럴 상수를 넘겨야 할 때
-  + **Java interop**에서 public static final처럼 동작해야 할 때
-  + enum/DSL에서 리터럴을 상수로 쓸 때
+  + | 상황                  | 설명                                              |
+    | ------------------- | ----------------------------------------------- |
+    | **Annotation 파라미터** | Annotation에 상수를 넣을 때는 반드시 `const val`이어야 함      |
+    | **Java 상호운용**       | Java에서 Kotlin 상수를 `public static final`처럼 사용 가능 |
+    | **공용 상수 관리**        | DSL, 설정 값, enum-like 문자열 등에서 상수를 명확하게 정의 가능     |
 
-- Java에서 접근할 경우
-  ```kotlin
-      // Kotlin
-      object Config {
-          const val TOKEN = "abc123"
-      }
-  
-      // Java
-      String Token = Config.TOKEN;  // ⚠️ public static final처럼 사용 가능
-  ```
+
+- Java 코드에서 사용 예시
+  + ```kotlin
+    // Kotlin
+    object Config {
+      const val TOKEN = "abc123"
+    }
+    ```
+  + ```java
+    // Java
+    String token = Config.TOKEN;  // → public static final처럼 동작
+    ```
   
 - 요약 
-  + | 특징       | 설명                            |
-                                    |----------|-------------------------------|
-    | 선언 키워드   | const val                     |
-    | 초기화 시점   | 컴파일 타임                        |
-    | 사용 가능 타임 | Int, Long, String 등 기본 타입만 가능 |
-    | 선언 위치    |    top-level, object, companion object 내부   |
-    | 쓰임새      |   annotation 상수, 공통 리터럴 정의, Java interop    |
+  + | 항목       | 설명                                  |
+    | -------- | ----------------------------------- |
+    | 선언 키워드   | `const val`                         |
+    | 초기화 시점   | 컴파일 타임                              |
+    | 사용 가능 타입 | 기본 타입만 (`Int`, `Long`, `String` 등)  |
+    | 선언 위치    | top-level, object, companion object |
+    | 주요 사용 사례 | Annotation, Java interop, 설정 상수 등   |
 
 - 면접질문
-  + val과 const val의 차이는 무엇인가요?
-    * val은 **런타임 상수**이고, const val은 **컴파일 타임 상수**이다.
-    * const는 기본 타입(Int, Long, String 등)만 가능하며, 선언 위치에 제한이 있다.
-  + const는 어디에서 선언할 수 있나요?
-    * Top-level (파일 최상단)
-    * object
-    * companion object
-    * ❌ 함수 내부나 클래스 내부에서는 사용할 수 없습니다 (→ val만 사용 가능).
-  + 왜 const를 사용하나요? 그냥 val로 하면 안 되나요?
-    * const는 컴파일 시점에 값이 확정되기 때문에 더 빠르고 안정적입니다.
-    * annotation, Java interop, DSL 상수에 꼭 필요합니다.
-    * 예: @Header("Authorization: $TOKEN") 같이 annotation 내부에 들어가야 할 값은 const여야 컴파일됩니다.
-
+  + `val`과 `const val`의 차이는 무엇인가요?
+    * `val`은 런타임에 값이 결정되며, 모든 타입을 사용할 수 있습니다.
+    * `const val`은 컴파일 타임 상수로, 기본 타입만 사용 가능하고 특정 위치(top-level, object 등)에만 선언할 수 있습니다.
+  + `const`는 어디에서 선언할 수 있나요?
+    * `Top-level` (파일 최상단)
+    * `object` 내부
+    * `companion object` 내부 ➡️ 함수나 일반 클래스 내부에서는 선언 불가
+  + 그냥 `val` 쓰면 안 되고, 왜 굳이 `const`를 써야 하나요?
+    * const는 컴파일 타임에 값이 확정되므로 퍼포먼스 측면에서 더 효율적입니다.
+    * 특히 Annotation 파라미터나 Java와의 호환을 고려할 때 필수입니다.
+    * 예: 아래와 같은 annotation은 const가 아니면 컴파일되지 않습니다.
+    * ```kotlin
+      @Header("Authorization: $TOKEN") // TOKEN은 반드시 const 여야 함
+      ```
 
 
 ---
 
 
-
-
 ### KMM (Kotlin Multiplatform Mobile)
-- Android 와 Ios 앱에서 **공통 비즈니스 로직(ex) 네트워크, DB, 유틸 등)을 하나의 코틀린 코드로 작성하고**,
--  나머지 UI/플랫폼 특화 코드는 **각 플랫폼에 맞게 따로 구현**할 수 있게 해주는 멀티플랫폼 기술
+- 개념 및 정의
+  + KMM은 Android와 iOS 앱에서 공통 비즈니스 로직(네트워크, DB, 유틸 등)을 Kotlin 코드로 작성하고 UI나 플랫폼 특화 부분은 각 플랫폼에서 따로 구현할 수 있도록 하는 멀티플랫폼 기술입니다.
 
-1. KMM의 핵심 구성
-   ```markdown
-        ├── shared/ (Kotlin 공통 코드)
-        │   ├── commonMain/
-        │   │   └── 공유 로직 (ViewModel, Repository, UseCase 등)
-        │   ├── androidMain/
-        │   │   └── Android-specific 코드 (Context, Room 등)
-        │   └── iosMain/
-        │       └── iOS-specific 코드 (NSURL, iOS Logger 등)
+- 프로젝트 구조 예시
+  + ```text
+    ├── shared/ (Kotlin 공통 코드)
+    │   ├── commonMain/    // 공통 로직 (ViewModel, Repository, UseCase 등)
+    │   ├── androidMain/   // Android 전용 구현
+    │   └── iosMain/       // iOS 전용 구현
 
-        ├── androidApp/
-        │   └── Android 앱 코드 (Compose/Jetpack)
+    ├── androidApp/        // Android UI (Compose, Jetpack)
+    └── iosApp/            // iOS UI (SwiftUI, UIKit)
+    ``` 
 
-        ├── iosApp/
-        │   └── iOS 앱 코드 (SwiftUI/UIKit)
-   ```
-    - commonMain: Kotlin 공통 코드 (최대한 많은 로직을 여기에 둠)
-    - androidMain, iosMain: 각 플랫폼 전용 구현
+- KMM의 주요 특징 
+  + | 특징                  | 설명                                   |
+    | ------------------- | ------------------------------------ |
+    | Cross-platform 지원   | 하나의 Kotlin 코드로 Android & iOS 대응      |
+    | UI는 네이티브            | Compose, SwiftUI 등 플랫폼 네이티브 UI 유지    |
+    | 비즈니스 로직 재사용         | 네트워크, DB, 유즈케이스, 데이터 모델 등 공유         |
+    | Gradle 기반           | Kotlin DSL 빌드 구성 사용                  |
+    | Native Framework 생성 | iOS에서 XCFramework로 컴파일 후 Swift 호출 가능 |
 
-2. KMM의 주요 특징 
-   + | 특징                  | 설명                                       |
-                                         |---------------------|------------------------------------------|
-     | Cross-platform 지원   | 하나의 Kotlin 코드로 Android & iOS 대응 가능       |
-     | UI는 네이티브            | UI는 각 플랫폼의 기술 유지 (Compose, SwiftUI 등)    |
-     | 비즈니스 로직 재사용         | 네트워크, DB, 유즈케이스 등 로직 공유                  |
-     | Gradle 기반           | Kotlin DSL 기반 빌드 구성                      |
-     | Native Framework 생성 | iOS에서는 XCFramework로 컴파일되어 Swift에서 호출 가능  |
+- 공통화 할 수 있는 코드
+  + 비즈니스 로직, 데이터 모델, Repository, UseCase
+  + 네트워크 처리 (Ktor)
+  + 데이터 저장 (SQLDelight)
+  + 날짜/시간 처리 (kotlinx-datetime)
+  + 🚫 UI(View, Activity, SwiftUI 등)는 각 플랫폼에서 구현
 
-3. 공통화 할 수 있는 코드
-   - 비즈니스 로직, 데이터 모델, Repository, Usecase, 네트워크 처리(Ktor 등), 데이터 저장(SQLDelight 등)
-   - 🚫 UI, View, Activity, SwiftUI 같은 화면 코드 → 각 플랫폼에서 따로 구현해야 함
+- 예시
+  + 공통코드 (commonMain)
+    * ```kotlin
+      // shared/commonMain
+      class GreetingViewModel {
+        fun greet(): String = "Hello, KMM!"
+      }
+      ```
+  + iOS(Swift)
+    * ```markdown
+      let viewModel = GreetingViewModel()
+      print(viewModel.greet())
+      ``` 
+  + Android
+    * ```kotlin
+      val vm = GreetingViewModel()
+      Log.d("Greet", vm.greet())
+      ```
+  
+- 대표 라이브러리
+  + | 용도      | 라이브러리              |
+    | ------- | ------------------ |
+    | HTTP 통신 | Ktor               |
+    | DB 저장   | SQLDelight         |
+    | 비동기 처리  | Kotlinx.coroutines |
+    | DI      | Koin, Kodein       |
+    | 날짜/시간   | kotlinx-datetime   |
 
-4. 예제
-    ```kotlin
-        // shared/commonMain
-        class GreetingViewModel {
-            fun greet(): String = "Hello, KMM!"
-        }
-    ```
-   - iOS에서는 Swift에서 호출:
-   ```markdown
-        let viewModel = GreetingViewModel()
-        print(viewModel.greet())
-   ```
-   - Android에서는 일반 Kotlin처럼 사용:
-   ```kotlin
-        val vm = GreetingViewModel()
-        Log.d("Greet", vm.greet())
-   ```
-   
-5. 대표 라이브러리
-   + | 용도            | 라이브러리                 |
-                                              |---------------|-----------------------|
-     | HTTP 통신       | Ktor                  |
-     | DB 저장  | SQLDelight            |
-     | 비동기   | Kotlinx.coroutines    |
-     | DI       | Koin (KMM 지원), Kodein |
-     | 날짜/시간 | kotlinx-datetime      |
-
-6. 장점
-   - Kotlin 하나로 Android/iOS 코드 공유
-   - UI는 네이티브 그대로 사용 가능
-   - 빠른 성능 (네이티브 수준)
-   - Kotlin 코드 재사용성 극대화
-   - JetBrains + Google 지원 (공식성 ↑)
-
-7. 단점
-   - UI 코드 공유는 불가능 (Flutter보다 제한적)
-   - iOS 개발자가 Kotlin 이해 필요
-   - 아직 일부 라이브러리 생태계 미성숙
-   - 초기 설정이 복잡할 수 있음
+- 장점 & 단점
+  + | 장점                           | 단점                        |
+    | ---------------------------- | ------------------------- |
+    | Kotlin 하나로 Android/iOS 코드 공유 | UI 공유 불가 (Flutter 대비 제한적) |
+    | 네이티브 UI 활용 가능                | iOS 개발자가 Kotlin 이해 필요     |
+    | 네이티브 수준 성능                   | 라이브러리 생태계 일부 미성숙          |
+    | JetBrains + Google 공식 지원     | 초기 설정이 복잡할 수 있음           |
+ 
+- 면접 관련 질문
+  + KMM과 Flutter의 가장 큰 차이점은?
+    * KMM은 비즈니스 로직만 공유하고 UI는 각 플랫폼에서 네이티브로 구현, Flutter는 UI까지 공유하는 크로스플랫폼 프레임워크입니다.
+  + KMM에서 공통화가 불가능한 코드는 무엇인가요?
+    * UI(View, Activity, SwiftUI 등)는 플랫폼 종속이므로 각 플랫폼에서 따로 구현해야 합니다.
+  + iOS에서 KMM 코드를 어떻게 호출하나요?
+    * 공통 Kotlin 코드를 iOS용 XCFramework로 빌드한 후 Swift/Objective-C에서 호출합니다. 
 
 
 ---
 
 
 ### Label
-- 정의
-  + 코틀린에서 레이블은 특정 반복문이나 표현식에 이름을 붙이는 방법입니다.
-  + 붙여진 이름은 주로 break, continue, return과 같은 점프 표현식과 함께 사용되어 프로그램의 제어 흐름을 더 세밀하게 조종할 수 있게 합니다.
+- 개념 및 정의
+  + Kotlin에서 **레이블(Label)**은 특정 반복문이나 표현식에 이름을 붙이는 방법입니다.
+  + 주로 break, continue, return 같은 점프 표현식과 함께 사용하여 제어 흐름을 명확하게 관리합니다.
 
 - 레이블의 형태
-  + 레이블은 식별자 뒤에 @기호를 붙여서 만듭니다.
-  + 예) loop@, abc@, myLabel@ 등이 유효한 레입르 입니다.
+  + 형식: `식별자@`
+  + 예시: `loop@`, `abc@`, `myLabel@`, `outer@`
 
-- 레이블 사용법
-  + 반복문에 레이블 지정
-    * for, while, do-while과 같은 반복문 앞에 레이블을 붙일 수 있습니다.
+- 사용 예시
+  + 반복문에 레이블 지정 (`break@레이블`)
+    * 바깥쪽 `loop@`반복문을 종료 
     * ```kotlin
-      fun main() {
-          loop@ for (i in 1..3) {
-              for (j in 1..3) {
-                  println("i = $i, j = $j")
-                  if (i == 2 && j == 2) {
-                      println("Breaking outer loop from inner loop")
-                      break@loop // 'loop@'으로 지정된 바깥쪽 for 루프를 종료
-                  }
-              }
-          }
-          println("Loop finished")
+      loop@ for (i in 1..3) {
+        for (j in 1..3) {
+          if (i == 2 && j == 2) break@loop
+        }
       }
       ```
-  + continue와 함께 사용
-    * continue와 함께 레이블을 사용하면 지정된 레이블의 반복문의 다음 반복으로 바로 넘어갈 수 있습니다.
+  + 반복문 건너뛰기 (`continue@레이블`)
+    * `j == 2` 면 바깥 루프의 다음 반복으로 이동
+    * ```kotlin
+      outer@ for (i in 1..3) {
+        for (j in 1..3) {
+          if (j == 2) continue@outer
+        }
+      }
+      ``` 
+  + 람다에서 반환 제어 (`return@레이블`)
+    * `it == 2`일 떄 현재 람다만 종료하고 forEach는 계속 실행 
     * ```kotlin
       fun main() {
-          outerLoop@ for (i in 1..3) {
-              innerLoop@ for (j in 1..3) {
-                  if (j == 2) {
-                      println("Continuing outerLoop at i=$i, j=$j")
-                      continue@outerLoop // 'outerLoop@'의 다음 반복으로 점프 (즉, i가 증가)
-                  }
-              println("i = $i, j = $j")
-              }
-          }
+        listOf(1, 2, 3).forEach label@{
+          if (it == 2) return@label
+          println(it)
+        }
       }
       ```
 
-  + return과 함께 사용
-    * 람다 식이나 로컬 함수에서 바깥쪽 함수의 특정 지정으로 반환하고 싶을 때 레이블을 사용합니다.
+- 언제 레이블을 사용할까?
+  + 중첩 루프에서 바깥쪽 루프를 직접 제어해야 할 때
+  + 람다 식에서 반환 동작을 명확히 해야 할 때
 
-  + 표현식에 레이블 지정
-    * 반복문 외의 다른 표현식에도 레이블을 붙일 수 있지만, 주로 break나 continue와 함께 사용되는 반복문에 레이블을 지정하는 경우가 대부분입니다.
+- 주의사항
+  + 레이블 남용은 가독성을 해칠 수 있음
+  + 단순한 구조로 리팩토링이 가능하다면 레이블 없이 구현하는 것이 더 나을 수 있음
 
-  + 언제 레이블을 사용할까?
-    * 중첩된 반복문 제어: 안쪽 루프에서 바깥쪽 루프를 직접 break 하거나 continue 하고 싶을 때 매우 유용합니다.
-    * 람다 식에서의 반환 제어: 고차 함수에 전달된 람다 식에서 반환 동작을 명확히 하고 싶을 때. 
-
-  + 주의사항
-    * 레이블을 과도하게 사용하면 코드의 흐름을 이해하기 어렵게 만들 수 있습니다.
-    * 일반적으로 레이블은 복잡한 제어 흐름을 단순화하는 데 도움이 될 수 있지만, 때로는 코드를 리팩토링하여 레이블 없이도 명확한 구조를 만드는 것이 더 좋을 수 있습니다. 
-      Kotlin의 레이블은 Java의 레이블과 유사한 개념이지만, 특히 람다 식에서의 반환 제어와 관련하여 Kotlin의 함수형 프로그래밍 특성과 잘 어우러져 사용됩니다.
+- 면접 관련 질문
+  + Kotlin 레이블은 Java 레이블과 어떤 차이가 있나요?
+    * Java에서도 레이블이 있지만, Kotlin은 람다 반환 제어 등 함수형 패턴에서의 활용도가 더 높습니다.
+  + 람다에서 return과 return@레이블의 차이는 무엇인가요?
+    * return은 바깥 함수를 종료하지만, return@레이블은 해당 람다만 종료하고 나머지 흐름은 계속 실행됩니다.
+  + 레이블을 꼭 사용해야 하는 상황은 언제인가요?
+    * 중첩된 반복문에서 바깥 루프를 제어하거나, 람다에서 부분 반환이 필요할 때 사용합니다. 
 
 
 ---
@@ -3566,24 +3555,24 @@ ___
 
 ### Nothing 타입
 - 개념 및 정의
-  + 값이 존재하지 않을 것을 명시적으로 표현하는 특수 타입
-  + 정상적인 반환이 절대 없는 함수의 반환 타입으로 사용
-  + 이후 코드는 절대 실행되지 않음
-
+  + `Nothing`은 **"값이 절대 존재하지 않음"**을 명시적으로 표현하는 특수 타입입니다.
+  + 주로 정상적인 반환이 절대 없는 함수의 반환 타입으로 사용합니다.
+  + 즉, 이 함수 이후의 코드는 절대 실행되지 않음을 보장합니다.
+  
 - 왜 필요한가?
-  + | 목적        | 이유                                |
-    | --------- | --------------------------------- |
-    | 코드 가독성    | "이 함수는 절대 끝까지 반환 안 함" 을 명시        |
-    | 타입 시스템 보완 | 타입 추론 시 `Nothing`을 활용하면 더 안전하게 동작 |
-    | 예외 상황 표현  | 예외 던지기, 무한 루프 등에서 사용              |
+  + | 목적        | 이유                                    |
+    | --------- | ------------------------------------- |
+    | 코드 가독성    | "이 함수는 절대 끝까지 반환하지 않는다"를 타입으로 명확하게 표시 |
+    | 타입 안전성 강화 | 타입 추론 시 `Nothing` 덕분에 안전하게 컴파일 가능     |
+    | 예외 상황 표현  | 예외 발생, 무한 루프 등 프로그램 흐름이 종료되는 구문에 사용   |
 
 - 주요 특징
-  + | 특징    | 설명                                  |
-    | ----- | ----------------------------------- |
-    | 하위 타입 | **모든 타입의 하위 타입** (`subtype of all`) |
-    | 값 없음  | 인스턴스를 가질 수 없음                       |
-    | 종료 명시 | return, throw 등으로 코드 흐름 종료를 표현      |
-    | 주 용도  | 예외, 무한 루프, 실패 케이스 함수                |
+  + | 특징               | 설명                                          |
+    | ---------------- | ------------------------------------------- |
+    | **모든 타입의 하위 타입** | `String`, `List<Int>` 등 어떤 타입 자리에도 들어갈 수 있음 |
+    | **값 없음**         | 인스턴스를 가질 수 없음                               |
+    | **종료 보장**        | `throw`, `return` 등 코드 흐름을 끝내는 구문에서 사용      |
+    | **주요 용도**        | 예외 발생 함수, 무한 루프, 실패 케이스 처리                  |
 
 - 예시
   + 예외 던지는 함수에 사용
@@ -3592,14 +3581,14 @@ ___
         throw IllegalArgumentException(message)
       }
       ```
-    * 값을 반환하지 않으며 타입 추론에 도움을 줌
-  + 엘비스 연산자와 함께 사용
+    * `Nothing` 반환 타입은 "이 함수는 절대 값을 반환하지 않는다"는 것을 의미합니다.
+  + 엘비스 연산자(`?:`)와 결합
     * ```kotlin
       val name:String? = null
       val result = name ?: fail("name cannot be null")
       // result String 으로 타입 추론
       ```
-    * fail() 이 Nothing 이라 result 는 String 으로 안전하게 추론
+    * `fail()`이 `Nothing`을 반환하므로, `result`는 `String` 타입으로 유지됩니다.
   + when exhaustive
     * ```kotlin
       sealed class Result
@@ -3612,15 +3601,33 @@ ___
         else -> error("Unknown result") // error() 의 반환 Nothing
       }
       ```
+    * `Nothing` 덕분에 `else` 분기에서 반환 타입을 깨뜨리지 않음
 
+- 대표적으로 `Nothing`을 반환하는 표준 함수
+  + | 함수 이름            | 설명                       |
+    | ---------------- | ------------------------ |
+    | `error(message)` | 예외 발생 후 프로그램 종료          |
+    | `fail(message)`  | 커스텀 예외 발생                |
+    | `TODO()`         | 아직 구현되지 않은 부분 표시 후 예외 발생 |
+    | `throw` 표현식      | 예외 던짐                    |
+    | `while(true)` 형태 | 무한 루프                    |
+ 
 - 면접 관련 질문
-  + Nothing 타입이 실무에서 필요한 이유
-    * "반환되지 않는다"를 명확하게 타입 시스템에 전달해 코드 가독성 및 타입 추론 도움
-  + Nothing 은 어떤 타입의 하위 타입인가?
-    * 모든 타입의 하위 타입 (String?, List<Int> 등)
-  + Nothing 이 실무에서 쓰이는 케이스
-    * 예외를 던지는 fail(), error(), require() 같은 함수
-    * 엘비스 연산자 ?: 조합으로 타입 명확하게 유지할 때 사용
+  + Nothing 타입은 어떤 상황에서 사용하나요?
+    * 정상적으로 종료되지 않는 함수(예외 발생, 무한 루프)나 실패 케이스를 명확히 표현하기 위해 사용합니다.
+    * 타입 시스템에 "여기서 절대 값이 반환되지 않는다"를 알릴 수 있습니다.
+  + Nothing은 어떤 타입의 하위 타입인가요?
+    * 모든 타입의 하위 타입(subtype)입니다.
+    * 예: String, Int, List<Double> 어디든 들어갈 수 있습니다.
+  + 실무에서 Nothing 타입이 쓰이는 구체적인 예시는 무엇인가요?
+    * 예외를 던지는 함수(fail, error, require)
+    * ?: 엘비스 연산자와 조합해 타입 안정성 유지
+    * when 표현식에서 모든 분기 처리가 되었음을 보장
+    * 테스트 코드에서 TODO() 사용
+  + Nothing과 Unit의 차이는 무엇인가요?
+    * Unit: "값은 없지만 정상적으로 종료됨"
+    * Nothing: "정상적으로 종료되지 않음 (반환 불가능)"
+    * 즉, Unit 함수 뒤의 코드는 실행되지만, Nothing 함수 뒤의 코드는 절대 실행되지 않습니다.
 
 
 ---
@@ -3700,27 +3707,29 @@ ___
 
 ### list & array 차이
 - 개념/정의
-  + Array 고정 크기이며 같은 타입 요소의 모음
-  + List 컬렉션 인터페이스, 크기 유동적, 더 다양한 기능 제공
+  + | 타입        | 설명                                                                 |
+    | --------- | ------------------------------------------------------------------ |
+    | **Array** | 고정 크기의 동일 타입 요소 모음. 크기 변경 불가, 요소 변경 가능                             |
+    | **List**  | 컬렉션 인터페이스. 크기 유동적(불변 `List`와 변경 가능한 `MutableList` 제공), 더 다양한 기능 지원 |
 
 - 공통점
-  + | 공통점            | 설명                            |
-    | -------------- | ----------------------------- |
-    | 인덱스로 접근 가능     | `list[0]`, `array[0]` 등 사용 가능 |
-    | 순서 보장          | 입력된 순서대로 요소 유지                |
-    | Iterable 인터페이스 | for-each 루프 사용 가능             |
+  + | 공통점         | 설명                              |
+    | ----------- | ------------------------------- |
+    | 인덱스 접근 가능   | `list[0]`, `array[0]` 형태로 접근 가능 |
+    | 순서 보장       | 입력된 순서를 유지                      |
+    | Iterable 구현 | `for-each` 루프 사용 가능             |
 
 - 차이점
-  + | 항목    | **Array**    | **List**                         |
-    | ----- | ------------ | -------------------------------- |
-    | 크기    | **고정**       | **유동적 (immutable / mutable)**    |
-    | 타입    | 같은 타입 요소만    | 제네릭으로 타입 지정                      |
-    | 변경 여부 | 요소 변경 가능     | `List`는 불변, `MutableList`는 변경 가능 |
-    | 생성 방식 | `arrayOf()`  | `listOf()`, `mutableListOf()`    |
-    | 기능    | 단순 배열        | 다양한 컬렉션 기능 제공                    |
-    | 사용 목적 | 고정 크기, 성능 중심 | 컬렉션, 데이터 관리 중심                   |
+  + | 항목    | **Array**    | **List**                              |
+    | ----- | ------------ | ------------------------------------- |
+    | 크기    | **고정**       | **유동적** (불변/가변 모두 존재)                 |
+    | 타입    | 같은 타입 요소만 저장 | 제네릭으로 타입 지정 가능                        |
+    | 변경 여부 | 요소 변경 가능     | `List`는 읽기 전용, `MutableList`는 변경 가능   |
+    | 생성 방식 | `arrayOf()`  | `listOf()`, `mutableListOf()`         |
+    | 기능    | 단순 배열 연산     | 고차 함수(map, filter 등) 포함 다양한 컬렉션 기능 제공 |
+    | 사용 목적 | 고정 크기, 성능 중심 | 데이터 관리, 가변 컬렉션 작업 중심                  |
 
-- 각 특징과 사용 예시
+- 사용 예시
   + Array
     * ```kotlin
       val arr = arrayOf(1, 2, 3)
@@ -3737,14 +3746,24 @@ ___
       mutableList.add(4)
       println(mutableList)  // [1, 2, 3, 4]
       ```
-    * List 읽기 전용 변경 불가
-    * MutableList 요소 추가/삭제 가능
-    * 고차 함수 활용에 용이 (map, filter)
+    * `List` 읽기 전용 변경 불가
+    * `MutableList` 요소 추가/삭제 가능
+    * 고차 함수 활용에 용이 (map, filter, reduce 등)
 
+- 언제 사용?
+  + | 상황                 | 추천 타입         | 이유            |
+    | ------------------ | ------------- | ------------- |
+    | 크기가 절대 변하지 않는 데이터  | `Array`       | 메모리 효율, 단순 접근 |
+    | 요소 추가/삭제, 고차 함수 필요 | `MutableList` | 기능 다양, 확장성    |
+    | 읽기 전용 컬렉션          | `List`        | 불변성 보장, 안전성 ↑ |
+ 
 - 면접 관련 질문
-  + Array와 List의 가장 큰 차이는?
-    * Array 고정 크기를 사용하고 요소 변경 가능
-    * List 읽기 전용으로 사용 가변 컬렉션이 필요하면 MutableXXX 사용
-  + List와 MutableList의 차이는?
-    * List 읽기 전용이라 요소 추가/삭제 불가능
-    * MutableList 변경 가능한 컬렉션
+  + Array와 List의 가장 큰 차이는 무엇인가요?
+    * Array는 크기가 고정되고 요소 변경 가능
+    * List는 읽기 전용(Immutable), 변경이 필요하면 MutableList 사용
+  + List와 MutableList의 차이는 무엇인가요?
+    * List: 읽기 전용, 요소 추가/삭제 불가
+    * MutableList: 요소 추가/삭제 가능
+  + Array보다 List를 더 자주 사용하는 이유는 무엇인가요?
+    * List는 Kotlin 컬렉션 API와의 호환성이 높고, 고차 함수(map, filter 등)를 바로 활용 가능
+    * 사이즈 변경 및 데이터 가공이 편리

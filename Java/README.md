@@ -8,55 +8,78 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 ### 기본형 타입 (Primitive Type) vs 참조형 타입 (reference type)
 - **기본형 타입**
-  1. 타입종류
-     - 논리형 : boolean (1byte)
-     - 문자형 : char (2byte)
-     - 정수형 : byte (1byte), short (2byte), int (4byte), long (8byte)
-     - 실수형 : float (4byte), double (8byte)
-  2. 특징
-     - 메모리의 **stack**에 값(value) 자체를 저장
-     - 객체가 아니기 때문에 **NULL 불가**
-     - 산술 연산 가능
-     - 저장공간에 실제 값을 가짐
-     - 변수 선언 동시에 메모리 생성
-     ```Java
-        int a = 10;
-        double pi = 3.141592;
-        boolean flag = true;
-        char ch = 'A';
-        ```
-  3. 값 전달 방식
-      - 실제 값이 복사되어 전달
-     ```Java
-        void modify(int x) {
-        x = 100;    // x의 값이 복사되어 전달되므로, 원본 x의 값이 변하지 않음
-        }
-        ```
+  + 종류 및 크기
+    * | 분류  | 타입                                | 크기                 |
+      | --- | --------------------------------- | ------------------ |
+      | 논리형 | `boolean`                         | 1 byte             |
+      | 문자형 | `char`                            | 2 byte             |
+      | 정수형 | `byte` / `short` / `int` / `long` | 1 / 2 / 4 / 8 byte |
+      | 실수형 | `float` / `double`                | 4 / 8 byte         | 
+  + 주요 특징
+    * Stack 영역에 값 자체 저장
+    * 객체가 아니므로 null 불가
+    * 산술 연산 가능
+    * 변수 선언과 동시에 메모리 할당
+    * 값이 직접 저장되므로 접근 속도 빠름
+    * ```java
+      int a = 10;
+      double pi = 3.141592;
+      boolean flag = true;
+      char ch = 'A';
+      ```
+  + 값 전달 방식
+    * 값 자체가 복사되어 전달
+    * 원본 데이터 변경 X
+    * ```java
+      void modify(int x) {
+        x = 100; // 원본 x에는 영향 없음
+      }
+      ``` 
 
 - **참조형 타입**
-    1. 타입종류
-       - 클래스 (class)
-       - 인터페이스 (interface)
-       - 배열 (array)
-       - 열거형 (enum)
-    2. 특징
-        - 기본형 이외의 타입 ( ex) 배열(Array), 열거형(enum), 인터페이스(interface), 클래스(class) )
-        - 실제 객체는 **힙(heap)** 에 할당되고, stack에는 메모리 주소가 저장
-        - 객체이기 때문에 **NULL을 대입 할 수 있음** / 모든 참조형의 기본값은 **NULL**
-        - 런타임에 생성된 객체이므로, **크기&구조를 자유롭게 정의**
-       ```Java
-          String str = "Hello, Java!";
-          int[] number = {1, 2, 3, 4, 5};
-          List<String> list = new ArrayList<>();
-          MyClass obj = new MyClass();
-          ```
-    3. 값 전달 방식
-        - 객체 참조 값 (주소)가 복사되어 전달
-       ```Java
-          void modifyArray(int[] arr) {
-            arr[0] = 99;    // 참조가 복사되어 전달되므로, 같은 배열의 객체를 참조하여 내부 값이 바뀜
-          }    
-          ```
+  + 종류
+    * 클래스(class)
+    * 인터페이스(interface)
+    * 배열(array)
+    * 열거형(enum)  
+  + 특징
+    * Heap 영역에 객체 저장, Stack에는 객체의 메모리 주소(참조값) 저장
+    * null 대입 가능 (기본값도 null)
+    * 런타임 시 크기 및 구조 자유롭게 정의 가능
+    * 다양한 기능 및 메서드 포함 가능
+    * ```java
+      String str = "Hello, Java!";
+      int[] numbers = {1, 2, 3, 4, 5};
+      List<String> list = new ArrayList<>();
+      MyClass obj = new MyClass();
+      ```
+  + 값 전달 방식
+    * **참조 값(주소)**가 복사되어 전달
+    * 참조된 객체의 내용은 변경 가능 (원본 데이터 영향 O)
+    * ```java
+      void modifyArray(int[] arr) {
+        arr[0] = 99; // 원본 배열 내용이 변경됨
+      }
+      ```
+  
+- 기본형 vs 참조형 비교
+  + | 구분         | 기본형(Primitive)           | 참조형(Reference)                 |
+    | ---------- | ------------------------ | ------------------------------ |
+    | 저장 위치      | Stack                    | Stack(주소) + Heap(객체)           |
+    | 저장 값       | 실제 값                     | 객체의 주소값                        |
+    | 크기         | 고정                       | 가변 (클래스/배열 크기에 따라)             |
+    | null 가능 여부 | ❌                        | ✅                              |
+    | 성능         | 빠름                       | 상대적으로 느림 (주소 참조 과정)            |
+    | 전달 방식      | 값 복사                     | 참조값 복사                         |
+    | 예시         | `int`, `boolean`, `char` | `String`, `ArrayList`, `int[]` |
+ 
+- 면접 관련 질문
+  + Java에서 기본형과 참조형의 가장 큰 차이는 무엇인가요?
+    * 기본형은 값 자체를 저장하며 스택에 보관, 참조형은 객체의 주소값을 저장하고 객체는 힙에 할당됩니다.
+  + 참조형을 메서드 인자로 전달할 때 원본이 변경될 수 있는 이유는?
+    * 참조형은 객체의 참조값을 복사해서 전달하므로, 같은 객체를 가리키고 있어 내부 상태 변경이 가능합니다.
+  + Java에서 String은 왜 참조형인데 불변(Immutable)인가요?
+    * String 객체는 참조형이지만, 내부적으로 불변성을 보장하도록 설계되어 값 변경 시 새로운 객체를 생성합니다. 
 
 
 ---

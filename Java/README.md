@@ -569,67 +569,90 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 ---
 
+
 ### Thread 쓰레드
 - 개념
-  + 프로세스 내부에서 실행되는 작업 단위. 같은 메모리 공간을 공유
-  + 프로세스는 실행중인 프로그램 단위. 자체 메모리 공간을 가짐
-  + | 항목         | 프로세스 (Process)                          | 쓰레드 (Thread)                               |
-    | ---------- |-----------------------------------------|--------------------------------------------|
-    | **정의**     | 실행 중인 프로그램                              | 프로세스 내의 실행 단위                              |
-    | **메모리 구조** | 고유한 메모리 공간 (Heap, Stack, Data, Code 분리) | 같은 프로세스 내에서 Heap, Code, Data 공유. Stack은 개별 |
-    | **속도/성능**  | 생성/전환 비용 큼 (Heavyweight)                | 빠름 (Lightweight)                           |
-    | **안정성**    | 하나가 죽어도 다른 프로세스 영향 없음                   | 하나의 쓰레드가 문제 생기면 전체 프로세스에 영향 가능             |
-    | **통신 방식**  | IPC 필요 (Socket, Pipe 등)                 | 메모리 공유로 직접 통신 가능                           |
-    | **예시**     | 브라우저, 게임, 백그라운드 서비스                     | 브라우저 탭, 음악 앱의 재생/다운로드 쓰레드 등                |
+  + 쓰레드 : 프로세스 내부에서 실행되는 작업 단위.
+  + 프로세스 :  실행중인 프로그램 단위. 자체 메모리 공간을 가짐
+  + 하나의 프로세스는 최소 1개의 쓰레드를 가지며, 여러 쓰레드가 메모리 공간을 공유하면서 동작
+  + | 항목     | 프로세스 (Process)                          | 쓰레드 (Thread)                       |
+    | ------ | --------------------------------------- | ---------------------------------- |
+    | 정의     | 실행 중인 프로그램                              | 프로세스 내 실행 단위                       |
+    | 메모리 구조 | 고유한 메모리 공간 (Heap, Stack, Data, Code 분리) | Heap, Code, Data 공유, **Stack은 개별** |
+    | 속도/성능  | 생성·전환 비용 큼 (**Heavyweight**)            | 전환 빠름 (**Lightweight**)            |
+    | 안정성    | 하나 죽어도 다른 프로세스 영향 없음                    | 하나 오류 → 전체 프로세스 영향 가능              |
+    | 통신 방식  | IPC (Socket, Pipe 등) 필요                 | 메모리 공유로 직접 통신                      |
+    | 예시     | 브라우저, 게임 프로세스                           | 브라우저 탭, 음악 재생/다운로드 쓰레드             |
 
-- 쓰레드 생성 3가지 방식 + Runnable 선호 이유
+
+- 쓰레드 생성 방법
   + 쓰레드 클래스 상속
-  ```java
-  MyThread myThread = new MyThread();
-  myThread.start();
-  
-  class MyThread extends Thread {
-    public void run() {
+  + ```java
+    class MyThread extends Thread {
+      @Override
+      public void run() {
         System.out.println("Running in MyThread");
+      }
     }
-  }
-  ```
-  + Runnable 구현
-  ```java
-  MyRunnable myRunnable = new MyRunnable();
-  Thread thread = new Thread(myRunnable);
-  thread.start();
-  
-  class MyRunnable implements Runnable {
-    public void run() {
+
+    MyThread t1 = new MyThread();
+    t1.start();
+    ```
+  + Runnable 구현 (선호)
+  + ```java
+    class MyRunnable implements Runnable {
+      @Override
+      public void run() {
         System.out.println("Running in MyRunnable");
+      }
     }
-  }
-  ```
+
+    Thread t2 = new Thread(new MyRunnable());
+    t2.start();
+    ```
   + 람다식 (Java 8 이상)
-  ```java
-   Runnable r = () -> System.out.println("Running with lambda");
-   new Thread(r).start();
-  ```
+  + ```java
+    Runnable r = () -> System.out.println("Running with lambda");
+    new Thread(r).start();
+    ```
   + Runnable 선호 이유
-    * Java 단일 상속만 지원되기에 Thread 상속시 다른 클래스 상속 불가
-    * Runnable 인터페이스가 더 유연함
-    * ExecutorService 등 고급 API 와 호환성이 좋음
-    * | 항목            | Thread 상속 방식                          | Runnable 구현 방식                           |
-      |----------------|-------------------------------------------|----------------------------------------------|
-      | 구현 방식       | `extends Thread`                          | `implements Runnable`                        |
-      | 상속 제약       | 다른 클래스 상속 불가 (단일 상속 한계)    | 다른 클래스와 함께 구현 가능 (유연함)        |
-      | 결합도          | 실행 코드 + 쓰레드 실행이 강하게 결합됨   | 실행 로직과 쓰레드 실행 분리 (낮은 결합도)   |
-      | 재사용성        | 낮음 (Thread 객체 재사용 어려움)          | 높음 (Runnable 객체 재사용 가능)             |
-      | 실무 적합성     | 제한적 사용                                | 선호도 높음 (ExecutorService와 연계 용이)    |
+    * | 항목    | Thread 상속               | Runnable 구현               |
+      | ----- | ----------------------- | ------------------------- |
+      | 상속 제약 | 다른 클래스 상속 불가 (단일 상속 한계) | 다른 클래스 상속 가능              |
+      | 결합도   | 실행 코드 + 쓰레드 실행 강하게 결합   | 실행 로직과 쓰레드 실행 분리          |
+      | 재사용성  | 낮음                      | 높음                        |
+      | 실무 활용 | 제한적                     | ExecutorService 등과 호환성 높음 |
 
+- 쓰레드 생명주기
+  + ```text
+    NEW → RUNNABLE → RUNNING → (BLOCKED / WAITING / TIMED_WAITING) → TERMINATED
+    ```
+  + NEW: new Thread()로 생성, 아직 start() 안 함
+  + RUNNABLE: 실행 대기 상태 (JVM 스케줄러가 실행 시간 배정)
+  + RUNNING: CPU 점유 중
+  + BLOCKED / WAITING / TIMED_WAITING: 자원·신호 대기
+  + TERMINATED: 실행 종료
+  + ```java
+    Thread t = new Thread(() -> {});
+    System.out.println(t.getState()); // NEW
+    t.start();
+    System.out.println(t.getState()); // RUNNABLE or RUNNING
+    ```
 
-- 쓰레드 생명주기와 상태 변화
-  + New -> Runnable -> Running -> Blocked,Waiting,Timed Waiting -> Terminated
-  + Thread.getState() 로 확인 가능하며 JVM 에서 관리
-  + Runnable 상태에서 JVM 스케쥴러가 유선순위 시간 분할 정책에 따라 실행 시간을 조절
-- 관련 개념
-  + synchronized, volatile, ReentrantLock, 세마포어, 뮤텍스, 데드락
+- 동기화 관련 키워드
+  + synchronized: 임계 구역 동기화
+  + volatile: 변수 가시성 보장
+  + ReentrantLock: 유연한 Lock 제어
+  + Semaphore / Mutex: 자원 접근 제어
+  + Deadlock: 서로 Lock 점유 대기 → 시스템 멈춤
+
+- 면접 관련 질문
+  + Runnable vs Thread 상속 차이는?
+    * Runnable은 단일 상속 제약이 없고 실행 로직과 쓰레드 실행이 분리돼 재사용·유연성이 높아 실무에서 선호.
+  + Thread의 상태 전이는 누가 관리하나요?
+    * JVM이 관리하며, OS 스케줄러 정책(우선순위·시간 분할)에 따라 RUNNABLE 상태에서 실행이 선택됨.
+  + 멀티스레드에서 가장 주의할 점은?
+    * 공유 자원 접근 시 동기화 문제와 데드락 방지. 동기화 시 성능 저하도 고려.
 
 
 ---

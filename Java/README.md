@@ -798,39 +798,65 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 ---
 
 ### JVM (Java Virtual Machine)
-- 자바 바이트코드(.class 파일)를 실행하는 가상의 컴퓨터(런타임)
-- 물리적 OS나 하드웨어와 무관하게 **한번 작성하면 어디서나 실행**
-- 바이트코드를 실행하고, 메모리를 관리하며, 플랫폼 독립성과 안정성을 제공하는 자바 프로그램의 **심장** 역할
-- 역활
-    - 자바 컴파일러가 생성한 바이트코드 기계어로 변환해 실행
-    - 메모리 관리 : 힙(객체), 스택(메서드 호출), 메타스페이스(클래스 정보) 등을 할당 또는 회수
-    - 가비지 컬렉션(GC) : 더 이상 사용되지 않는 객체를 자동으로 정리
-    - JIT(Just-In-Time) 컴파일 : 자주 쓰이는 바이트코드를 네이티브 코드로 변환해 성능 최적화
-- JVM 내부구조
-    1. 클래스 로더 (Class Loader)
-        - .class 파일을 읽어 메모리에 올리고, 의존 클래스로도 로딩
-    2. 런타임 데이터 영역
-        - 메소드 영역(Method Area / MetaSpace) : 클래스 구조, 상수풀, static 변수
-        - 힙(Heap) : new로 생성된 객체
-        - 스택(Stack) : 각 스레드별 메서드 호출 정보와 지역변수
-        - PC 레지스터 : 현재 실행중인 바이트코드 주소
-        - 네이티브 메소드 영역(Native Method Stack) : 네이티브 코드 호출 정보
-    3. 실행 엔진 (Excusion Engine)
-        - 인터프리터 : 바이트코드를 한 줄씩 해석
-        - JIR 컴파일러 : 반복 실행되는 코드를 네이티브로 변환
-        - GC 모듈 : 힙에서 사용하지 않는 객체 탐지 및 정리
-- JVM 동작 흐름
-    1.	소스 코드(.java)를 javac로 컴파일 → 바이트코드(.class)
-    2.	클래스 로더가 바이트코드 로딩
-    3.	**바이트코드 검증(Bytecode Verifier)** 으로 안전성 검사
-    4.	실행 엔진에서 인터프리트 또는 JIT 컴파일 후 실행
-    5.	런타임에 필요 시 GC로 메모리 정리
-- JVM 장점
-    - 플랫폼 독립성 : "Write Once, Run Anywhere"
-    - 안정성 : 바이트코드 검증으로 잘못된 메모리 접근 방지
-    - 자동 메모리 관리 : 개발자가 직접 free/delete 하지 않아도 됨
-    - 성능 최적화 : JIT, GC 튜닝으로 고속 실행이 가능
+- 개념 및 정의
+  + 자바 바이트코드(.class) 실행을 위한 가상 컴퓨터
+  + 플랫폼 독립성 제공 → "Write Once, Run Anywhere"
+  + 메모리 관리, 실행 최적화(JIT), 자동 GC 수행
 
+- JVM 주요 역할
+  + 바이트코드 → 기계어 변환 및 실행
+  + 메모리 관리 (힙, 스택, 메타스페이스 등)
+  + GC(가비지 컬렉션) → 사용하지 않는 객체 회수
+
+- 구조
+  + ```text
+    JVM
+    ├── Class Loader (클래스 로딩)
+    ├── Execution Engine (실행 엔진)
+    │     ├─ Interpreter (한 줄씩 해석)
+    │     ├─ JIT Compiler (자주 쓰는 코드 → 네이티브 변환)
+    │     └─ GC (Garbage Collector)
+    └── Runtime Data Areas
+          ├─ Method Area (MetaSpace) → 클래스 정보, static 변수
+          ├─ Heap → new 객체 저장
+          ├─ Stack → 메서드 호출, 지역 변수 (스레드별)
+          ├─ PC Register → 현재 실행 주소
+          └─ Native Method Stack → JNI, 네이티브 호출
+
+    ```
+
+- JVM 동작 흐름
+  + 소스.java → javac → 바이트코드.class
+  + Class Loader 가 JVM 메모리에 적재
+  + Bytecode Verifier 안전성 검증
+    * Execution Engine 실행
+    * 인터프리터로 해석
+  + JIT으로 자주 실행되는 코드 최적화 → 네이티브 코드 변환
+
+- JVM 내부구조
+  + | 영역                      | 설명                        |
+    | ----------------------- | ------------------------- |
+    | Method Area (MetaSpace) | 클래스, static, 상수 풀         |
+    | Heap                    | 객체(new) 저장                |
+    | Stack                   | 메서드 호출, 지역 변수 (스레드별)      |
+    | PC Register             | 현재 실행 중인 바이트코드 주소         |
+    | Native Method Stack     | JNI, C/C++ 같은 네이티브 메서드 호출 |
+
+- JVM 장점
+  + 플랫폼 독립성: OS와 무관
+  + 메모리 자동 관리 (GC)
+  + 안정성 (검증된 바이트코드만 실행)
+  + 최적화 (JIT, GC 튜닝)
+
+- 면접 관련 질문
+  + JVM 메모리 구조 설명해보세요. (힙/스택/메타스페이스 차이 강조)
+  + JIT 컴파일러는 무엇이고 왜 필요한가요?
+    * 인터프리터 단점 보완, 자주 실행되는 코드 최적화
+  + GC는 어떻게 동작하나요? (Stop-the-world, Young/Old Gen 개념)
+  + JVM과 JRE, JDK 차이점은?
+    * JDK = 개발 키트 (JRE + 컴파일러)
+    * JRE = 실행 환경 (JVM + 라이브러리)
+    * JVM = 실행 엔진
 
 
 ---

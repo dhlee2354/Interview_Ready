@@ -797,6 +797,7 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 ---
 
+
 ### JVM (Java Virtual Machine)
 - 개념 및 정의
   + 자바 바이트코드(.class) 실행을 위한 가상 컴퓨터
@@ -864,42 +865,82 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 ### volatile
 - 개념
-  + 사전적 의미로 `휘발성`을 뜻함
-  + 변수의 값이 여러 쓰레드 간에 공유됨을 보장하는 키워드
-  + 메인 메모리와 스레드 로컬 메로리 간의 동기화 문제 해결
+  + volatile 변수는 메인 메모리와 스레드 캐시 간의 동기화를 보장
+  + 변수의 가시성(visibility) 은 보장하지만, 원자성(atomicity) 은 보장하지 않음
+  + JMM (Java Memory Model) 에서 happens-before 관계 보장
+
 - 필요한 이유?
-  + Java 에선 각 스레드가 자기만의 캐시를 유지함 → 변수 값이 다른 스레드에 반영 안 될 수 있음
-  + 변수 읽기 시 메인 메모리부터 직접 읽어옴
-  + 변수 쓰기 시 메인 메모리에 적용(캐시 패싱)
+  + Java에서 각 스레드는 자신만의 캐시(레지스터/CPU 캐시) 에 변수를 복사해 사용
+  + → 메인 메모리 값과 불일치 발생 가능 (가시성 문제)
+  + ```java
+    class Example {
+      private static boolean running = true;
+
+      public static void main(String[] args) throws Exception {
+        new Thread(() -> {
+            while (running) { } // running 값이 캐시에 갇히면 무한 루프
+        }).start();
+
+        Thread.sleep(1000);
+        running = false; // 메인 스레드에서 종료 신호
+      }
+    }
+    ```
+  + volatile 로 선언하면 무한 루프 정상 종료됨
+
 - 언제 쓰면 좋을까?
-  + Flag 변수 (true/false) 가 있는 경우
+  + 상태 플래그, 완료 여부, stop 신호 같은 단순 boolean 변수
+  + Double-checked locking 패턴 (Singleton)
+  + ```java
+    class Singleton {
+      private static volatile Singleton instance;
+
+      private Singleton() {}
+
+      public static Singleton getInstance() {
+        if (instance == null) {
+          synchronized (Singleton.class) {
+            if (instance == null) {
+              instance = new Singleton(); // 안전하게 보장
+              }
+          }
+        }
+        return instance;
+      }
+    }
+    ```
+
 - ❗주의할 점
   + 원자성 보장 X
-    * 원자성은 하나의 연산이 중단 없이 단일 동작처럼 수행되는 것
-    ```java
+  + ```java
     private volatile int count = 0;
     public void increment() {
         count++;
     }
     ```
-    * count++ 는 count 읽기, +1 하기, count 쓰기 3단계로 나뉘기에 여러 쓰레드가 동시 접근 시 값이 꼬일 수 있음
-  + Thread-Safe X
-    * 여러 스레드가 동시에 접근해도 결과가 일관되고 에러 없이 작동하는 상태
-    * 변수의 최신값은 공유되지만 그 값에 대해 경쟁조건은 방지하지 못함
-  + 그럼 어떻게?
-    ```java
-    private volatile int count = 0;
-    public synchronized void increment() {
-        count++;
-    }
-    
-    private AtomicInteger count = new AtomicInteger();
+  + 해결책 
+    * synchronized 사용
+    * AtomicInteger 등 java.util.concurrent.atomic 패키지 사용
+    * ```java
+      private AtomicInteger count = new AtomicInteger();
 
-    public void increment() {
-        count.incrementAndGet(); // 원자적으로 증가
-    }
-    ```
-    + volatile + synchronized 를 쓰거나 AtomicInteger 클래스 사용 필요
+      public void increment() {
+        count.incrementAndGet(); // 원자적 연산
+      }
+      ```
+  
+- 면접 관련 질문
+  + volatile과 synchronized의 차이?
+    * volatile → 가시성 보장 (최신 값 공유)
+    * synchronized → 가시성 + 원자성 + mutual exclusion(상호 배제)
+    * 단순 flag → volatile
+    * 복잡한 연산 → synchronized or Atomic 클래스
+  + volatile은 원자성을 보장하나요?
+    * ❌ NO. count++ 같은 복합 연산은 여전히 경쟁 조건 발생
+    * → AtomicInteger 같은 CAS 기반 원자 연산 필요
+  + volatile을 사용하는 대표 사례는?
+    * boolean running 같은 플래그 변수
+    * Double-checked locking Singleton 패턴
 
 
 ---

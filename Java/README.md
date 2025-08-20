@@ -948,106 +948,85 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 ### final 키워드
 - 개념
-  + 자바에서 final 키워드는 **변경 될 수 없음**을 나타내는 비 접근 제어자 입니다.
-  + 이 키워드는 변수, 메서드, 클래스에 적용 될수 있으며, 각각의 경우에 다른 의미를 가집니다.
+  + final = "더 이상 바꿀 수 없음" 을 명시하는 키워드
+  + 적용 대상: 변수 / 메서드 / 클래스 → 각각 다른 의미
 
 - final 변수
-  + 의미
-    * 한번 초기화되면 그 값을 절대 변경할 수 없는 상수가 됩니다.
-
-  + 초기화
-    * 선언 시점에 초기화 해야합니다.
-    * 생성자 내에서 초기화 할 수 있습니다.
-    * static 블록 내에서 초기화 할 수 있습니다.
-
-  + 특징
-    * final로 선언된 변수는 제할당이 불가능합니다.
-    * 만약 final 변수가 객체를 참조하고 있다면, 
-      그 참조 자체는 변경할 수 없지만, 참조하는 객체의 내부 상태는 별경 될 수 있습니다.
-
-  + 소스 예제
-    ```java
+  + 한번 초기화 → 값 변경 불가
+  + 초기화 방법
+    * 선언과 동시에 초기화
+    * 생성자에서 초기화 (인스턴스 변수)
+    * static 블록에서 초기화 (클래스 변수)
+  + ```java
     class MyClass {
-          final int MAX_VALUE = 100; // 선언과 동시에 초기화
-          final String GREETING;
-          static final double PI = 3.14159;
-    
-          public MyClass(String greeting) {
-              this.GREETING = greeting; // 생성자에서 초기화
-          }
-    
-          public void doSomething() {
-              // MAX_VALUE = 200; // 컴파일 오류! final 변수는 재할당 불가
-              // GREETING = "Hello"; // 컴파일 오류!
-          }
+      final int MAX_VALUE = 100; // 선언과 동시에 초기화
+      final String GREETING;
+      static final double PI = 3.14159;
+
+      public MyClass(String greeting) {
+          this.GREETING = greeting; // 생성자에서 초기화
       }
+
+      public void doSomething() {
+          // MAX_VALUE = 200; // 컴파일 오류! final 변수는 재할당 불가
+          // GREETING = "Hello"; // 컴파일 오류!
+      }
+    }
+    ```
+  + 참조 타입 final 변수
+    * 참조 변경 불가 (다른 객체를 가리킬 수 없음)
+    * 하지만 참조된 객체의 내부 상태는 변경 가능
+    * ```java
+      final List<String> list = new ArrayList<>();
+      list.add("hello");   // ✅ 가능 (리스트 내부 변경)
+      // list = new ArrayList<>(); // ❌ 불가 (참조 변경)
       ```
 
 - final 메서드
-  + 의미
-    * 하위 클래스에서 해당 메서드를 오버라이드 할 수 없도록 만듭니다.
-
-  + 목적
-    * 메서드의 구현을 변경하지 못하도록 하여, 핵심적인 동작을 보장하고 싶을 때 사용합니다.
-    * 상속 계층 구조에서 특정 메서드의 동작 일관성을 유지하고 싶을 때 사용합니다.
-
-  + 소스 예제
-  ```java
-  class Animal {
-        final void makeSound() {
-            System.out.println("동물 소리");
-        }
+  + 오버라이딩 불가
+  + 의도: 핵심 로직 보호, 일관성 유지
+  + ```java
+    class Animal {
+      final void makeSound() {
+        System.out.println("동물 소리");
+      }
     
-        void eat() {
-            System.out.println("먹는다");
-        }
+      void eat() {
+        System.out.println("먹는다");
+      }
     }
     
     class Dog extends Animal {
-        // @Override
-        // void makeSound() { // 컴파일 오류! final 메서드는 오버라이드 불가
-        //     System.out.println("멍멍");
-        // }
-    
-        @Override
-        void eat() {
-            System.out.println("사료를 먹는다"); // 오버라이드 가능
-        }
+    // ❌ 컴파일 오류 (sound() 오버라이딩 불가)
+    // @Override
+    // void sound() { System.out.println("멍멍"); }
     }
-  ```
+    ```
 
 - final 클래스
-  + 의미
-    * 해당 클래스를 상속할 수 없도록 만듭니다.
-    * 다른 클래스가 이 클래스를 부모 클래스로 사용할 수 없습니다.
-
-  + 목적
-    * 클래스의 구현을 완전하게 만들고, 더 이상 확장될 필요가 없다고 판단될 때 사용합니다.
-    * 보안상의 이유로 클래스의 변경을 막고 싶을 때 사용합니다.
-
-  + 소스 예제
-  ```java
-  final class SecureData {
-        private String data;
-    
-        public SecureData(String data) {
-            this.data = data;
-        }
-    
-        public String getData() {
-            return data;
-        }
-    }
-    
-    // class MoreSecureData extends SecureData { // 컴파일 오류! final 클래스는 상속 불가
-    //     // ...
-    // }
-  ```
+  + 상속 불가
+  + 의도: 더 이상 확장할 필요 없는 클래스, 보안/불변 보장
+  + ```java
+    final class String { ... } // 실제 JDK의 String 클래스도 final
+    ```
   
 - final 키워드 사용의 이점
-  + 불변성 확보 : final 변수를 사용하여 객체의 상태를 변경 불가능하게 만들 수 있습니다.
-  + 보안 강화 : final 클래스나 메서드를 사용하여 의도치 않은 변경이나 확장을 막아 시스템의 보안을 강화할 수 있습니다.
-  + 설계 명확성 : final 키워드를 사용함으로써 해당 요소가 변경되거나 확장되지 않음을 명시적으로 표현하여 코드의 의도를 더 명확하게 전달 할 수 있습니다.
+  + 불변성 확보 → 버그 예방, thread-safe한 객체 설계 용이
+  + 보안 강화 → 상속이나 재정의로 인한 의도치 않은 동작 변경 방지
+  + 의도 명확 → "이건 바뀌지 않는다"를 코드 차원에서 전달 가능
+  + 성능 최적화 힌트 → JIT 컴파일러가 final 필드를 상수처럼 다룰 수 있음
+
+- 면접 관련 질문
+  + final 변수와 참조 타입 차이 설명 가능?
+    * 참조는 바꿀 수 없지만 객체의 내부 상태는 변경 가능
+  + final, finally, finalize 차이점은?
+    * final → 변경 불가 (변수/메서드/클래스)
+    * finally → 예외 처리 시 무조건 실행되는 블록
+    * finalize() → GC가 객체 회수 직전에 호출하는 메서드 (Java 9부터 deprecated)
+  + final 메서드와 private 메서드 차이?
+    * private 메서드도 사실상 오버라이딩 불가 → 묵시적으로 final
+    * 하지만 private은 접근 제한, final은 오버라이딩 제약이라는 의미 차이 있음
+
 
 ---
 

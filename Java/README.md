@@ -1361,67 +1361,64 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 ---
 
 
-
-
 ### throw/throws
 - throw vs throws 의 차이
-   * | 구분    | throw             | throws                |
-             |-------|-------------------|-----------------------|
-      | 역할    | 예외를 **직접 발생**시킴   | 예외를 **메서드 선언부에서 위임**함 |
-      | 위치    | 메서드 **본문 내부**     | 메서드 **선언부** ( () 뒤에 ) |
-      | 예외 개수 | **하나의 예외**만 사용 가능 | 여러개 예외를 ,로 나열 가능      |
-      | 사용대상  | Exception 개체      | Exception 클래스 명       |
+  + | 구분     | **throw**             | **throws**           |
+    | ------ | --------------------- | -------------------- |
+    | **역할** | 예외 **객체를 직접 발생**      | 예외를 **메서드 선언부에서 위임** |
+    | **위치** | 메서드 **본문 내부**         | 메서드 **선언부 (매개변수 뒤)** |
+    | **개수** | 한 번에 **하나만**          | 여러 개 나열 가능 (`,`로 구분) |
+    | **대상** | Exception **객체 인스턴스** | Exception **클래스 타입** |
 
-1. throw (예외를 직접 발생시킴)
-   - 특정 조건에서 **예외 개체를 new 해서** 직접 던지는 것
-   - 반드시 Throwable의 하위 클래스만 가능
-   - 문법
-     ```java
-        throw new 예외객체;
-     ```
-   - 예제
-     ```java
-        public void checkAge(int age) {
-            if (age < 18) {
-                throw new IllegalArgumentException("나이는 18세 이상이어야 합니다.");
-            }
-        }
-     ```
-     + 예외 객체를 new 해서 직접 던지는 것 = throw
-
-2. throws (예외를 위로 전달)
-   - 해당 메서드에서 발생할 수 있는 **예외를 호출자에게 떠넘기는 것**
-   - 메서드 선언부에 사용
-   - 문법
-     ```java
-        public void 메서드명() throws 예외클래스 { ... }
-     ```
-   - 예제
-     ```java
-        public void readFile(String path) throws IOException {
-            FileReader fr = new FileReader(path);
-        }
-     ```
-     + IOException이 발생할 수 있으니, 호출한 곳에서 처리하게 throws로 명시
-
-3. 함께 사용하는 예
-   ```java
-      public void read(String path) throws IOException {
-            if (path == null) {
-                throw new IllegalArgumentException("경로는 null일수 없습니다.");
-            }
-   
-            throw new IOException("파일을 읽을 수 없습니다.");
+- throw (예외 발생 시키기)
+  + 예외 객체를 new 해서 직접 던짐
+  + 반드시 Throwable 하위 클래스만 가능
+  + ```java
+    public void checkAge(int age) {
+      if (age < 18) {
+        throw new IllegalArgumentException("나이는 18세 이상이어야 합니다.");
       }
-   ```
-   + throw -> 실제 예외를 던짐
-   + throws -> 예외가 발생할 수 있으니 호출자에게 책임을 넘
+    }
+    ``` 
+  
+- throws (예외 위임하기)
+  + throws (예외 위임하기)
+  + 해당 메서드에서 발생 가능한 예외를 호출자에게 책임 전가
+  + Checked Exception의 경우 필수적으로 명시해야 함
+  + ```java
+    public void readFile(String path) throws IOException {
+      FileReader fr = new FileReader(path);
+    }
+    ```
 
-4. checked vs Unchecked
-   * | 구분           | 설명                           | 예시                        |
-                  |--------------|------------------------------|---------------------------|
-     | checked 예외   | 반드시 throws 또는 try-catch 필요   | IOException, SQLException |
-     | Unchecked 예외 | Runtime-Exception 계열 - 생략 가능 | NullPointerException, IllegalArgumentException    |
+- 함께 사용하는 예
+  + ```java
+    public void read(String path) throws IOException {
+      if (path == null) {
+        throw new IllegalArgumentException("경로는 null일 수 없습니다."); // Unchecked
+      }
+      throw new IOException("파일을 읽을 수 없습니다."); // Checked
+    }
+    ``` 
+  + throw -> 실제 예외 객체 던짐
+  + throws -> 메서드가 해당 예외를 던질 수 있음을 명시
+  
+- checked vs Unchecked
+  + | 구분                      | 설명                                | 예시                                                 |
+    | ----------------------- | --------------------------------- | -------------------------------------------------- |
+    | **Checked Exception**   | 반드시 `throws` 또는 `try-catch` 필요    | `IOException`, `SQLException`                      |
+    | **Unchecked Exception** | `RuntimeException` 계열 → 명시 안 해도 됨 | `NullPointerException`, `IllegalArgumentException` |
+
+- 면접 관련 질문
+  + throw와 throws 차이는?
+    * throw는 예외 객체를 던지는 것,
+    * throws는 예외를 메서드 선언부에서 위임하는 것
+  + Checked Exception과 Unchecked Exception 차이는?
+    * Checked는 컴파일 시점에 강제 처리, throws 필요
+    * Unchecked는 런타임 시 발생, 선택적 처리
+  + 왜 Checked Exception이 존재할까?
+    * 반드시 예외 처리를 강제해 안정성 확보
+    * 단, 과도하면 코드 복잡성 증가 → 실무에서는 Unchecked(Exception wrapping) 방식 많이 씀 (Spring도 대부분 런타임 예외로 변환) 
 
 
 ---

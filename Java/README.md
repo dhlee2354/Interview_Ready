@@ -1664,78 +1664,81 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 
 ### object 클래스
-- java.lang.Object는 **Java의 모든 클래스가 암묵적으로 상속받는 최상위 클래스**
-```java
+- 정ㅢ
+  + Java의 모든 클래스가 암묵적으로 상속받는 최상위 클래스
+  + extends Object는 자동으로 포함됨
+  + ```java
     class Person {
-        // 암묵적으로 extends Object가 포함
+        // 컴파일 시 자동으로 extends Object가 포함
     }   
-```
+    ```
 
-1. 사용 이유
-   - 모든 객체를 **동일한 타입(object)**으로 다룰수 있게 하기 위해 사용
-   - equals(), hashCode(), toString() 같은 **기본 동작을 모든 객체에게 제공**하기 위해 사용
+- 사용 이유
+  + 모든 객체를 동일하게 다루기 위함
+    * → 다형성(polymorphism) 기반: 모든 객체를 Object 타입으로 처리 가능
+  + 공통 기능 제공
+    * equals(), hashCode(), toString() 같은 메서드 기본 제공 
 
-2. 주요 메서드 정리
-   + | 메서드                           | 설명                            | 
-           |-------------------------------|-------------------------------|
-     | equals(Object obj)            | 객체 동등성 비교                     | 
-     | hashCode()                    | 객체 고유 정수값 반환 (해시 구조에 사용)      | 
-     | toString()                    | 객체를 문자열로 표현                   | 
-     | getClass()                    | 클래스 정보를 담은 Class 객체 반환        | 
-     | clone()                       | 객체 복제 (얕은 복사, Clonable 구현 필요) | 
-     | finalize()                    | 객체가 GC될 때 호출되는 종료 처리용 메서드     | 
-     | wait(), notify(), notifiAll() | 스레드 동기화 지원 (멀티 스레드 관련)        | 
+- 주요 메드 정리
+  + | 메서드                             | 설명                   | 비고                                  |
+    | ------------------------------- | -------------------- | ----------------------------------- |
+    | `equals(Object obj)`            | 객체의 동등성 비교           | 기본은 `==` (참조 비교), 필요 시 오버라이딩        |
+    | `hashCode()`                    | 객체 해시값 반환            | 해시 기반 컬렉션(`HashMap`, `HashSet`)에 필요 |
+    | `toString()`                    | 객체 문자열 표현            | 기본: "클래스명@해시코드"                     |
+    | `getClass()`                    | 런타임 클래스 정보 반환        | Reflection에 자주 사용                   |
+    | `clone()`                       | 객체 복제 (얕은 복사)        | `Cloneable` 인터페이스 필요                |
+    | `finalize()`                    | GC 직전 호출(Deprecated) | 자바 9 이후 사용 X                        |
+    | `wait(), notify(), notifyAll()` | 스레드 동기화              | 동기화된 블록 내에서만 호출 가능                  |
+ 
+- eqauls() & hashCode() 규약
+  + ```java
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Person)) return false;
+        Person other = (Person) obj;
+        return this.name.equals(other.name);
+    }
 
-3. eqauls() & hashCode()
-   ```java
-        @Override
-        public boolean eqauls (Object obj) {
-            if (!(obj instanceof Person)) return false;
-            Person other = (Person) obj;
-            return this.name.equals(other.name);
-        }
+    @Override
+    public int hashCode() {
+        return name.hashCode();  // equals와 일관성 유지
+    }
+    ```
+  + equals()가 true라면 → hashCode()는 반드시 동일해야 함
+  + hashCode()가 같다고 해서 반드시 equals()가 true인 것은 아님 
+
+- 사용 예시
+  + ```java
+    Person p1 = new Person("Bae");
+    Person p2 = new Person("Bae");
+
+    System.out.println(p1 == p2);           // false (주소 비교)
+    System.out.println(p1.equals(p2));      // true (논리적 비교)
+    System.out.println(p1.toString());      // "Person[name=Bae]"
+    ```
    
-        @Override
-        public int hashCode() {
-            return name.hashCode();     // equals와 hashCode는 반드시 함께!
-        }
-   ```
-   | 두 객체가 **논리적으로 같다고 판단**되면 hashCode()도 같아야 함 -> 항상 같이 오버라이드 함
+- Object 클래스와 인터페이스 비교
+  + | 항목    | Object 클래스      | 인터페이스       |
+    | ----- | --------------- | ----------- |
+    | 역할    | 모든 클래스의 최상위 구현체 | 행동 명세서 (규약) |
+    | 상속    | 단일 상속만 가능       | 다중 구현 가능    |
+    | 자동 포함 | 모든 클래스에 자동 상속   | 명시적 구현 필요   |
 
-4. 사용 예시
-   ```java
-        Person p1 = new Person("Bae");
-        Person p2 = new Person("Bae");
-   
-        System.out.println(p1 == p2);           // false (주소 비교)
-        System.out.println(p1.equals(p2));      // true (논리적 비교)
-        System.out.println(p1.toString());      // "Person[name=Bae]"
-   ```
-   
-5. Object 클래스와 인터페이스 비교
-   + | 항목       | Object 클래스     | 인터페이스                  |
-     |----------|----------------|------------------------|
-     | 역할       | 최상위 구현 클래스     | 행동 명세서                 |
-     | 상속 방식    | 단일 상속 (1개만 가능) | 다중 구현 가능               |
-     | 자동 상속 여부 | 모든 클래스에 자동 상속  | 명시적 구현 필요 (implements) |
-
-5. 요약
-   + | 항목       | 설명                                          | 
-                |----------|---------------------------------------------|
-     | 클래스 명    | java.lang.Object                            | 
-     | 역할       | Java 모든 클래스의 최상위 클래스                        | 
-     | 핵심 메서드   | toString(), eqauls(), hashCode(), clone() 등 | 
-     | 주 용도     | 기본 기능 제공 + 다형성 지원                           | 
-     | 자주 오버라이딩 | toString, equals, hashCode                  | 
-
-6. 면접 질문
-   + equals() 와 == 의 차이는 무엇인가요?
-        + == : 주소 비교 (레퍼런스 비교)
-        + equals() : 논리적 비교 (값이 같은지 비교)
-   + equals()와 hashCode()는 왜 같이 오버라이딩 해야하나요?
-        + equals()가 같으면 hashCode()도 같아야 해시 기반 자료구조 (Map, Set 등)에서 정상 작동하기 때문입니다. 
-   + toString()을 왜 오버라이딩 해야하나요?
-        + 객체 정보를 출력하거나 디버깅할 때 **사람이 읽을 수 있는 문자열**로 나타내기 위해서 입니다.
+- 면접 관련 질문
+  + == vs equals() 차이?
+    * == → 참조 비교 (주소값)
+    * equals() → 논리적 동등성 비교 (값), 필요시 오버라이딩
+  + equals()와 hashCode()를 왜 같이 오버라이딩해야 할까?
+    * HashMap, HashSet 같은 해시 기반 컬렉션에서
+      1. hashCode() → 객체의 버킷 위치 결정
+      2. equals() → 버킷 내에서 실제 동등성 비교
+    * 둘 중 하나만 오버라이딩하면 데이터 불일치 발생 가능
+  + toString()을 오버라이딩하는 이유?
+    * 디버깅, 로깅 시 사람이 읽기 좋은 문자열 제공
+    * 기본 구현은 클래스명@해시코드라 가독성이 떨어짐
+  + finalize()는 왜 Deprecated 되었나?
+    * GC 실행 시점 불확실, 성능 저하/리소스 누수 문제
+    * 대안: try-with-resources 또는 Cleaner API 사용 
 
 
 ---

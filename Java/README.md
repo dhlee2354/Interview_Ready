@@ -1664,7 +1664,7 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
 
 
 ### object 클래스
-- 정ㅢ
+- 정의
   + Java의 모든 클래스가 암묵적으로 상속받는 최상위 클래스
   + extends Object는 자동으로 포함됨
   + ```java
@@ -1749,6 +1749,10 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
   + Java에서 객체의 순서를 비교하고 정렬하는 데 사용되는 두 가지 주요 인터페이스는 **Comparable과 Comparator**입니다. 
   + 이 둘은 비슷한 목적을 가지지만, 사용 방식과 적용 상황에 차이가 있습니다.
 
+- 공통점
+  + 둘 다 객체 정렬 기준을 정의하는 인터페이스
+  + 정렬 메서드(Collections.sort, Arrays.sort) 또는 정렬 컬렉션(TreeSet, TreeMap)에서 사용 
+
 - Comparator<T> 인터페이스
   + 목적
     * 객체의 **"외부적인 정렬 기준"**을 정의합니다. 
@@ -1798,8 +1802,34 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
     | 패키지      | java.lang                      | java.util                                    | 
     | 클래스 수정   | 원본 클래스 코드 수정 필요           | 원본 클래스 코드 수정 불필요                       | 
     | 사용 시점    | Collections.sort(list) (자동 사용)| Collections.sort(list, comparator) (명시적 전달)  |
-        + 객체 정보를 출력하거나 디버깅할 때 **사람이 읽을 수 있는 문자열**로 나타내기 위해서 입니다.  
+        
+- Java 8 이후 Comparator 개선
+  + 람다식과 메서드 참조로 간결해짐
+    * ```java
+      list.sort(Comparator.comparing(Person::getName)); // 이름 오름차순
+      list.sort(Comparator.comparingInt(Person::getAge).reversed()); // 나이 내림차순
+      ```  
+  + 복합 정렬 지원
+    * ```java
+      list.sort(
+        Comparator.comparing(Person::getName)
+                  .thenComparing(Person::getAge)
+      );
+      ``` 
 
+- 면접 관련 질문
+  + Comparable과 Comparator 차이는?
+    * Comparable → 클래스 자체에 "자연스러운 순서" 정의
+    * Comparator → 외부에서 다양한 정렬 기준 제공 가능
+  + TreeSet이나 TreeMap은 어떤 걸 사용할까?
+    * 기본적으로 Comparable 사용 (compareTo)
+    * Comparator를 생성자에 넘겨주면 해당 기준으로 정렬 유지
+  + 왜 Comparable은 하나만 정의 가능할까?
+    * "자연 순서"는 본질적으로 하나만 존재해야 하기 때문
+    * 여러 기준이 필요하다면 Comparator 사용
+  + Comparator와 Comparable을 동시에 사용할 수 있을까?
+    * 가능. 기본 정렬은 Comparable 기준을 따르고,
+    * 필요에 따라 Comparator를 전달해 다른 기준으로도 정렬 가능 
 
 
 ---

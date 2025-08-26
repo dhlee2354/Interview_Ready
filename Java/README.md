@@ -2335,6 +2335,15 @@ Java 언어의 기초 문법부터 객체지향, 멀티스레드, 컬렉션 등 
     | 주된 원인      | 예측 가능하고 복구 가능한 외부 요인 (파일 없음, 네트워크 오류 등)| 프로그래밍 오류, 논리적 실수 (null 참조, 배열 범위 초과 등) | 
     | 처리 방식      | 예외를 잡아서 복구하거나, 호출한 곳으로 전파하여 처리 위임     | 주로 코드 수정을 통해 예방, 필요시 try-catch 사용      |
 
+- 면접 질문
+  + Checked Exception과 Unchecked Exception의 가장 큰 차이점은 무엇인가요?
+    * 컴파일 시점의 예외 처리 강제 여부입니다. Checked Exception은 반드시 예외 처리를 해야 컴파일이 되고, Unchecked Exception은 그렇지 않습니다.
+  + Checked Exception을 처리하는 두 가지 방법은 무엇인가요?
+    * try-catch 블록으로 직접 처리하거나, throws 키워드를 사용하여 메서드를 호출한 쪽으로 예외 처리를 위임하는 방법이 있습니다.
+  + Kotlin에서는 Checked Exception을 어떻게 다루나요? Java와 어떤 차이가 있나요?
+    * Kotlin은 모든 예외를 Unchecked Exception처럼 취급합니다. 
+      throws 키워드로 예외를 선언할 필요가 없으며, try-catch로 예외를 처리하는 것도 필수가 아닙니다. 
+      Checked Exception이 때로는 과도한 보일러플레이트 코드를 유발한다는 판단 때문입니다.
 
 ---
 

@@ -132,19 +132,59 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 ### Content Provider
 - 정의
-  + Content Provider는 애플리케이션이 자신의 데이터를 다른 애플리케이션과 안전하게 공유할 수 있도록 관리하는 컴포넌트 입니다.
-  + 데이터는 파일 시스템, SQLite 데이터베이스, 웹 또는 애플리케이션이 접근할 수 있는 다른 영구 저장 위치에 저장될 수 있습니다.
+  + 안드로이드 4대 컴포넌트 중 하나
+  + 앱 간 데이터 공유 표준 인터페이스
+  + SQLite, 파일, 네트워크 등 내부 저장소 구조를 숨기고 통일ㅚㄴ CRUD API로 제공
 
-- 데이터 공유
-  + 애플리케이션 간에 구조화된 데이터를 공유하기 위한 표준 인터페이스를 제공합니다.
-  + 안드로이드 시스템의 주소록, 미디어 스토어 등은 Content Provider를 통해 다른 앱에 데이터를 제공합니다.
+- 주요 역할
+  + 데이터 공유: 다른 앱이 표준 인터페이스로 데이터 접근
+  + 데이터 캡슐화: 내부 저장 방식(파일/DB 등) 노출 X
+  + 접근 제어: 퍼미션 기반 권한 관리 (READ_CONTACTS, WRITE_CONTACTS 등)
+  + CRUD 제공: query, insert, update, delete, getType 
+  
+- 핵심 구성 요소
+  + Content URI
+    * content://<authority>/<path>/<id>
+      1. authority: ContentProvider의 고유 이름 (AndroidManifest에 등록)
+      2. path: 테이블/데이터 종류
+      3. id(optional): 특정 row 식별
+    * content://contacts/people/3
+      1. contacts authority의 people 테이블에서 ID=3 레코드 
+  + ContentResolver
+    * 다른 앱에서 Content Provider 접근 시 사용하는 클라이언트 API 
+    * ```kotlin
+      val cursor = contentResolver.query(
+        ContactsContract.Contacts.CONTENT_URI,
+        null, null, null, null
+      )
+      ```
+    * 앱은 직접 Provider에 접근하지 않고 ContentResolver → ContentProvider 경유
+ 
+- 표준 CRUD 메서드
+  + | 메서드         | 역할                   |
+    | ----------- | -------------------- |
+    | `query()`   | 데이터 조회 (`Cursor` 반환) |
+    | `insert()`  | 새로운 데이터 추가           |
+    | `update()`  | 기존 데이터 수정            |
+    | `delete()`  | 데이터 삭제               |
+    | `getType()` | 특정 URI의 MIME 타입 반환   |
+  
+- 실무 예시
+  + 안드로이드 기본 앱
+    * 연락처 (ContactsContract)
+    * 캘린더 (CalendarContract)
+    * 미디어 파일 (MediaStore)
+  + 우리 앱에서 직접 구현
+    * DB 데이터를 외부 앱과 공유해야 할 때
+    * 예: 메신저 앱이 content://messenger/chat/1 URI로 채팅 데이터 노출
 
-- 데이터 캡슐화
-  + 데이터의 실제 저장 방식을 숨기고, 추상화된 인터페이스를 통해 데이터에 접근 하도록 합니다.
-  + 데이터 저장 방식이 변경되더라도 다른 앱의 코드에 영향을 주지 않고 데이터를 제공할 수 있습니다.
-
-- 데이터 접근제어
-  + 읽기/쓰기 권한을 세밀하게 제어하여 다른 애플리케이션이 데이터에 접근하는 것을 허용하거나 제한할 수 있습니다.
+- 비교
+  + | 항목 | Activity/Fragment | ContentProvider |
+    | -- | ----------------- | --------------- |
+    | 목적 | UI 제공             | 데이터 공유          |
+    | 실행 | 명시적/암시적 Intent    | Content URI     |
+    | 권한 | Intent-filter 기반  | 퍼미션 기반 접근 제어    |
+ 
 
 - 표준 CRUD 인터페이스
   + 데이터를 조작하기 위한 표준 메서드 집합을 제공합니다.
@@ -161,14 +201,18 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
   + <path>: 프로아비더가 제공하는 데이터의 종류를 나타내는 경로
   + <optional_id>: 특정 레코드를 식별하기 위한 ID
 
-- ContentResolver
-  + 다른 애플리케이션은 ContentsResolver 객체를 사용하여 특정 콘텐츠 프로아비더와 상호작용합니다.
-  + 클라이언트는 ContentResolver의 메서드를 호출하고 ContentResolver는 해당 URI를 기반으로 적절한 콘텐츠 프로바이더를 찾아 요청을 전달 합니다.
-
-- 주의할 점
-  + 콘텐츠 프로바이더의 메서드(특히 query())는 시간이 오래 걸릴 수 있으므로, UI 스레드에서 직접 호출하면 ANR이 발생할 수 있습니다. 비동기적으로 처리해야 합니다.
-  + 데이터 공유 시 보안에 유의해야 합니다. 필요한 최소한의 권한만 부여하고, 민감한 정보는 신중하게 다루어야 합니다.
-  + 자신의 앱 내에서만 데이터를 사용하는 경우에는 굳이 콘텐츠 프로바이더를 만들 필요가 없을 수도 있습니다.
+- 면접 관련 질문
+  + Content Provider는 언제 직접 구현하나요?
+    * 내 앱 데이터를 다른 앱과 공유할 필요가 있을 때만
+    * 자기 앱 내부에서만 쓰면 Room/DB/Repository로 충분
+  + ContentResolver와 직접 DB 접근 차이는?
+    * ContentResolver는 앱 간 표준 인터페이스
+    * DB 접근은 내부 전용
+    * 즉, ContentProvider는 앱 간 데이터 추상화 계층
+  + Content Provider 성능 이슈 방지 방법은?
+    * query는 반드시 백그라운드 스레드에서 처리
+    * Cursor는 다 쓴 후 close()
+    * 필요한 최소한의 데이터만 projection
 
 
 ---

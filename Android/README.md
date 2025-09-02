@@ -220,26 +220,64 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 ### Service
 - 정의
-  + 서비스는 사용자와 직접적인 UI 상호작용 없이 백그라운드에서 오래 실행되는 작업을 수행하거나, 
-    다른 애플리케이션에 기능을 제공하기 위한 애플리케이션에 기능을 제공하기 위한 애플리케이션 컴포넌트 입니다.
+  + UI 없이 백그라운드에서 동작하는 컴포넌트
+  + Activity와 독립적인 생명주기 가짐
+  + 주로 오래 걸리는 작업, 장기 실행 작업, 앱 간 기능 제공 시 사용
 
-- 주요 특징 및 용도
-  + 백그라운드 작업
-    * 네트워크 트랜잭션 처리
-    * 음악 재생
-    * 백그라운드 데이터 동기화
-    * 위치 정보 업데이트
-  + UI 없음
-    * 서비스는 자체적인 사용자 인터페이스를 가지지 않습니다.
-  + 생명주기
-    * 액티비티와는 다른 독립적인 생명주기를 가집니다.
-  + 포그라운드 서비스
-    * 사용자에게 현재 실행 중임을 인지시켜야 하는 중요한 작업을 수행하는 서비스입니다.
-    * 반드시 상태 표시줄에 알림을 표시해야 합니다.
-    * 시스템이 메모리 부족 상황에서도 포그라운드 서비스를 쉽게 종료시키지 않습니다.
-    * 안드로이드 9 버전 이상에서는 포그라운드 서비스 실행시 FOREGROUND_SERVICE 권한이 필요합니다.
-  + 서비스는 기본적으로 애플리케이션의 메인 스레드에서 실행됩니다. 따라서 서비스 내에서 CPU를 많이 사용하거나 시간이 오래 걸리는 작업을 직접 수행하면 ANR 오류가 발생할 수 있습니다.
-  + 백그라운드 실행 제한 : 최신안드로이드 버전에서는 배터리 수명과 시스템 성능을 위해 백그라운드 서비스 실행에 제한이 강화되었습니다. 따라서 장기 실행 작업에서는 WorkManager와 같은 다른 솔루션을 고려하는 것이 좋습니다.
+- Service 종류
+  + | 구분                     | 설명                                              | 사용 예시                           |
+    | ---------------------- | ----------------------------------------------- | ------------------------------- |
+    | **Started Service**    | `startService()`로 시작 → `onStartCommand()` 실행    | 음악 재생, 파일 다운로드                  |
+    | **Bound Service**      | `bindService()`로 시작 → 클라이언트와 **IPC(프로세스 간 통신)** | 앱-서비스 간 데이터 교환, Messenger, AIDL |
+    | **Foreground Service** | 알림(Notification)을 동반해 실행, 시스템이 잘 안 죽임           | 음악 플레이어, 위치 추적, 피트니스 트래킹        |
+    | **Background Service** | UI 없이 실행되나, 최신 OS에서 제한 많음                       | (거의 사용 안 권장, WorkManager로 대체)   |
+ 
+ - Service 생명주기
+   + Started Service
+     * ```text
+       onCreate() → onStartCommand() → (실행 중) → onDestroy()
+       ``` 
+   + Bound Service 
+     * ```text
+       onCreate() → onBind() → (클라이언트와 통신) → onUnbind() → onDestroy()
+       ```  
+
+- Service 주요 메서드
+  + | 메서드                | 설명                                   |
+    | ------------------ | ------------------------------------ |
+    | `onCreate()`       | 서비스 최초 생성 시 1회 호출                    |
+    | `onStartCommand()` | `startService()` 호출 시 실행, 작업 시작      |
+    | `onBind()`         | `bindService()` 호출 시 실행, 통신 인터페이스 반환 |
+    | `onUnbind()`       | 마지막 클라이언트 연결 해제 시 호출                 |
+    | `onDestroy()`      | 서비스 종료 시 호출                          |
+ 
+- 서비스 실행 시 주의사항
+  + 메인 스레드에서 동작 → 무거운 작업 직접 실행 시 ANR 발생 가능
+    * HandlerThread, Executor, Coroutine, IntentService 사용
+  + 안드로이드 8.0(Oreo) 이상 제한
+    * 백그라운드에서 임의 실행 불가
+    * 반드시 Foreground Service 또는 JobScheduler / WorkManager 사용 필요
+  + 배터리 최적화
+    * Doze 모드, 앱 standby 모드에서 서비스가 제한될 수 있음
+    * 중요한 경우 setForegroundServiceType 활용 
+
+- 실무 활용 예시
+  + 음악 앱: Foreground Service + MediaSession API
+  + 메신저: Bound Service (앱 ↔ 서비스 양방향 통신)
+  + 위치 추적: Foreground Service + Notification
+  + 데이터 동기화: WorkManager (서비스 대체)
+
+- 면접 질문 포인트
+  + Service와 Thread 차이는 무엇인가요?
+    * Service는 안드로이드 컴포넌트로 생명주기 관리
+    * Thread는 자바 실행 단위일 뿐, 앱 종료 시 같이 사라짐
+    * Service 내부에서 별도의 Thread를 사용해야 함
+  + Foreground Service는 왜 알림(Notification)을 강제하나요?
+    * 사용자에게 명시적으로 실행 중임을 알려야 하기 때문
+    * 배터리 소모, 개인 정보 추적 같은 민감 작업에 투명성 보장
+  + 안드로이드 8.0 이상에서 백그라운드 서비스가 제한된 이유는?
+    * 배터리 수명, 시스템 성능 최적화를 위해
+    * 대체 기술: WorkManager, JobScheduler, Foreground Service
 
 
 ---

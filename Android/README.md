@@ -285,29 +285,63 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 ## 4대 컴포넌트 Activity
 - 정의
-  + 안드로이드에서 하나의 사용자 인터페이스 화면
-  + 사용자와 직접 상호작용하는 컴포넌트이며 UI를 구성하고 앱 흐름을 제어하는 기본 단위
+  + 앱에서 화면 하나를 담당하는 컴포넌트
+  + 사용자와 직접 상호작용(UI)
+  + UI 렌더링 + 이벤트 처리 + 앱 흐름 제어
+
 - 특징
-  + | 항목                     | 내용                                       |
-    | ---------------------- | ---------------------------------------- |
-    | **UI 구성 단위**           | 앱의 화면 하나가 하나의 Activity                   |
-    | **생명주기 존재**            | `onCreate()`부터 `onDestroy()`까지 상태 전환     |
-    | **명시적/암시적 인텐트로 호출 가능** | 다른 Activity나 앱 호출 가능                     |
-    | **Manifest 등록 필수**     | `AndroidManifest.xml`에 선언돼야 실행 가능        |
-    | **백스택 관리**             | `startActivity()` → 이전 Activity는 백스택에 저장 |
-    | **Context 역할 수행**      | 리소스 접근, 시스템 서비스 호출 가능                    |
+  + | 항목                 | 내용                                            |
+    | ------------------ | --------------------------------------------- |
+    | **UI 구성 단위**       | 앱의 화면 1개 = Activity 1개                        |
+    | **생명주기 존재**        | `onCreate()` \~ `onDestroy()`                 |
+    | **호출 방식**          | 명시적/암시적 Intent                                |
+    | **Manifest 등록 필수** | `AndroidManifest.xml`에 선언 필요                  |
+    | **백스택 관리**         | `startActivity()` 호출 시 이전 Activity는 백스택에 push |
+    | **Context 역할**     | 리소스 접근, 시스템 서비스 호출, 다른 컴포넌트 실행 가능             |
+
 - Intent
-  + 명시적(Intent Explicit) 특정 컴포넌트 지정
+  + 명시적(Intent Explicit)
     * ```kotlin
       val intent = Intent(this, DetailActivity::class.java)
       startActivity(intent)
       ```
-  + 암시적(Intent Implicit) 작업(Action)에 맞는 컴포넌트 자동 매칭
+  + 암시적(Intent Implicit)
     * ```kotlin
       val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://google.com"))
-      startActivity(intent)
+      startActivity(intent) // OS가 적절한 앱을 Finder
       ```
     * 링크를 띄울 수 있는 액션을 OS에서 받아 하단 Chooser 브라우저 목록 표시
+
+- Activity vs Fragment
+  + | 항목    | Activity | Fragment          |
+    | ----- | -------- | ----------------- |
+    | 실행 단위 | 독립 실행 가능 | Activity 내부에서만 실행 |
+    | 생명주기  | 독립적      | Activity에 종속      |
+    | 목적    | 전체 화면 관리 | 부분 화면, 동적 UI      |
+    | 재사용성  | 낮음       | 높음                |
+    | 관리 주체 | OS       | FragmentManager   |
+  + 👉 Fragment 장점
+    * 메모리 효율성 (View만 교체 가능)
+    * 재사용성 ↑ (다양한 Activity에서 호출 가능)
+    * 동적 UI 대응 (뷰페이저, 탭 등)  
+ 
+- Activity 메모리 누수 발생 상황
+  + 전역 static Context 보관
+  + Handler / Runnable 내부 클래스 참조
+  + 비동기 콜백 (Retrofit, RxJava) 완료 전 Activity 종료
+  + ViewBinding 해제 누락 (onDestroyView()에서 해제 필요)
+  + 👉 해결 방법
+    * WeakReference 사용
+    * lifecycleScope, LiveData 활용
+    * onDestroy()에서 해제 
+
+- Activity 화면 회전 시 상태 보존
+  + 기본 동작: Activity 재생성
+  + 해결 방법
+    * onSaveInstanceState() → Bundle 저장
+    * onCreate() or onRestoreInstanceState() → 복원
+    * ViewModel (구성 변경에도 데이터 유지)
+  
 - 면접 관련 질문
   + Activity 간 데이터 전달 방법?
     * Activity 간 데이터는 주로 Intent의 Extra를 통해 전달

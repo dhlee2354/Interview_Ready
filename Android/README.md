@@ -450,24 +450,24 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 ## PendingIntent
 - 정의
-  + 다른 앱 또는 시스템이 지정된 작업(Intent) 대신 실행할 수 있도록 허가하는 객체
-  + 알림(Notification), 알람(AlarmManager), 위젯(AppWidget), 브로드캐스트 예약 등에 쓰임
-  > Intent 캡슐화하여 나중에 다른 컴포넌트(시스템 또는 외부 앱)가 실행할 수 있도록 위임하는 객체
+  + `Intent`를 다른 앱/시스템이 대신 실행할 수 있도록 위임하는 객체
+  + 즉, "나중에 이 Intent 실행해줘"라고 OS나 외부 앱에 맡기는 역할
+  + 사용 예시: Notification, AlarmManager, AppWidget 등
 
 - 필요한 이유?
-  + 시스템이나 다른 앱이 내 앱의 Context 없이 특정 작업을 수행해야 할 때 사용
-  + AlarmManager, NotificationManager 같은 시스템 서비스는 앱의 Intent를 직접 실행할 수 없음
-  + 즉, 앱이 대신 실행해달라고 요청하는 형태로 감싸서 전달해야 함
+  + 보안 + Context 문제 해결
+    * 시스템 서비스(AlarmManager, NotificationManager)나 외부 앱은 직접 내 앱의 Intent를 실행할 권한이 없음
+    * PendingIntent는 "내 앱이 실행을 위임"한 것이라, 대신 실행 가능
+  + 실행 주체가 바뀌어도 내 앱의 권한(Context) 그대로 유지됨
 
 - 주요 사용 케이스
-  + | 상황                     | 사용 예                                |
-    | ---------------------- | ----------------------------------- |
-    | 알림 클릭 시 특정 Activity 열기 | `Notification`과 함께 사용               |
-    | 특정 시간에 알림 보내기          | `AlarmManager`에서 예약 시 사용            |
-    | 브로드캐스트 예약              | `PendingIntent.getBroadcast()` 사용   |
-    | 서비스 시작                 | `PendingIntent.getService()` 사용     |
-    | 앱 위젯에서 버튼 클릭 처리        | 위젯의 `RemoteViews`에 PendingIntent 연결 |
-  + PendingIntent 메소드에는 getActivity(), getService() 도 있음
+  + | 상황          | 예시                                         |
+    | ----------- | ------------------------------------------ |
+    | 알림 클릭 시     | Notification + PendingIntent.getActivity() |
+    | 특정 시간 작업 예약 | AlarmManager + PendingIntent               |
+    | 브로드캐스트 예약   | getBroadcast()                             |
+    | 서비스 실행      | getService()                               |
+    | 위젯 버튼 클릭    | RemoteViews.setOnClickPendingIntent()      |
 
 - 생성 방법
   + ```kotlin
@@ -504,9 +504,16 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
   + 보안을 위해 불필요하게 mutable한 Intent는 지양
 
 - 면접 관련 질문
-  + PendingIntent란 무엇이며, 왜 필요한가요?
-  + PendingIntent.FLAG_IMMUTABLE은 언제 사용하나요?
-  + PendingIntent.getActivity()와 getBroadcast()의 차이는?
+  + PendingIntent란 무엇이며 왜 필요한가요?
+    * Intent를 시스템/외부 앱이 대신 실행하도록 위임하는 객체
+    * 시스템 서비스가 내 앱 Context 없이 작업 실행 가능
+  + getActivity(), getBroadcast(), getService() 차이는?
+    * 실행 대상이 Activity냐 / BroadcastReceiver냐 / Service냐에 따라 다름
+  + FLAG_IMMUTABLE vs FLAG_MUTABLE?
+    * Immutable: Intent 수정 불가 (보안 ↑, 기본적으로 이걸 사용)
+    * Mutable: 시스템이 내용을 변경할 필요가 있을 때만 (예: Notification inline reply)
+  + 왜 Android 12 이상에서 반드시 명시해야 하나요?
+    * 보안 강화 목적. PendingIntent가 의도치 않게 수정돼 악용되는 것을 방지하기 위해
 
 
 ---

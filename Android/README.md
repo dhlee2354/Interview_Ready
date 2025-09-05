@@ -521,39 +521,78 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 ### Bundle
 - 정의
-  + key-value 쌍으로 데이터를 저장하고 전달하는 데 사용되는 핵심 클래스이며, 다양한 타입의 데이터를 담을 수 있습니다.
+  + Key-Value 기반 데이터 저장 객체
+  + Parcelable 구현 → 프로세스 간 통신(IPC)도 가능
+  + Android의 Activity, Fragment, Service, BroadcastReceiver, ContentProvider 등 모든 주요 컴포넌트 간 데이터 교환에 사용됨
 
-- Activity, Fragment 간 데이터 전달
-  + Intent 객체에 Bundle을 담아 다른 Activity로 데이터를 전달할 수 있습니다.
-  + Fragment를 생성할 때 arguments로 Bundle을 전달하여 초기 데이터를 넘겨줄 수 있습니다.
+- 사용 예시
+  + Activity <-> Activity
+    * ```kotlin
+      // 전송
+      val intent = Intent(this, DetailActivity::class.java)
+      val bundle = Bundle().apply {
+          putString("name", "Bae")
+          putInt("age", 30)
+      }
+      intent.putExtras(bundle)
+      startActivity(intent)
 
-- Activity, Fragment 상태 저장 및 복원
-  + 화면 회전과 같이 Activity나 Fragment가 시스템에 의해 재생성될때, onSaveInstanceState 콜백 메서드를 통해 현재 상태를 Bundle에 저장할 수 있습니다.
-  + 이후 onCreate나 onRestoreInstanceState 또는 onCreateView(), onViewCreated()에서 저장된 Bundle을 받아 상태를 복원할 수 있습니다.
+      // 수신
+      val name = intent.getStringExtra("name")
+      val age = intent.getIntExtra("age", 0)
+      ``` 
+  + Fragment 초기 데이터 전달
+    * ```kotlin
+      val fragment = MyFragment().apply {
+        arguments = Bundle().apply {
+            putString("title", "Hello Fragment")
+        }
+      }
 
-- Service와 데이터 교환
-  + Service에 데이터를 전달하거나 Service로부터 결과를 받을 때 Bundle을 사용할 수 있습니다.
+      // Fragment 내부
+      val title = arguments?.getString("title")
+      ``` 
+  + 상태 저장/복원
+    * ```kotlin
+      override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("count", counter)
+      }
 
-- 다양한 Android 컴포넌트 간 데이터 전달
-  + BroadcastReceiver가 브로드캐스트를 수신할 때 Intent에 포함된 Bundle을 통해 데이터를 받을 수 있습니다.
-  + ContentProvider를 통해 데이터를 전달할 때도 Bundle이 사용될 수 있습니다.
+      override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val restoredCount = savedInstanceState?.getInt("count") ?: 0
+      }
+      ``` 
+  + Service, Broadcast, ContentProvider
+    * Intent 내부 extras 로 전달 → 결국 Bundle이 사용됨 
 
-- Bundle의 주요 특징
-  + key-value 저장소 : 문자열 키를 사용하여 다양한 타입의 값을 저장합니다.
-  + 다양한 데이터 타입 지원 : String, int, long,boolean, float, double, char, byte, short와 같은 기본 타입뿐만 아니라,
-                         CharSequence, Parcelable, Serializable, 배열, ArrayList 등 다양한 객체 타입을 저장할 수 있습니다.
-  + Parcelable 인터페이스 : Bundle 자체는 Parcelable 인터페이스를 구현합니다. 이는 Bundle 객체가 프로세스 간 통신을 위해 효율적으로 직렬화될 수 있음을 의미합니다.
-                         안드로이드 시스템은 Parcelable을 사용하여 객체를 Intent에 담아 다른 컴포넌트로 전달하거나, 프로세스 경계를 넘어 데이터를 전송합니다.
-  + 데이터 크기 제한 : Bundle을 통해 전달되는 데이터의 크기에는 제한이 있습니다. 너무 큰 데이터를 Bundle에 담아 전달하려고 하면 TranscationTooLargeException이 발생할 수 있습니다.
-                   일반적으로 10KB에서 1MB 미만으로 유지하는 것이 좋습니다. 
+- 특징
+  + Key-Value 저장소
+  + 다양한 타입 지원 (primitive, String, CharSequence, Parcelable, Serializable, ArrayList 등)
+  + Parcelable 기반 직렬화 → 성능 좋음
+  + 데이터 크기 제한 있음
+  + 너무 큰 데이터 전달 시 TransactionTooLargeException 발생 (Binder 트랜잭션 한계, 보통 1MB 내외)
+  + 대용량 데이터는 File, DB, SharedPreferences 등으로 처리 후 경로만 전달하는 방식 추천
 
 - Bundle 사용 시 주의 사항
-  + null 체크 : Bundle에서 값을 꺼낼 때는 해당 키가 존재하지 않거나 값이 null일 수 있으므로, 항상 null체크를 하거나 기본값을 제공하는 함수(예 : getXX(key, defaultValue))를 사용 하는 것이 안전 합니다.
-  + 키 관리 : Bundle에 데이터를 넣고 뺄 때 사용하는 키 문자열은 정확히 일치해야 합니다. 오타를 방지하기 위해 상수로 정의하여 사용하는 것이 좋습니다.
-  + 데이터 타입 일치 : 데이터를 넣을 때 사용한 putType() 메서드와 꺼낼 때 사용한 getType()메서드의 데이터 타입이 일치 해야 합니다.
-  + Serializable vs Parcelable : 복잡한 객체를 Bundle에 담을 때 Serializable이나 Parcelable을 사용할 수 있습니다.
-    * Parcelable : 안드로이드에서 성능이 더 좋도록 특별히 설계되었으므로, 안드로이드 컴포넌트 간 데이터 전달에는 Parcelable 사용이 권장됩니다.
-    * Serializable : 구현이 더 간단하지만 리플렉션을 사용하기 때문에 성능이 상대적으로 느립니다.
+  + Null 안전성: get 계열 호출 시 항상 null 체크 or defaultValue 제공
+  + Key 관리: 하드코딩 지양 → object Keys { const val USER_NAME = "user_name" }
+  + 타입 일치: putInt() 했으면 반드시 getInt()로 꺼내야 함
+  + Serializable vs Parcelable
+    * Parcelable : 안드로이드 최적화된 직렬화, 빠름, 권장
+    * Serializable : 구현 간단하지만 리플렉션 기반, 느림
+
+- 면접 관련 질문
+  + Bundle과 Intent의 차이는?
+    * Intent는 컴포넌트 실행을 위한 "메시지 객체"
+    * Bundle은 그 안에서 데이터를 담는 "데이터 컨테이너"
+  + Serializable과 Parcelable 차이는?
+    * Serializable: 자바 표준 직렬화, 느림, 리플렉션 기반
+    * Parcelable: 안드로이드 전용 직렬화, 빠름, 직접 구현 필요
+  + Bundle에 큰 데이터 넣으면 어떻게 되나요?
+    * Binder 트랜잭션 한계(보통 1MB) 초과 시 TransactionTooLargeException 발생
+    * 큰 데이터는 파일, DB, 캐시에 저장하고 식별자(id, uri, path)만 전달
 
 
 ---

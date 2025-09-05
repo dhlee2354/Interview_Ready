@@ -521,39 +521,78 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 ### Bundle
 - 정의
-  + key-value 쌍으로 데이터를 저장하고 전달하는 데 사용되는 핵심 클래스이며, 다양한 타입의 데이터를 담을 수 있습니다.
+  + Key-Value 기반 데이터 저장 객체
+  + Parcelable 구현 → 프로세스 간 통신(IPC)도 가능
+  + Android의 Activity, Fragment, Service, BroadcastReceiver, ContentProvider 등 모든 주요 컴포넌트 간 데이터 교환에 사용됨
 
-- Activity, Fragment 간 데이터 전달
-  + Intent 객체에 Bundle을 담아 다른 Activity로 데이터를 전달할 수 있습니다.
-  + Fragment를 생성할 때 arguments로 Bundle을 전달하여 초기 데이터를 넘겨줄 수 있습니다.
+- 사용 예시
+  + Activity <-> Activity
+    * ```kotlin
+      // 전송
+      val intent = Intent(this, DetailActivity::class.java)
+      val bundle = Bundle().apply {
+          putString("name", "Bae")
+          putInt("age", 30)
+      }
+      intent.putExtras(bundle)
+      startActivity(intent)
 
-- Activity, Fragment 상태 저장 및 복원
-  + 화면 회전과 같이 Activity나 Fragment가 시스템에 의해 재생성될때, onSaveInstanceState 콜백 메서드를 통해 현재 상태를 Bundle에 저장할 수 있습니다.
-  + 이후 onCreate나 onRestoreInstanceState 또는 onCreateView(), onViewCreated()에서 저장된 Bundle을 받아 상태를 복원할 수 있습니다.
+      // 수신
+      val name = intent.getStringExtra("name")
+      val age = intent.getIntExtra("age", 0)
+      ``` 
+  + Fragment 초기 데이터 전달
+    * ```kotlin
+      val fragment = MyFragment().apply {
+        arguments = Bundle().apply {
+            putString("title", "Hello Fragment")
+        }
+      }
 
-- Service와 데이터 교환
-  + Service에 데이터를 전달하거나 Service로부터 결과를 받을 때 Bundle을 사용할 수 있습니다.
+      // Fragment 내부
+      val title = arguments?.getString("title")
+      ``` 
+  + 상태 저장/복원
+    * ```kotlin
+      override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt("count", counter)
+      }
 
-- 다양한 Android 컴포넌트 간 데이터 전달
-  + BroadcastReceiver가 브로드캐스트를 수신할 때 Intent에 포함된 Bundle을 통해 데이터를 받을 수 있습니다.
-  + ContentProvider를 통해 데이터를 전달할 때도 Bundle이 사용될 수 있습니다.
+      override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val restoredCount = savedInstanceState?.getInt("count") ?: 0
+      }
+      ``` 
+  + Service, Broadcast, ContentProvider
+    * Intent 내부 extras 로 전달 → 결국 Bundle이 사용됨 
 
-- Bundle의 주요 특징
-  + key-value 저장소 : 문자열 키를 사용하여 다양한 타입의 값을 저장합니다.
-  + 다양한 데이터 타입 지원 : String, int, long,boolean, float, double, char, byte, short와 같은 기본 타입뿐만 아니라,
-                         CharSequence, Parcelable, Serializable, 배열, ArrayList 등 다양한 객체 타입을 저장할 수 있습니다.
-  + Parcelable 인터페이스 : Bundle 자체는 Parcelable 인터페이스를 구현합니다. 이는 Bundle 객체가 프로세스 간 통신을 위해 효율적으로 직렬화될 수 있음을 의미합니다.
-                         안드로이드 시스템은 Parcelable을 사용하여 객체를 Intent에 담아 다른 컴포넌트로 전달하거나, 프로세스 경계를 넘어 데이터를 전송합니다.
-  + 데이터 크기 제한 : Bundle을 통해 전달되는 데이터의 크기에는 제한이 있습니다. 너무 큰 데이터를 Bundle에 담아 전달하려고 하면 TranscationTooLargeException이 발생할 수 있습니다.
-                   일반적으로 10KB에서 1MB 미만으로 유지하는 것이 좋습니다. 
+- 특징
+  + Key-Value 저장소
+  + 다양한 타입 지원 (primitive, String, CharSequence, Parcelable, Serializable, ArrayList 등)
+  + Parcelable 기반 직렬화 → 성능 좋음
+  + 데이터 크기 제한 있음
+  + 너무 큰 데이터 전달 시 TransactionTooLargeException 발생 (Binder 트랜잭션 한계, 보통 1MB 내외)
+  + 대용량 데이터는 File, DB, SharedPreferences 등으로 처리 후 경로만 전달하는 방식 추천
 
 - Bundle 사용 시 주의 사항
-  + null 체크 : Bundle에서 값을 꺼낼 때는 해당 키가 존재하지 않거나 값이 null일 수 있으므로, 항상 null체크를 하거나 기본값을 제공하는 함수(예 : getXX(key, defaultValue))를 사용 하는 것이 안전 합니다.
-  + 키 관리 : Bundle에 데이터를 넣고 뺄 때 사용하는 키 문자열은 정확히 일치해야 합니다. 오타를 방지하기 위해 상수로 정의하여 사용하는 것이 좋습니다.
-  + 데이터 타입 일치 : 데이터를 넣을 때 사용한 putType() 메서드와 꺼낼 때 사용한 getType()메서드의 데이터 타입이 일치 해야 합니다.
-  + Serializable vs Parcelable : 복잡한 객체를 Bundle에 담을 때 Serializable이나 Parcelable을 사용할 수 있습니다.
-    * Parcelable : 안드로이드에서 성능이 더 좋도록 특별히 설계되었으므로, 안드로이드 컴포넌트 간 데이터 전달에는 Parcelable 사용이 권장됩니다.
-    * Serializable : 구현이 더 간단하지만 리플렉션을 사용하기 때문에 성능이 상대적으로 느립니다.
+  + Null 안전성: get 계열 호출 시 항상 null 체크 or defaultValue 제공
+  + Key 관리: 하드코딩 지양 → object Keys { const val USER_NAME = "user_name" }
+  + 타입 일치: putInt() 했으면 반드시 getInt()로 꺼내야 함
+  + Serializable vs Parcelable
+    * Parcelable : 안드로이드 최적화된 직렬화, 빠름, 권장
+    * Serializable : 구현 간단하지만 리플렉션 기반, 느림
+
+- 면접 관련 질문
+  + Bundle과 Intent의 차이는?
+    * Intent는 컴포넌트 실행을 위한 "메시지 객체"
+    * Bundle은 그 안에서 데이터를 담는 "데이터 컨테이너"
+  + Serializable과 Parcelable 차이는?
+    * Serializable: 자바 표준 직렬화, 느림, 리플렉션 기반
+    * Parcelable: 안드로이드 전용 직렬화, 빠름, 직접 구현 필요
+  + Bundle에 큰 데이터 넣으면 어떻게 되나요?
+    * Binder 트랜잭션 한계(보통 1MB) 초과 시 TransactionTooLargeException 발생
+    * 큰 데이터는 파일, DB, 캐시에 저장하고 식별자(id, uri, path)만 전달
 
 
 ---
@@ -561,17 +600,23 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 
 ### 객체 직렬화
 - **Serializable**
-  - 객체를 **바이트 스트림으로 변환**하여 파일로 저장하거나 네트워크로 전송할 수 있게 하는 기능
-  - 바이트 스트림을 역직렬화(Deserialization)를 통하여 원래 객채로 복원 가능
-
-  - 직렬화 사용 이유
-    - 저장 : 객체 상태를 파일에 저장하거나 DB에 저장
-    - 전송 : 네트워크를 통해 객체를 다른 JVM으로 전달
-    - 캐싱 : 객체를 메모리/디스크에 저장해 재사용
-    - RPC : 원격 호출에서 객체 데이터를 주고 받을때 사용
-
-  - 사용방법
-    1. **Serializable** 인터페이스 구현
+  + 개념 및 정의
+    * 자바 표준 직렬화 방식
+    * JVM 레벨에서 사용 (파일 저장, 네트워크 전송)
+    * 마커 인터페이스 (Serializable)만 구현하면 됨
+    * 내부적으로 **리플렉션(Reflection)**을 사용 → 느림, 메모리 사용량 큼
+  + 특징
+    * serialVersionUID 필요 (클래스 변경 시 버전 불일치 방지)
+    * transient 키워드 → 직렬화에서 제외할 필드
+    * static 필드 → 직렬화 대상 아님
+    * 직렬화 대상 객체의 모든 필드가 Serializable 가능해야 함  
+  + 직렬화 사용 이유
+    * 저장 : 객체 상태를 파일에 저장하거나 DB에 저장
+    * 전송 : 네트워크를 통해 객체를 다른 JVM으로 전달
+    * 캐싱 : 객체를 메모리/디스크에 저장해 재사용
+    * RPC : 원격 호출에서 객체 데이터를 주고 받을때 사용
+  + 사용방법
+    * **Serializable** 인터페이스 구현
       ```java
           import java.io.Serializable;
        
@@ -584,36 +629,38 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
               // 생성자, getter, setter 등
           }
       ```
-    - Serializable은 마커 인터페이스로, 메서드가 하나도 없고 단지 직렬화 대상이라는 표시만 함
-
-    2. 직렬화 예제 (저장)
+    * Serializable은 마커 인터페이스로, 메서드가 하나도 없고 단지 직렬화 대상이라는 표시만 함
+    * 직렬화 예제 (저장)
       ```java
           ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("user.dat"));
           User user = new User("철수", 25);
           out.writeObject(user);
           out.close();
       ```
-    - 역질렬화 예제 (복원)
+    * 역질렬화 예제 (복원)
       ```java
           ObjectInputStream in = new ObjectInputStream(new FileInputStream("user.dat"));
           User user = (User) in.readObject();
           in.close();
       ```
-  - 주의할 점
-    - serialVersionUID : 클래스 버전 관리를 위한 고유 ID (버전이 불일치할 경우 오류 발생 가능)
-    - transient 키워드 : 직렬화에서 제외할 필드에 사용 (transient String password;)
-    - static 필드 : 클래스에 속한 값이므로 직렬화 되지 않음
-    - 직렬화 대상 객체의 모든 필드 : 직렬화가 가능해야 함 (안될경우 NotSerializableException 발생)
+    + 주의할 점
+      * serialVersionUID : 클래스 버전 관리를 위한 고유 ID (버전이 불일치할 경우 오류 발생 가능)
+      * transient 키워드 : 직렬화에서 제외할 필드에 사용 (transient String password;)
+      * static 필드 : 클래스에 속한 값이므로 직렬화 되지 않음
+      * 직렬화 대상 객체의 모든 필드 : 직렬화가 가능해야 함 (안될경우 NotSerializableException 발생)
 
 - **Parcelable**
-  - 안드로이드에서 객체를 Intent나 Bundle로 전달할 때 사용되는 직렬화 방식
-  ```kotlin
-        val intent = Intent(this, DetailActivity::class.java)
-        intent.putExtra("user", user)   // user는 객체
-  ```
-  - user가 일반 클래스면 안됨 -> Parcelable을 구현해야 넘기기 가능
-  - 예제
-    1. 데이터 클래스 만들기
+  + 개념 및 정의
+    * 안드로이드 전용 직렬화 방식
+    * Intent, Bundle 등에서 객체 전달에 최적화
+    * 객체를 바이트 배열로 직접 변환 → 성능 우수
+    * Android Studio + Kotlin → @Parcelize 덕분에 구현 간단해짐
+  + 특징
+    * 수동 구현 시 writeToParcel() & CREATOR 필요
+    * Kotlin에서는 @Parcelize로 자동 처리
+    * 성능 최적화 : GC 적게 발생, 메모리 사용 효율적
+  + 예제
+    * 데이터 클래스 만들기
     ```kotlin
         import android.os.Parcelable
         import kotlinx.parcelize.Parcelize
@@ -621,7 +668,7 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
         @Parcelize
         data class User (val name: String, val age: Int) : Parcelable
     ```
-    2. Intent에 담아서 전달
+    * Intent에 담아서 전달
     ```kotlin
         val user = User("철수", 25)
         val intent = Intent(this, DetailActivity::class.java)
@@ -629,19 +676,39 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
         intent.putExtra("user", user)
         startActivity(intent)
     ```
-    3. 받은 쪽에서 꺼내기
+    * 받은 쪽에서 꺼내기
     ```kotlin
         val user = intent.getParcelableExtra<User>("user")
     ```
+
 - Parcelable vs Serializable
+  + | 항목         | Parcelable 🚀      | Serializable 🐢 |
+    | ---------- | ------------------ | --------------- |
+    | **속도**     | 빠름 (메모리 직접 처리)     | 느림 (리플렉션 기반)    |
+    | **용도**     | Android IPC 전용     | JVM 전반 (범용)     |
+    | **구현 난이도** | 다소 복잡 (직접 구현 필요)   | 쉬움 (인터페이스만 추가)  |
+    | **성능**     | 고성능, 모바일 최적화       | 저성능, 메모리 낭비     |
+    | **권장 상황**  | 안드로이드 컴포넌트 간 객체 전달 | 파일 저장, 네트워크 전송  |
+ 
+- 실무 팁
+  + Intent/Bundle → Parcelable
+    * 성능 차이가 크므로 Android에서는 Parcelable 권장
+  + 네트워크 전송, 파일 저장 → Serializable/Gson/Protobuf
+    * Parcelable은 안드로이드 전용이므로 범용 저장/전송은 다른 직렬화 방식 사용사용
+  + 대용량 객체 전달 X
+    * Bundle/Intent 크기 제한 (보통 1MB 내외) → TransactionTooLargeException 발생 가능
+    * DB, SharedPreferences, File 저장 후 경로만 전달하는 방식이 안정적 
 
-  | 항목  | Parcelable     | Serializable       |
-            |-----|----------------|--------------------|
-  | 속도  | 빠름 (메모리 직접 처리) | 느림 (리플렉션 기반)       |
-  | 용도  | 안드로이드 앱 전용     | 자바 전반에 사용 가능       |
-  | 코드량 | 많음 (직접 작성)     | 적음 (인터페이스만 붙히면 가능) |
-  | 성능  | 고성능            | 저성능                |
-
+- 면접 관련 질문
+  + Parcelable이 Serializable보다 빠른 이유는?
+    * Serializable은 리플렉션 기반 (많은 오버헤드)
+    * Parcelable은 직접 메모리에 write/read (GC 발생 적음)
+  + Parcelable과 Serializable 언제 각각 쓰나요?
+    * 안드로이드 내부 데이터 전달 (Intent, Bundle) → Parcelable
+    * 범용 저장/전송 (파일, 네트워크, 캐싱) → Serializable 또는 JSON, ProtoBuf
+  + Bundle에 큰 데이터 넣으면 어떻게 되나요?
+    * TransactionTooLargeException 발생 가능
+    * 해결책: DB/파일에 저장 후 key만 전달
 
 
 ---

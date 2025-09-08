@@ -747,6 +747,20 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
       </application>
       ```
 
+- Application과 Context 관계
+  + Application은 앱 프로세스 단위의 Context
+  + Activity, Service, BroadcastReceiver 등은 모두 Application Context를 내부적으로 참조함
+  + 따라서 applicationContext는 항상 안전하게 앱 전체에서 사용할 수 있음
+  + ❌ 단, UI 관련 작업 (View.inflate, Dialog 등)은 Activity Context 필요
+
+- 전역 상태 관리의 위험성
+  + Application은 앱 실행 내내 살아있음
+  + 전역 변수처럼 쓰면 편하지만, 잘못 관리하면 메모리 누수, 동시성 문제 유발
+  + 특히 Activity, Fragment, View 참조를 저장하면 GC가 불가능해져 누수 발생
+  + ✅ 안전한 활용법
+    * Application에는 라이브러리 초기화, DI Container, 공용 util만 저장
+    * UI 컴포넌트 참조는 절대 저장하지 않음
+
 - 주의사항
   + | 주의점                   | 설명                                    |
     | --------------------- | ------------------------------------- |
@@ -764,7 +778,6 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
     * 간단한 설정 or 일시적 정보는 괜찮음
     * DB나 SharedPreferences가 필요한 복잡한 데이터 별도 관리 권장
     * 장기 보관은 ViewModel, Repository 등을 사용
-
 
 
 ---

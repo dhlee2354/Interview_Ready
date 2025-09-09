@@ -1872,6 +1872,12 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
   + 진행률 표기시 : 파일 다운로드와 같이 시간이 오래걸리는 작업의 진행 상태를 알림에 표시할 수 있습니다.
   + 알림 그룹 : 여러 알림을 하나의 그룹으로 묶어 표시할 수 있습니다.
 
+- 면접 질문
+  + Notification을 구현하는 기본적인 단계는 무엇인가요?
+    * NotificationCompat.Builder 사용, 채널 생성, 콘텐츠 설정, 탭 액션(PendingIntent), NotificationManagerCompat.notify().
+  + Foreground Service에서 Notification을 사용하는 이유는 무엇이며, 어떻게 구현해야 하나요? 일반 Notification과의 차이점은 무엇인가요?
+    + 백그라운드 작업이 진행 중임을 사용자에게 명확히 알리고, 시스템에 의해 작업이 중단되는 것을 방지 합니다. startForeground() 호출 시 Notification 필수로 노출되어야 하며, 사용자가 직접 해제하기 전까지 사라지지 않아야 함.
+
 
 ---
 

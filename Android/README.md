@@ -1287,41 +1287,87 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
 ---
 
 
-
 ### DiffUtil
-- **RecyclerView의 리스트 데이터가 변경되었을 때, 변경된 부분만 갱신**해주는 유틸리티
-  1. 사용 이유
-    + **기존 방식 (**`notifyDataSetChanged()`**)**
-      ```kotlin
-          adapter.notifyDataSetChanged()  // 리스트 전체를 다시 그림
-      ```
-      * 모든 아이템이 다시 그려짐 (비효율적)
-      * 깜빡임, 스크롤 위치 초기화, 애니메이션 없음
+- 개념 및 정의
+  + RecyclerView에서 데이터가 변경될 때 변경된 부분만 효율적으로 업데이트하기 위한 유틸리리티 클래스.
+  + 전체 리사이클러뷰를 다시 그리는 notifyDataSetChanged() 대신, Diff 알고리즘을 통해 바뀐 아이템만 갱신 → 성능 최적화 + UX 개선
 
-    + **`DiffUtil` 방식**
-       ```kotlin
-           val diffResult = DiffUtil.calculateDiff(diffCallback)
-           diffResult.dispatchUpdatesTo(adapter)
-       ```
-      * 변경된 항목만 새로 그림
-      * 애니메이션 자동 처리
-      * 리스트 스크롤 위치 유지
-  2. 사용 시기
-  + | 조건                            | DiffUtil 사용 권장 여부 |
-          |-------------------------------|-------------------|
-    | RecyclerView에서 데이터 리스트가 자주 바뀜 | ✅ 필요              |
-    | 변경된 항목만 효율적으로 갱신하고 싶음         | ✅ 필요              |
-    | J깜빡임 없는 UI와 부드러운 애니메이션 필요     | ✅ 필요              |
-    | 정적 리스트 (변경 없음)                | ❌ 필요 없음           |
+- 기본 사용법
+  + ```kotlin
+    class MyDiffCallback(
+      private val oldList: List<User>,
+      private val newList: List<User>
+    ) : DiffUtil.Callback() {
+    
+      override fun getOldListSize() = oldList.size
+    
+      override fun getNewListSize() = newList.size
+    
+      // 아이템 자체가 같은지 (고유 ID 비교)
+      override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return oldList[oldItemPosition].id == newList[newItemPosition].id
+      }
+
+      // 아이템의 내용이 같은지 (equals 비교)
+      override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return oldList[oldItemPosition] == newList[newItemPosition]
+      }
+    }
+
+    // 사용
+    val diffResult = DiffUtil.calculateDiff(MyDiffCallback(oldList, newList))
+    adapter.submitList(newList)  // ListAdapter면 이거만 호출하면 됨
+    diffResult.dispatchUpdatesTo(adapter)
+    ``` 
+
+- 📌 ListAdapter와 DiffUtil
+  + 안드로이드 Jetpack에서 제공하는 ListAdapter는 내부적으로 DiffUtil을 내장하고 있음
+  + 따라서 DiffUtil.ItemCallback<T>만 구현하면 자동으로 DiffUtil 적용 가능 
+  + ```kotlin
+    data class User(val id: Int, val name: String)
+
+    class UserAdapter : ListAdapter<User, UserAdapter.ViewHolder>(DIFF_CALLBACK) {
+        
+        companion object {
+            private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<User>() {
+                override fun areItemsTheSame(oldItem: User, newItem: User) = oldItem.id == newItem.id
+                override fun areContentsTheSame(oldItem: User, newItem: User) = oldItem == newItem
+            }
+        }
+
+        class ViewHolder(val binding: ItemUserBinding) : RecyclerView.ViewHolder(binding.root)
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val binding = ItemUserBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            return ViewHolder(binding)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val user = getItem(position)
+            holder.binding.textView.text = user.name
+        }
+    }
+    ```
+
+- DiffUtil vs notifyDataSetChanged
+  + | 비교 항목      | notifyDataSetChanged() | DiffUtil           |
+    | ---------- | ---------------------- | ------------------ |
+    | 갱신 범위      | 전체 아이템 다시 그림           | 변경된 항목만 그림         |
+    | 성능         | ❌ 비효율적                 | ✅ 효율적              |
+    | UX (애니메이션) | ❌ 깜빡임, 스크롤 튐           | ✅ 자연스러운 애니메이션      |
+    | 사용 편의성     | 간단하지만 성능 나쁨            | 초기 구현 필요하지만 재사용 가능 |
+ 
 
 - 면접 예상 질문
-  + DiffUtil이 무엇인가요?
-    * RecyclerView의 데이터를 효율적으로 갱신하기 위한 유틸리티 클래스
-    * 변경된 항목만 감지해 애니메이션과 함께 부분 업데이트 수행
-    * `notifyDataSetChanged()` 대신 사용
-  + DiffUtil 과 notifyDataSetChanged의 차이점이 무엇인가요?
-    * `notifyDataSetChanged()`는 전체 리스트를 다시 그리므로 비효율적
-    * DiffUtil은 변경된 항목만 계산해서 해당 위치에만 업데이트 호출 -> 성능 및 Ux 개선
+  + DiffUtil을 직접 구현했을 때와 ListAdapter의 차이는?
+    * DiffUtil은 직접 old/new 리스트를 비교하고 dispatchUpdatesTo() 호출 필요
+    * ListAdapter는 DiffUtil을 내부적으로 관리하므로 submitList()만 호출하면 됨
+  + DiffUtil의 내부 동작 원리 아나요?
+    * 최소 편집 거리 알고리즘 (Myers’s diff algorithm) 기반으로 리스트 변경점 계산
+    * O(n + m) 성능 (n = oldList, m = newList 크기)
+  + DiffUtil에서 areItemsTheSame과 areContentsTheSame 차이는?
+    * areItemsTheSame: 같은 객체(동일 ID)인지 확인 (ex: PK 비교)
+    * areContentsTheSame: 같은 객체라도 내용이 바뀌었는지 확인 (equals 비교)
 
 
 ---
@@ -1407,6 +1453,13 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
       val username = prefs.getString("userName", null)
       val isLoggedIn = prefs.getBoolean("isLogin", false)
       ```
+  + apply() vs commit()
+    * `apply()` → 비동기, 결과 반환 없음 (권장)
+    * `commit()` → 동기, boolean 반환 (성공 여부 확인 가능)
+    * UI 스레드에서 commit() 호출 시 ANR 위험
+  + Migration 이슈
+    * 앱 데이터가 많거나 빈번히 쓰기 작업이 있을 경우 XML 파싱 지연 발생 가능
+    * SharedPreferences는 내부적으로 하나의 파일(XML)에 모든 데이터를 저장하므로, 데이터 크기가 커질수록 성능 저하  
 
 - DataStore
   + Jetpack에서 제공하는 최신 데이터 저장 솔루션으로, 비동기 처리와 타입 안전성을 갖춘 Key-Value 저장 방식
@@ -1453,22 +1506,37 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
         }
       }
       ```
+  + Preferences vs Proto
+    * Preferences DataStore → 단순 Key-Value (SharedPreferences 대체)
+    * Proto DataStore → 구조화된 데이터 저장 (스키마 기반, 타입 안전 보장
+  + Migration 지원
+    * 기존 SharedPreferences 데이터를 DataStore로 마이그레이션 가능
+    * SharedPreferencesMigration(context, "prefs_name")
+  + 실시간 반응
+    * Flow 기반 → 데이터 변경 시 UI 자동 업데이트 가능 (collectLatest) 
 
 - 비교
-  + | 항목            | SharedPreferences | DataStore             |
-    | ------------- | ----------------- | --------------------- |
-    | 저장 구조         | Key-Value         | Key-Value / Proto 구조  |
-    | 저장 방식         | 동기 / 제한적 비동기      | 완전 비동기 + Coroutine 기반 |
-    | 데이터 접근 방식     | 직접 접근             | Flow (Reactive)       |
-    | 스레드 안전성       | ❌ 보장 안됨           | ✅ 보장됨                 |
-    | 타입 안정성        | ❌                 | ✅ (특히 ProtoDataStore) |
-    | 사용 용도         | 간단 설정값, 플래그 등     | 동기화 필요, 실시간 반응 등      |
-    | Jetpack 권장 여부 | ❌ (구식 API)        | ✅ (공식 권장 방식)          |
+  + | 항목         | SharedPreferences  | DataStore                            |
+    | ---------- | ------------------ | ------------------------------------ |
+    | 저장 구조      | XML 파일 (Key-Value) | Preferences (Key-Value) / Proto (객체) |
+    | API 방식     | get/put 직접 호출      | Flow + suspend 함수                    |
+    | 저장/읽기      | 동기 + 제한적 비동기       | 완전 비동기 (Coroutine 기반)                |
+    | 스레드 안전성    | ❌ 보장 안 됨           | ✅ 보장됨                                |
+    | 데이터 타입 안전성 | ❌ 없음               | ✅ (특히 ProtoDataStore)                |
+    | 성능/확장성     | 데이터 많아지면 느려짐       | 대량 데이터에도 효율적                         |
+    | 권장 여부      | 레거시 유지용            | ✅ Jetpack 공식 권장                      |
+
 
 - 면접 관련 질문
-  + SharedPreferences와 DataStore 중 어떤 것을 사용?
-    * 프로젝트에 Coroutine과 Flow를 사용하고 있고, 데이터 안정성과 실시간 반응성이 중요하다면 DataStore가 적합
-    * SharedPreferences는 마이그레이션 전 레거시 앱에서 빠르게 구현할 때는 유용하나 유지보수와 확장성 측면에서 DataStore가 더 좋음
+  + SharedPreferences에서 ANR이 발생할 수 있는 상황은?
+    * 메인 스레드에서 commit() 호출 시 발생
+    * 큰 데이터를 자주 저장할 때 XML 파싱이 오래 걸리면 위험
+  + DataStore에서 Flow를 쓰는 이유는?
+    * 데이터 변경 시 자동으로 UI 업데이트 반영 가능
+    * Reactive 패턴에 적합 → MVVM, LiveData/StateFlow와 궁합 좋음
+  + DataStore Proto를 써야 하는 상황은?
+    * 데이터 구조가 복잡하고 타입 안정성이 중요한 경우
+    * 예: 사용자 설정(UserSettings), 앱 환경설정, 다중 필드 상태 저장
 
 
 ---

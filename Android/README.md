@@ -1453,6 +1453,13 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
       val username = prefs.getString("userName", null)
       val isLoggedIn = prefs.getBoolean("isLogin", false)
       ```
+  + apply() vs commit()
+    * `apply()` → 비동기, 결과 반환 없음 (권장)
+    * `commit()` → 동기, boolean 반환 (성공 여부 확인 가능)
+    * UI 스레드에서 commit() 호출 시 ANR 위험
+  + Migration 이슈
+    * 앱 데이터가 많거나 빈번히 쓰기 작업이 있을 경우 XML 파싱 지연 발생 가능
+    * SharedPreferences는 내부적으로 하나의 파일(XML)에 모든 데이터를 저장하므로, 데이터 크기가 커질수록 성능 저하  
 
 - DataStore
   + Jetpack에서 제공하는 최신 데이터 저장 솔루션으로, 비동기 처리와 타입 안전성을 갖춘 Key-Value 저장 방식
@@ -1499,22 +1506,37 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
         }
       }
       ```
+  + Preferences vs Proto
+    * Preferences DataStore → 단순 Key-Value (SharedPreferences 대체)
+    * Proto DataStore → 구조화된 데이터 저장 (스키마 기반, 타입 안전 보장
+  + Migration 지원
+    * 기존 SharedPreferences 데이터를 DataStore로 마이그레이션 가능
+    * SharedPreferencesMigration(context, "prefs_name")
+  + 실시간 반응
+    * Flow 기반 → 데이터 변경 시 UI 자동 업데이트 가능 (collectLatest) 
 
 - 비교
-  + | 항목            | SharedPreferences | DataStore             |
-    | ------------- | ----------------- | --------------------- |
-    | 저장 구조         | Key-Value         | Key-Value / Proto 구조  |
-    | 저장 방식         | 동기 / 제한적 비동기      | 완전 비동기 + Coroutine 기반 |
-    | 데이터 접근 방식     | 직접 접근             | Flow (Reactive)       |
-    | 스레드 안전성       | ❌ 보장 안됨           | ✅ 보장됨                 |
-    | 타입 안정성        | ❌                 | ✅ (특히 ProtoDataStore) |
-    | 사용 용도         | 간단 설정값, 플래그 등     | 동기화 필요, 실시간 반응 등      |
-    | Jetpack 권장 여부 | ❌ (구식 API)        | ✅ (공식 권장 방식)          |
+  + | 항목         | SharedPreferences  | DataStore                            |
+    | ---------- | ------------------ | ------------------------------------ |
+    | 저장 구조      | XML 파일 (Key-Value) | Preferences (Key-Value) / Proto (객체) |
+    | API 방식     | get/put 직접 호출      | Flow + suspend 함수                    |
+    | 저장/읽기      | 동기 + 제한적 비동기       | 완전 비동기 (Coroutine 기반)                |
+    | 스레드 안전성    | ❌ 보장 안 됨           | ✅ 보장됨                                |
+    | 데이터 타입 안전성 | ❌ 없음               | ✅ (특히 ProtoDataStore)                |
+    | 성능/확장성     | 데이터 많아지면 느려짐       | 대량 데이터에도 효율적                         |
+    | 권장 여부      | 레거시 유지용            | ✅ Jetpack 공식 권장                      |
+
 
 - 면접 관련 질문
-  + SharedPreferences와 DataStore 중 어떤 것을 사용?
-    * 프로젝트에 Coroutine과 Flow를 사용하고 있고, 데이터 안정성과 실시간 반응성이 중요하다면 DataStore가 적합
-    * SharedPreferences는 마이그레이션 전 레거시 앱에서 빠르게 구현할 때는 유용하나 유지보수와 확장성 측면에서 DataStore가 더 좋음
+  + SharedPreferences에서 ANR이 발생할 수 있는 상황은?
+    * 메인 스레드에서 commit() 호출 시 발생
+    * 큰 데이터를 자주 저장할 때 XML 파싱이 오래 걸리면 위험
+  + DataStore에서 Flow를 쓰는 이유는?
+    * 데이터 변경 시 자동으로 UI 업데이트 반영 가능
+    * Reactive 패턴에 적합 → MVVM, LiveData/StateFlow와 궁합 좋음
+  + DataStore Proto를 써야 하는 상황은?
+    * 데이터 구조가 복잡하고 타입 안정성이 중요한 경우
+    * 예: 사용자 설정(UserSettings), 앱 환경설정, 다중 필드 상태 저장
 
 
 ---

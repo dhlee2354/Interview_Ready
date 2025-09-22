@@ -2144,80 +2144,93 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
     * MeasureSpec은 부모 ViewGroup이 자식 View에게 전달하는 크기 제약 조건입니다. 정수 값으로 인코딩되며, 모드(Mode)와 크기(Size) 두 가지 정보를 담고 있습니다.
 
 
-
-
 ---
 
 
-
-### jar, arr, apk
-1. JAR (Java ARchive)
-  + 개념
-    * Java 클래스 파일과 메타데이터를 압축한 아카이브
-    * Java 기반 라이브러리를 패키징 할때 사용
+### jar, aar, apk
+- JAR (Java ARchive)
+  + 정의
+    *  Java 클래스와 메타데이터를 압축한 라이브러리 패키지
   + 구성
-    * .class 파일 (컴파일 된 Java 바이트코드)
-    * META_-INF/MANIFEST.MF (메타 정보)
-    * 리소스 파일 (.properties, .xml 등 포함 가능, 하지만 Android 리소스는 불가능)
+    * .class 파일 (컴파일된 Java 바이트코드)
+    * META-INF/MANIFEST.MF
+    * 일반 리소스 파일(.properties, .xml 등) 포함 가능
+    * ❌ Android 리소스(res/, AndroidManifest.xml) 포함 불가
   + 사용처
-    * Java 코드만 있는 라이브러리
-    * ex) Gson, OkHttp 등 일부 라이브러리 jar 버전
-  + ❌ 한계
-    * res/, AndroidManifest.xml 같은 안드로이드 전용 리소스 포함 불가
+    * 순수 Java 코드 기반 라이브러리 (ex: Gson, Apache Commons, OkHttp JAR 버전)
 
-2. APK (Android Package)
-  + 개념
-    * .apk 는 Android 애플리케이션 패키지 파일
-    * 안드로이드 앱을 기기에 설치할때 사용
+- AAR (Android ARchive)
+  + 정의
+    *  안드로이드 라이브러리 모듈을 패키징한 파일 (JAR의 Android 확장 버전)
   + 구성
-    * class.dex (Dalvik / ART 바이트코드)
+    * classes.jar (Java/Kotlin 코드)
+    * res/, assets/, jni/
+    * AndroidManifest.xml
+    * proguard.txt 등 추가 설정 파일
+  + 사용처
+    * Android 전용 모듈을 라이브러리 형태로 배포
+    * 다른 프로젝트에서 공통 UI, SDK, 커스텀 컴포넌트 재사용
+    
+- APK (Android Package)
+  + 정의
+    * 안드로이드 앱 최종 패키지 (사용자 단말기에 설치 가능한 실행 파일)
+  + 구성
+    * classes.dex (Dalvik/ART 바이트코드)
     * res/, assets/, AndroidManifest.xml
     * META-INF/ (서명 정보)
-    * 네이티브 라이브러리 (lib/)
+    * lib/ (네이티브 라이브러리)
   + 사용처
-    * 사용자 단말기에 설치되는 최종 결과물
-    * GooglePlay에 업로드 하는 파일
-  + 빌드 흐름
-    ```text
-      .java/.kt → .class → .dex → APK
-    ```
+    * 최종적으로 배포되는 앱 파일 (Google Play 스토어 업로드 및 단말기 설치)
     
-3. ARR (Android ARchive)
-  + 개념
-    * .arr은 Android 라이브러리 모듈을 위한 패키지 파일
-    * JAR의 안드로이드 버전
-  + 구성
-    * classes.jar (컴파일 된 java/kotlin 코드)
-    * res/ (레이아웃, 이미지 등 리소스 파일)
-    * AndroidManifest.xml
-    * assets/, jni/, proguard.txt 등
-  + 사용처
-    * Android 모듈을 라이브러리로 분리할 때
-    * 다른 프로젝트에서 재사용 가능
-    * ex) UI 컴포넌트, SDK 제공용 라이브러리
-  + 예시
-    ```kotlin
-      dependencies {
-        implementation("com.example:mylibrary:1.0.0") // 내부적으로 aar 사용
-      }
-    ```
-    
-- 차이점 요약
-  + | 항목            | jar        | aar                 | apk          |
-                |---------------|------------|---------------------|--------------|
-    | 목적            | Java 라이브러리 | Android 라이브러리       | Androi 앱 패키지 |
-    | 포함 가능한 것      | Java 코드만   | 코드 + 리소스 + Manifest | 전체 앱 리소스     |
-    | 설치 가능 여부      | ❌          | ❌                   | ✅            |
-    | 리소스 포함 여부     | ❌          | ✅                   | ✅            |
-    | Manifest 포함 여부 | ❌          | ✅                   | ✅            |
-    | 사용 대상         | 공통 로직      | Android 모듈 공유       | 최종 사용자 기기    |
+- 비교표
+  + | 항목             | JAR (Java Archive) | AAR (Android Archive) | APK (Android Package) |
+    | -------------- | ------------------ | --------------------- | --------------------- |
+    | 목적             | Java 라이브러리         | Android 라이브러리         | 앱 최종 실행 패키지           |
+    | 포함 가능 요소       | Java 코드만           | 코드 + 리소스 + Manifest   | 코드 + 리소스 + 서명         |
+    | 설치 가능 여부       | ❌                  | ❌                     | ✅                     |
+    | 리소스 포함 여부      | ❌                  | ✅                     | ✅                     |
+    | Manifest 포함 여부 | ❌                  | ✅                     | ✅                     |
+    | 사용 대상          | Java 애플리케이션        | Android 프로젝트 공유 모듈    | 사용자 단말기 설치 앱          |
 
-- 사용 시기 예시 
-  + | 상황                              | 사용 파일 |
-        |---------------------------------|-------|
-    | Gson, Apache Commons 등 Java 유틸리티 | JAR   |
-    | 버튼, 커스텀뷰, SDK 등 Android 재사용 모듈   | ARR   |
-    | 앱 배포 (스토어 등록, 설치)    | APK   |
+- APK 빌드 과정
+  + ```text
+    .java / .kt (소스 코드)
+        │
+        ▼
+    .class (Java 바이트코드)     ← javac / kotlinc 컴파일러
+        │
+        ▼
+    .jar (Java Archive)        ← 클래스 + 메타데이터 묶음
+        │
+        ▼
+    .dex (Dalvik Executable)   ← D8/R8 (ART/Dalvik VM용 변환)
+        │
+        ▼
+    APK (Android Package)       ← .dex + res/ + Manifest + assets/ + lib/ + META-INF
+          │
+          ▼
+    (서명 & zipalign)           ← 서명(Signature) + 최적화
+          │
+          ▼
+    최종 설치 파일 (.apk)         ← 사용자 단말기에 설치 가능
+    ```
+  + 소스 코드 (.java / .kt)
+    * 개발자가 작성한 코드
+  + .class (바이트코드)
+    * javac (Java), kotlinc (Kotlin) 컴파일러가 바이트코드로 변환
+  + .jar (Java Archive)
+    * 여러 .class 파일과 메타데이터를 묶은 라이브러리 형태
+  + .dex (Dalvik Executable)
+    * D8 (또는 R8: 최적화/압축 포함)이 .class → .dex로 변환
+    * 안드로이드 런타임(ART/Dalvik VM)에서 실행 가능한 코드
+  + APK 패키징
+    * classes.dex + res/(리소스) + AndroidManifest.xml + assets/ + lib/
+    * 모든 앱 구성 요소를 하나로 묶음
+  + 서명(Signing) & zipalign 최적화
+    * Google Play에 배포하거나 단말기에 설치하려면 반드시 앱에 서명(Signature) 필요
+    * zipalign은 압축을 정렬해 런타임 성능 최적화
+  + 최종 APK
+    * 사용자가 설치할 수 있는 실제 앱 파일
 
 - 면접 질문
   + JAR, ARR, APK의 차이가 무엇일까요?

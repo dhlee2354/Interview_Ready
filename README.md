@@ -41,6 +41,8 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + GSON & Moshi
   + view & viewGroup
   + jar/apk/aar
+  + 안드로이드 앱 서명방식 V1, V2, V3
+  + 안드로이드 앱 성능 최적화
 - ### [Java](./Java)
   + 기본형 타입 vs 참조형 타입
   + String 문자열
@@ -74,8 +76,6 @@ Java와 Kotlin 언어를 기반으로 Android의 핵심 개념, 아키텍처 패
   + Atomic Class
   + transient
   + JUnit
-  + 안드로이드 앱 서명방식 V1, V2, V3
-  + 안드로이드 앱 성능 최적화
 - ### [Kotlin](./Kotlin)
   + object 키워드
   + lateinit & lazy

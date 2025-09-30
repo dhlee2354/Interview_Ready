@@ -2479,3 +2479,89 @@ Android 개발에 필요한 핵심 개념, 구조, 실무 적용 예시들을 �
     * Context/Activity 참조 관리, WeakReference, 리스너 해제, LeakCanary 활용
   + RecyclerView 성능 최적화 방법은?
     * ViewHolder 패턴, DiffUtil, ListAdapter, setHasFixedSize(true), itemView 재활용
+
+
+---
+
+
+### glide & coil & picaso 비교
+- Gilde
+  + 장점
+    * 이미지 변환, 썸네일, 다양한 캐시 전략, 리소스 풀링 등 유연하고 강력한 기능을 제공합니다.
+    * GIF 및 비디오 정지 프레임 로딩을 기본적으로 지원합니다.
+    * Activity 및 Fragment의 생명주기를 자동으로 관리하여 메모리 누수를 방지합니다.
+    * 광범위한 문서와 커뮤니티 지원을 받을 수 있습니다.
+  + 단점
+    * 다른 라이브러리에 비해 상대적으로 크기가 클 수 있습니다.
+    * API가 다소 복잡하게 느껴질 수 있습니다.
+  + 추천대상
+    * 복잡한 이미지 처리 요구사항이 있는 대규모 프로젝트
+    * 다양한 이미지 포맷(GIF, 비디오 썸네일 등) 지원이 필요한 경우
+    * 성능 및 메모리 관리에 대한 세밀한 제어가 필요한 경우
+  + ```kotlin
+    Glide.with(context)
+        .load("https://example.com/image.jpg")
+        .placeholder(R.drawable.placeholder)
+        .error(R.drawable.error)
+        .circleCrop() // 원형 이미지 변환
+        .into(imageView)
+    ```
+     
+
+- coil
+  + 장점
+    * Kotlin Coroutines를 기반으로 하여 현대적이고 간결한 API를 제공합니다.
+    * 매우 가볍고 빠릅니다.
+    * Jetpack Compose와 뛰어난 통합성을 보여줍니다.
+    * 이미지 파이프라인을 커스터마이징하기 용이합니다.
+  + 단점
+    * Glide만큼 기능이 다양하지는 않을 수 있습니다.
+    * Java 기반 프로젝트에서는 Kotlin Coroutines 설정이 추가로 필요할 수 있습니다.
+  + 추천대상
+    * Kotlin을 주력으로 사용하는 프로젝트
+    * Jetpack Compose를 사용하는 프로젝트
+    * 가볍고 빠른 이미지 로딩 라이브러리를 선호하는 경우
+    * 현대적인 API와 Coroutine의 이점을 활용하고 싶은 경우
+  + ```kotlin
+    imageView.load("https://example.com/image.jpg") {
+        placeholder(R.drawable.placeholder)
+        error(R.drawable.error)
+        transformations(CircleCropTransformation()) // 원형 이미지 변환
+    }
+    ``` 
+
+- picaso
+  + 장점
+    * 매우 간단하고 직관적인 API를 가지고 있어 배우고 사용하기 쉽습니다.
+    * 라이브러리 크기가 작습니다.
+  + 단점
+    * Glide나 Coil에 비해 기능이 제한적입니다.
+    * 성능 및 메모리 관리 기능이 상대적으로 부족할 수 있습니다.
+    * 최근 업데이트 및 지원이 다른 라이브러리에 비해 활발하지 않을 수 있습니다.
+  + 추천대상
+    * 간단한 이미지 로딩 기능만 필요한 소규모 프로젝트
+    * 라이브러리 크기에 매우 민감한 경우
+    * 빠르게 이미지 로딩 기능을 구현하고 싶은 경우
+  + ```kotlin
+    Picasso.get()
+        .load("https://example.com/image.jpg")
+        .placeholder(R.drawable.placeholder)
+        .error(R.drawable.error)
+        .transform(CircleTransform()) // 커스텀 변환 필요
+        .into(imageView)
+    ```  
+    
+- 비교
+  + | 특징                 | Glide                                        | Coil (Coroutine Image Loader)                                | Picasso                     | 
+    |--------------------|----------------------------------------------|--------------------------------------------------------------|-----------------------------|
+    | 개발 주체              | BumpTech (Google 지원)                         | Instacart (Jetbrains 및 커뮤니티 기여)                              | Square                      | 
+    | 주요 언어              | Java (Kotlin 지원)                             | Kotlin (Kotlin Coroutines 기반)                                | Java                        | 
+    | API 스타일            | 유연하고 다양한 옵션 제공                               | 간결하고 현대적인 Kotlin API                                         | 간단하고 직관적인 API               | 
+    | 성능/메모리             | 우수 (Bitmap Pool, 다양한 캐시 전략)                  | 우수 (Coroutines 활용, 메모리 최적화)                                  | 준수 (기본적인 캐시 기능)             | 
+    | GIF 지원             | ✅                                            | ✅ (확장 라이브러리 필요)                                              | ❌ (별도 라이브러리 필요)             | 
+    | 비디오 썸네일            | ✅                                            | ✅ (확장 라이브러리 필요)                                              | ❌                           | 
+    | Jetpack Compose 지원 | ✅ (라이브러리 추가 필요)                              | ✅ (기본 지원)                                                    | ⚠️ (제한적, 공식 지원 부족)          | 
+    | 라이브러리 크기           | 상대적으로 큼                                      | 작고 가벼움                                                       | 작음                          | 
+    | 확장성                | 매우 높음 (커스텀 Target, Transformation 등)         | 좋음 (Interceptor, Mapper 등)                                   | 보통                          | 
+    | 문서/커뮤니티            | 매우 활발하고 자료 풍부                                | 성장 중, Kotlin 사용자 중심                                          | 안정적, 자료는 있으나 Glide만큼은 아님    | 
+    | 특징                 | 생명주기 자동 관리, 다양한 이미지 포맷 지원, 강력한 캐싱 및 리소스 관리 | Kotlin Coroutines 네이티브 지원, Jetpack Compose와 통합 용이, 현대적이고 가벼움 | 사용하기 쉬운 API, 간단한 이미지 로딩에 적합 | 
